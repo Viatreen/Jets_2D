@@ -1,0 +1,31 @@
+# Objects
+*.o
+
+# Executables
+*.app
+*.exe
+*.out
+
+# Binaries
+*.bin
+*.cubin
+
+# Libraries
+*.a
+*.lib
+*.so
+
+# Cache
+*.check_cache
+*.includecache
+*.internal
+*.make
+*.marks
+
+# Logs
+*.log
+
+# Directories
+bin/
+out/
+CMakeFiles/
