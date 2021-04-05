@@ -253,7 +253,7 @@ __device__ void CollisionDetect(CraftState *C, int idx1, int idx2)
 	{
 		// Check for collision
 		//__fsqrt_ru
-		float DistanceSquared = pow(C->Position.X[idx1] - C->Position.X[idx2], 2) + pow(C->Position.Y[idx1] - C->Position.Y[idx2], 2);
+		float DistanceSquared = pow(C->Position.X[idx1] - C->Position.X[idx2], 2.f) + pow(C->Position.Y[idx1] - C->Position.Y[idx2], 2.f);
 		if (DistanceSquared < 2 * FUSELAGE_RADIUS * 2 * FUSELAGE_RADIUS)
 		{
 			float Distance = __fsqrt_ru(DistanceSquared);
@@ -306,16 +306,16 @@ __device__ void BulletMechanics(GraphicsObjectPointer Buffer, CraftState *CS, in
 			CS->Bullet[i].Position.Y[ID1] += CS->Bullet[i].Velocity.Y[ID1] * TIME_STEP;
 
 			// TODO: Turn on friendly fire
-			float DistanceSquared = pow(CS->Bullet[i].Position.X[ID1], 2) + pow(CS->Bullet[i].Position.Y[ID1], 2);
-			if (DistanceSquared > pow(LIFE_RADIUS - BULLET_RADIUS, 2))
+			float DistanceSquared = pow(CS->Bullet[i].Position.X[ID1], 2.f) + pow(CS->Bullet[i].Position.Y[ID1], 2.f);
+			if (DistanceSquared > pow(LIFE_RADIUS - BULLET_RADIUS, 2.f))
 			{
 				CS->Bullet[i].Active[ID1] = false;
 				CS->BulletCounter[ID1]--;
 				ConcealBullet(Buffer, WarpID, ID1, i);
 			}
-			else if (pow(CS->Bullet[i].Position.X[ID1] - CS->Position.X[ID2], 2)
-				+ pow(CS->Bullet[i].Position.Y[ID1] - CS->Position.Y[ID2], 2)
-				< pow(FUSELAGE_RADIUS + BULLET_RADIUS, 2))
+			else if (pow(CS->Bullet[i].Position.X[ID1] - CS->Position.X[ID2], 2.f)
+				+ pow(CS->Bullet[i].Position.Y[ID1] - CS->Position.Y[ID2], 2.f)
+				< pow(FUSELAGE_RADIUS + BULLET_RADIUS, 2.f))
 			{
 				CS->Bullet[i].Active[ID1] = false;
 				CS->BulletCounter[ID1]--;

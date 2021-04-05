@@ -183,7 +183,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	for (int i = 0; i < SENSORS_EXTERNAL_FORCE_COUNT; i++)
 	{
 		float AngleMomentumVsGravity = -atan2(C->Acceleration.X[ID], GRAVITY + C->Acceleration.Y[ID]);
-		float Magnitude = sqrt(pow(GRAVITY + C->Acceleration.Y[ID], 2) + pow(C->Acceleration.X[ID], 2)) / GRAVITY;
+		float Magnitude = sqrt(pow(GRAVITY + C->Acceleration.Y[ID], 2.f) + pow(C->Acceleration.X[ID], 2.f)) / GRAVITY;
 		float Angle = C->Angle[ID] + AngleMomentumVsGravity + i * (2.f * PI) / SENSORS_EXTERNAL_FORCE_COUNT + PI / 2.f;
 
 		while (Angle > PI)
@@ -256,7 +256,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 	// Opponent Distance
 	{
-		float Distance = sqrt(pow(C->Position.Y[IdxOpponent] - C->Position.Y[ID], 2) + pow(C->Position.X[IdxOpponent] - C->Position.X[ID], 2));
+		float Distance = sqrt(pow(C->Position.Y[IdxOpponent] - C->Position.Y[ID], 2.f) + pow(C->Position.X[IdxOpponent] - C->Position.X[ID], 2.f));
 
 		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
 		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
@@ -292,7 +292,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	{
 		if (C->Bullet->Active[IdxOpponent])
 		{
-			float Distance = sqrt(pow(C->Bullet->Position.Y[IdxOpponent] - C->Position.Y[ID], 2) + pow(C->Bullet->Position.X[IdxOpponent] - C->Position.X[ID], 2));
+			float Distance = sqrt(pow(C->Bullet->Position.Y[IdxOpponent] - C->Position.Y[ID], 2.f) + pow(C->Bullet->Position.X[IdxOpponent] - C->Position.X[ID], 2.f));
 
 			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
 			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
@@ -480,7 +480,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 			// Apply strength and brake
 			float Strength = (1.f - Brake);
 
-			if ((2.f / ENGINE_ANGULAR_ACCEL) * AngleSign * AngleVel > sqrt(pow(AngleVel, 2) + fabs(2.f * ENGINE_ANGULAR_ACCEL * AngleDifference)))
+			if ((2.f / ENGINE_ANGULAR_ACCEL) * AngleSign * AngleVel > sqrt(pow(AngleVel, 2.f) + fabs(2.f * ENGINE_ANGULAR_ACCEL * AngleDifference)))
 				C->Engine[i].AngularAcceleration[ID] = -AngleSign * ENGINE_ANGULAR_ACCEL * Strength;
 			else
 				C->Engine[i].AngularAcceleration[ID] = AngleSign * ENGINE_ANGULAR_ACCEL * Strength;
@@ -535,7 +535,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 			float Strength = (1.f - Brake);
 			C->CannonStrength[ID] = Strength;
 
-			if ((2.f / CANNON_ANGULAR_ACCEL) * AngleSign * AngleVel > sqrt(pow(AngleVel, 2) + fabs(2.f * CANNON_ANGULAR_ACCEL * AngleDifference)))
+			if ((2.f / CANNON_ANGULAR_ACCEL) * AngleSign * AngleVel > sqrt(pow(AngleVel, 2.f) + fabs(2.f * CANNON_ANGULAR_ACCEL * AngleDifference)))
 				C->Cannon.AngularAcceleration[ID] = -AngleSign * CANNON_ANGULAR_ACCEL * Strength;
 			else
 				C->Cannon.AngularAcceleration[ID] = AngleSign * CANNON_ANGULAR_ACCEL * Strength;

@@ -34,13 +34,21 @@ namespace Inputs
 	void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode)
 	{
 		if (key >= 0 && key < 1024)
+		{
 			if (action == GLFW_PRESS)
+			{
 				keys[key] = true;
+			}
 			else if (action == GLFW_RELEASE)
+			{
 				keys[key] = false;
+			}
+		}
 
 		if (keys[GLFW_KEY_ESCAPE])
+		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
+		}
 		if (keys[GLFW_KEY_LEFT_CONTROL] || keys[GLFW_KEY_RIGHT_CONTROL])
 		{
 			/*if (keys[GLFW_KEY_S])
@@ -65,7 +73,10 @@ namespace Inputs
 		}
 
 		// Pass commands to ImGui
-		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mode);
+		if (key >= 0 && key < 1024)
+		{
+			ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mode);
+		}
 	}
 
 	void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)

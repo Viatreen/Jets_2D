@@ -15,17 +15,21 @@
 *.lib
 *.so
 
-# Cache
+# Build and cache
+CMakeCache.txt
 *.check_cache
 *.includecache
 *.internal
 *.make
 *.marks
+*.cmake
+Makefile
 
 # Logs
 *.log
 
 # Directories
+.vs/
 bin/
 out/
 CMakeFiles/
