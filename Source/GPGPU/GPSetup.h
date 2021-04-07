@@ -11,8 +11,7 @@
 //namespace GPGPU
 //{
 MatchState				*Match;
-CraftPtrArr				*Crafts;
-TempPtrArr				*Temp;
+temp					*Temp;
 config					*d_Config;
 GraphicsObjectPointer	Buffer;		// Filled by CUDA_Map and copied to global memory
 GraphicsObjectPointer	*d_Buffer;	// Global memory version
@@ -21,8 +20,9 @@ config					*h_Config;	// Host side variable. Requirement, whenever this is chang
 
 bool h_AllDone = false;	 // Breaks up epoch iterations so as to not trip Windows GPU watchdog timer and also to allow real-time rendering
 
-CraftPtrArr CraftsDevicePointers;
-TempPtrArr  WeightsTempDevicePointers;
+//TempPtrArr  WeightsTempDevicePointers;
+
+CraftState* Crafts;
 
 namespace Mem
 {
@@ -30,25 +30,15 @@ namespace Mem
 	{
 		cudaCheck(cudaMalloc(&Match, sizeof(MatchState)));
 
-		cudaCheck(cudaMalloc(&Crafts, sizeof(CraftPtrArr)));
+		cudaCheck(cudaMalloc(&Crafts, sizeof(CraftState)));
 		cudaCheck(cudaDeviceSynchronize());
 		
-		for (int i = 0; i < WARP_COUNT; i++)
-		{
-			cudaCheck(cudaMalloc(&CraftsDevicePointers.Warp[i], sizeof(CraftState)));
-			cudaCheck(cudaMemcpy(&Crafts->Warp[i], &CraftsDevicePointers.Warp[i], sizeof(CraftState*), cudaMemcpyHostToDevice));
-			cudaCheck(cudaDeviceSynchronize());
-		}
-
-		cudaCheck(cudaMalloc(&Temp, sizeof(TempPtrArr)));
+		cudaCheck(cudaMalloc(&Temp, sizeof(temp)));
 		cudaCheck(cudaDeviceSynchronize());
 		
-		for (int i = 0; i < 1; i++)	// TODO: Fix for loop high index
-		{
-			cudaCheck(cudaMalloc(&WeightsTempDevicePointers.Warp[i], sizeof(temp)));
-			cudaCheck(cudaMemcpy(&Temp->Warp[i], &WeightsTempDevicePointers.Warp[i], sizeof(CraftState*), cudaMemcpyHostToDevice));	// TODO: Free this
-			cudaCheck(cudaDeviceSynchronize());
-		}
+		//cudaCheck(cudaMalloc(&WeightsTempDevicePointers.Craft[0], sizeof(temp)));
+		//cudaCheck(cudaMemcpy(&Temp->Craft[0], &WeightsTempDevicePointers.Craft[0], sizeof(TempPtrArr*), cudaMemcpyHostToDevice));	// TODO: Free this
+		//cudaCheck(cudaDeviceSynchronize());
 		
 		h_Config = new config();
 
@@ -63,15 +53,10 @@ namespace Mem
 	{
 		cudaCheck(cudaFree(Match));
 		cudaCheck(cudaFree(Crafts));
-		for (int i = 0; i < WARP_COUNT; i++)
-			cudaCheck(cudaFree(CraftsDevicePointers.Warp[i]));
-
 		cudaCheck(cudaFree(Temp));		
-		for (int i = 0; i < 1; i++)
-			cudaCheck(cudaFree(WeightsTempDevicePointers.Warp[i]));
 
 		delete h_Config;
-		cudaCheck(cudaFree(d_Config));
+		cudaCheck(cudaFree(d_Config)); 
 	}
 }
 //}

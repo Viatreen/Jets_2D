@@ -23,44 +23,38 @@ namespace Graphics
 		//Axis[1]				= new axis(AxisVertices::Y);
 		CircleOfLife		= new circleOfLife();
 
-		for (int i = 0; i < WARP_COUNT; i++)
+		Craft::Fuselage	= new Craft::Circle(FUSELAGE_VERT_COUNT);
+		Craft::Wing		= new Craft::Component();
+		Craft::Cannon	= new Craft::Component();
+		
+		for (int j = 0; j < 4; j++)
 		{
-			Craft::Fuselage[i]	= new Craft::Circle(FUSELAGE_VERT_COUNT);
-			Craft::Wing[i]		= new Craft::Component();
-			Craft::Cannon[i]	= new Craft::Component();
-		
-			for (int j = 0; j < 4; j++)
-			{
-				Craft::Engine[i][j]			= new Craft::Component();
-				Craft::ThrustLong[i][j]	= new Craft::Thrust();
-				Craft::ThrustShort[i][j]		= new Craft::Thrust();
-			}
-		
-			for (int j = 0; j < BULLET_COUNT_MAX; j++)
-				Craft::Bullet[i][j] = new Craft::Circle(BULLET_VERT_COUNT);
+			Craft::Engine[j]		= new Craft::Component();
+			Craft::ThrustLong[j]	= new Craft::Thrust();
+			Craft::ThrustShort[j]	= new Craft::Thrust();
 		}
+		
+		for (int j = 0; j < BULLET_COUNT_MAX; j++)
+			Craft::Bullet[j] = new Craft::Circle(BULLET_VERT_COUNT);
 	}
 
 	void Shutdown()
 	{
 		delete CircleOfLife;
 
-		for (int i = 0; i < WARP_COUNT; i++)
+		delete Craft::Fuselage;
+		delete Craft::Wing;
+		delete Craft::Cannon;
+		
+		for (int j = 0; j < 4; j++)
 		{
-			delete Craft::Fuselage[i];
-			delete Craft::Wing[i];
-			delete Craft::Cannon[i];
-		
-			for (int j = 0; j < 4; j++)
-			{
-				delete Craft::Engine[i][j];
-				delete Craft::ThrustLong[i][j];
-				delete Craft::ThrustShort[i][j];
-			}
-		
-			for (int j = 0; j < BULLET_COUNT_MAX; j++)
-				delete Craft::Bullet[i][j];
+			delete Craft::Engine[j];
+			delete Craft::ThrustLong[j];
+			delete Craft::ThrustShort[j];
 		}
+		
+		for (int j = 0; j < BULLET_COUNT_MAX; j++)
+			delete Craft::Bullet[j];
 
 		glfwDestroyWindow(window);
 		glfwTerminate();

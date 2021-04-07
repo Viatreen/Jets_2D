@@ -34,20 +34,20 @@ namespace Craft
 			GLCheck(glGenBuffers(1, &EB));
 			GLCheck(glBindVertexArray(VA));
 			GLCheck(glBindBuffer(GL_ARRAY_BUFFER, VB));
-			GLCheck(glBufferData(GL_ARRAY_BUFFER, 4 * 5 * WARP_SIZE * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ARRAY_BUFFER, 4 * 5 * CRAFT_COUNT * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
 
-			unsigned int *IndexOrder = new unsigned int[WARP_SIZE * 2 * 5];
+			unsigned int *IndexOrder = new unsigned int[CRAFT_COUNT * 2 * 5];
 
-			for (int i = 0; i < WARP_SIZE * 2; i++)
+			for (int i = 0; i < CRAFT_COUNT * 2; i++)
 			{
 				for (int j = 0; j < 4; j++)
-					IndexOrder[5 * i + j] = j * WARP_SIZE * 2 + i;
+					IndexOrder[5 * i + j] = j * CRAFT_COUNT * 2 + i;
 
 				IndexOrder[5 * i + 4] = 0xFFFFFFFF;	// Draw restart primitive
 			}
 
 			GLCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EB));
-			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 5 * WARP_SIZE * 2 * sizeof(unsigned int), IndexOrder, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 5 * CRAFT_COUNT * 2 * sizeof(unsigned int), IndexOrder, GL_DYNAMIC_DRAW));
 			delete[] IndexOrder;
 
 			// TODO: What would the stride be
@@ -57,17 +57,17 @@ namespace Craft
 			GLCheck(glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0));
 
 			GLCheck(glEnableVertexAttribArray(1));
-			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * 4 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * 4 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			// Vertex Colors												   
 			GLCheck(glEnableVertexAttribArray(2));
-			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * 4 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * 4 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(3));
-			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * 4 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * 4 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(4));
-			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * 4 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * 4 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			// CUDA/GL Interoperation
 			//cudaCheck(cudaGraphicsResourceSetMapFlags(d_VertexBuffer, 0));
@@ -99,12 +99,12 @@ namespace Craft
 		void Draw()
 		{
 			GLCheck(glBindVertexArray(VA));
-			GLCheck(glDrawElements(GL_TRIANGLE_FAN, 5 * WARP_SIZE * 2, GL_UNSIGNED_INT, (void*)0));
+			GLCheck(glDrawElements(GL_TRIANGLE_FAN, 5 * CRAFT_COUNT * 2, GL_UNSIGNED_INT, (void*)0));
 			GLCheck(glBindVertexArray(0));
 		}
 	};	// End Component struct
 
-	Component *Wing[WARP_COUNT];
-	Component *Cannon[WARP_COUNT];
-	Component *Engine[WARP_COUNT][4];	// Engine 0 is left most
+	Component *Wing;
+	Component *Cannon;
+	Component *Engine[4];	// Engine 0 is left most
 }	// End Craft namespace

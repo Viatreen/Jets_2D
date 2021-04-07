@@ -34,17 +34,17 @@ namespace Craft
 			GLCheck(glGenBuffers(1, &EB));
 			GLCheck(glBindVertexArray(VA));
 			GLCheck(glBindBuffer(GL_ARRAY_BUFFER, VB));
-			GLCheck(glBufferData(GL_ARRAY_BUFFER, 5 * (VertexCount + 1) * WARP_SIZE * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ARRAY_BUFFER, 5 * (VertexCount + 1) * CRAFT_COUNT * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
 
-			unsigned int* IndexOrder = new unsigned int[WARP_SIZE * 2 * (VertexCount + 3)];	// Circle elements. Center vertex + edge vertices + first edge vertex + primitive restart
+			unsigned int* IndexOrder = new unsigned int[CRAFT_COUNT * 2 * (VertexCount + 3)];	// Circle elements. Center vertex + edge vertices + first edge vertex + primitive restart
 
 			// TODO: Connect first and last circle edge vertices
-			for (int i = 0; i < WARP_SIZE * 2; i++)
+			for (int i = 0; i < CRAFT_COUNT * 2; i++)
 			{
 				for (int j = 0; j < VertexCount + 1; j++)
-					IndexOrder[(VertexCount + 3) * i + j] = j * WARP_SIZE * 2 + i;
+					IndexOrder[(VertexCount + 3) * i + j] = j * CRAFT_COUNT * 2 + i;
 
-				IndexOrder[(VertexCount + 3) * i + VertexCount + 1] = WARP_SIZE * 2 + i;			// Tie circle back to first edge vertex
+				IndexOrder[(VertexCount + 3) * i + VertexCount + 1] = CRAFT_COUNT * 2 + i;			// Tie circle back to first edge vertex
 				IndexOrder[(VertexCount + 3) * i + VertexCount + 2] = 0xFFFFFFFF;	// Primitive restart
 			}
 
@@ -52,7 +52,7 @@ namespace Craft
 			//	std::cout << "Fuselage Index[" << i << "]: " << IndexOrder[i] << std::endl;
 
 			GLCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EB));
-			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, (VertexCount + 3) * WARP_SIZE * 2 * sizeof(unsigned int), IndexOrder, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, (VertexCount + 3) * CRAFT_COUNT * 2 * sizeof(unsigned int), IndexOrder, GL_DYNAMIC_DRAW));
 			delete[] IndexOrder;
 
 			// Vertex Positions
@@ -60,17 +60,17 @@ namespace Craft
 			GLCheck(glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0));
 
 			GLCheck(glEnableVertexAttribArray(1));
-			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * (VertexCount + 1) * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * (VertexCount + 1) * CRAFT_COUNT * 2 * sizeof(float))));
 
 			// Vertex Colors												   
 			GLCheck(glEnableVertexAttribArray(2));
-			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * (VertexCount + 1) * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * (VertexCount + 1) * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(3));
-			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * (VertexCount + 1) * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * (VertexCount + 1) * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(4));
-			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * (VertexCount + 1) * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * (VertexCount + 1) * CRAFT_COUNT * 2 * sizeof(float))));
 
 			// CUDA/GL Interoperation
 			//cudaCheck(cudaGraphicsResourceSetMapFlags(d_VertexBuffer, 0));
@@ -102,11 +102,11 @@ namespace Craft
 		void Draw(int VertexCount)
 		{
 			GLCheck(glBindVertexArray(VA));
-			GLCheck(glDrawElements(GL_TRIANGLE_FAN, (VertexCount + 3) * WARP_SIZE * 2, GL_UNSIGNED_INT, (void*)0));
+			GLCheck(glDrawElements(GL_TRIANGLE_FAN, (VertexCount + 3) * CRAFT_COUNT * 2, GL_UNSIGNED_INT, (void*)0));
 			GLCheck(glBindVertexArray(0));
 		}
 	};	// End Component struct
 
-	Circle *Fuselage[WARP_COUNT];
-	Circle *Bullet[WARP_COUNT][BULLET_COUNT_MAX];
+	Circle *Fuselage;
+	Circle *Bullet[BULLET_COUNT_MAX];
 }	// End Craft namespace

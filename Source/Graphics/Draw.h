@@ -38,22 +38,19 @@ namespace Graphics
 
 		CircleOfLife->Draw();
 
-		for (int i = 0; i < WARP_COUNT; i++)
+		Craft::Wing->Draw();
+		Craft::Fuselage->Draw(FUSELAGE_VERT_COUNT);
+		Craft::Cannon->Draw();
+		
+		for (int j = 0; j < 4; j++)
 		{
-			Craft::Wing[i]->Draw();
-			Craft::Fuselage[i]->Draw(FUSELAGE_VERT_COUNT);
-			Craft::Cannon[i]->Draw();
-		
-			for (int j = 0; j < 4; j++)
-			{
-				Craft::Engine[i][j]->Draw();
-				Craft::ThrustLong[i][j]->Draw();
-				Craft::ThrustShort[i][j]->Draw();
-			}
-		
-			for (int j = 0; j < BULLET_COUNT_MAX; j++)
-				Craft::Bullet[i][j]->Draw(BULLET_VERT_COUNT);
+			Craft::Engine[j]->Draw();
+			Craft::ThrustLong[j]->Draw();
+			Craft::ThrustShort[j]->Draw();
 		}
+		
+		for (int j = 0; j < BULLET_COUNT_MAX; j++)
+			Craft::Bullet[j]->Draw(BULLET_VERT_COUNT);
 		
 		CraftShader.Unbind();
 	}

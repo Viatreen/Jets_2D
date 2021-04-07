@@ -148,7 +148,7 @@ static const char* _cudaGetErrorEnum(cudaError_t error)
 
 	return "<unknown>";
 }
-#endif
+#endif	// #ifdef __DRIVER_TYPES_H__
 
 // GLFW Error Handling
 void glfwErrorCallback(int i, const char* err_str)

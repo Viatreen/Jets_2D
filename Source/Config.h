@@ -3,6 +3,7 @@
 // Standard Library
 #include <cmath>
 
+#define SMALL_CRAFT_AMOUNT
 #define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
@@ -20,7 +21,7 @@
 #define TIME_MATCH							  30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE							  64
+#define BLOCK_SIZE							  32
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
@@ -31,15 +32,12 @@
 #endif
 
 // Match Configuration
-#define WARP_SIZE							( 128 * 8 * SM_COUNT )
-#define CRAFT_COUNT							( WARP_SIZE  )
-#define WARP_COUNT							( CRAFT_COUNT / WARP_SIZE )
+#define CRAFT_COUNT							  64 //( 128 * 8 * SM_COUNT  )
 #define FIT_COUNT							( CRAFT_COUNT / 2 )
-#define WARP_COUNT_FIT						( FIT_COUNT / WARP_SIZE )
 // TODO: Fix issue. For now, FIT_COUNT must be half of CRAFT_COUNT
 #define OPPONENT_COUNT						  2
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  128		// TODO: Allow this to be opponent for other warp
+#define OPPONENT_RANK_RANGE_DEFAULT			  32		// TODO: Allow this to be opponent for other warp
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -84,7 +82,7 @@
 
 #define THRUST_MAX							( CRAFT_MASS / 2.4f * 9.8f)									// N
 #define THRUST_MIN							  0.25f														// Normalized thrust kgf. Thrust max is 1.f
-#define THRUST_MIN_RAMP_TIME				  7.f														// Seconds. Time to ramp from THRUST_MIN to 1.f thrust.
+#define THRUST_MIN_RAMP_TIME				  3.f														// Seconds. Time to ramp from THRUST_MIN to 1.f thrust.
 #define THRUST_RAMP_MAX						( TIME_STEP / THRUST_MIN_RAMP_TIME * (1.f - THRUST_MIN))	// Max allowable change in thrust per timestep
 #define THRUST_NORMALIZED_INITIAL			  0.75f														// Initial state. Normalized
 
@@ -182,17 +180,17 @@
 
 // Set floating point of neural net to half2 for arch that supports it (Volta)
 // Else, use standard float (32-bit)
-#define VOLTA
-#ifdef VOLTA
-#include <cuda_fp16.h>
-typedef __half fp_NN;
-#define fp_NN_To_fp32(x)	__half2float(x)
-#define fp32_To_fp_NN(x)	__float2half_rn(x)
-#else
-typedef float fp_NN;
-#define fp_NN_To_fp32(x)	(x)
-#define fp32_To_fp_NN(x)	(x)
-#endif
+// #define VOLTA
+// #ifdef VOLTA
+// #include <cuda_fp16.h>
+// typedef __half fp_NN;
+// #define fp_NN_To_fp32(x)	__half2float(x)
+// #define fp32_To_fp_NN(x)	__float2half_rn(x)
+// #else
+// typedef float fp_NN;
+// #define fp_NN_To_fp32(x)	(x)
+// #define fp32_To_fp_NN(x)	(x)
+// #endif
 
 // TODO: Add a few rounds where the unfit are replaced by random NNs
  

@@ -10,181 +10,148 @@
 // Project Headers
 #include "GPGPU/Vertices.h"
 
-__device__ void WeightsMutateAndTransfer(CraftPtrArr *C, config *Config, int SourceIndex, int TargetIndex)
+__device__ void WeightsMutateAndTransfer(CraftState *C, config *Config, int SourceIndex, int TargetIndex)
 {
-	int SourceWarpID = SourceIndex / WARP_SIZE;
-	int SourceID = SourceIndex % WARP_SIZE;
-
-	int TargetWarpID = TargetIndex / WARP_SIZE;
-	int TargetID = TargetIndex % WARP_SIZE;
-
 	for (int i = 0; i < WEIGHT_COUNT; i++)
 	{
-		float Chance = curand_uniform(&C->Warp[SourceWarpID]->RandState[SourceID]);
+		float Chance = curand_uniform(&C->RandState[SourceIndex]);
 
 		if (Chance < Config->MutationFlipChance)
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] = -C->Warp[SourceWarpID]->Weights[WARP_SIZE * i + SourceID];
+			C->Weights[CRAFT_COUNT * i + TargetIndex] = -C->Weights[CRAFT_COUNT * i + SourceIndex];
 		else if (Chance < Config->MutationFlipChance + Config->MutationScaleChance)
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID]
-			= (1.f - Config->MutationScale + 2.f * Config->MutationScale * curand_uniform(&C->Warp[TargetWarpID]->RandState[TargetID])) * C->Warp[SourceWarpID]->Weights[WARP_SIZE * i + SourceID];
+			C->Weights[CRAFT_COUNT * i + TargetIndex]
+			= (1.f - Config->MutationScale + 2.f * Config->MutationScale * curand_uniform(&C->RandState[TargetIndex])) * C->Weights[CRAFT_COUNT * i + SourceIndex];
 		else if (Chance < Config->MutationFlipChance + Config->MutationScaleChance + Config->MutationSlideChance)
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] = C->Warp[SourceWarpID]->Weights[WARP_SIZE * i + SourceID] + Config->MutationSigma * curand_normal(&C->Warp[SourceWarpID]->RandState[SourceID]);
+			C->Weights[CRAFT_COUNT * i + TargetIndex] = C->Weights[CRAFT_COUNT * i + SourceIndex] + Config->MutationSigma * curand_normal(&C->RandState[SourceIndex]);
 		else
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] = C->Warp[SourceWarpID]->Weights[WARP_SIZE * i + SourceID];
+			C->Weights[CRAFT_COUNT * i + TargetIndex] = C->Weights[CRAFT_COUNT * i + SourceIndex];
 
-		if (C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] > Config->WeightMax)
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] = Config->WeightMax;
-		if (C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] < -Config->WeightMax)
-			C->Warp[TargetWarpID]->Weights[WARP_SIZE * i + TargetID] = -Config->WeightMax;
+		if (C->Weights[CRAFT_COUNT * i + TargetIndex] > Config->WeightMax)
+			C->Weights[CRAFT_COUNT * i + TargetIndex] = Config->WeightMax;
+		if (C->Weights[CRAFT_COUNT * i + TargetIndex] < -Config->WeightMax)
+			C->Weights[CRAFT_COUNT * i + TargetIndex] = -Config->WeightMax;
 	}
 }
 
-__global__ void RoundAssignPlace(CraftPtrArr *Crafts)
+__global__ void RoundAssignPlace(CraftState *Crafts)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	Crafts->Warp[WarpID]->Place[ID] = 0;
+	Crafts->Place[idx] = 0;
 
 	// Assign place to each craft
 	for (int i = 0; i < CRAFT_COUNT; i++)
 		if (i != idx)
-			if (Crafts->Warp[WarpID]->ScoreCumulative[ID] < Crafts->Warp[i / WARP_SIZE]->ScoreCumulative[i % WARP_SIZE])
-				Crafts->Warp[WarpID]->Place[ID]++;
+			if (Crafts->ScoreCumulative[idx] < Crafts->ScoreCumulative[i])
+				Crafts->Place[idx]++;
 }
 
-__global__ void RoundTieFix(CraftPtrArr *Crafts)
+__global__ void RoundTieFix(CraftState *Crafts)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
 	// Deal with score ties
 	for (int i = 0; i < CRAFT_COUNT; i++)
 		if (i != idx)
-			if (Crafts->Warp[WarpID]->Place[ID] == Crafts->Warp[i / WARP_SIZE]->Place[i % WARP_SIZE])
+			if (Crafts->Place[idx] == Crafts->Place[i])
 				if (i > idx)
-					atomicAdd(&(Crafts->Warp[WarpID]->Place[ID]), 1);					// Only compatible with compute >=6.0
+					atomicAdd(&(Crafts->Place[idx]), 1);					// Only compatible with compute >=6.0
+					// TODO: Add one place to all crafts below it
 }
 
-__global__ void IDAssign(CraftPtrArr *C, config *Config)
+__global__ void IDAssign(CraftState *C, config *Config)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = (idx + FIT_COUNT) / WARP_SIZE;
-	int ID = (idx + FIT_COUNT) % WARP_SIZE;
 
 	/*if (idx == 0)
 		printf("Round Number: %d\n", Config->RoundNumber);*/
 
-	C->Warp[WarpID]->ID[ID] = (Config->RoundNumber + 1) * FIT_COUNT + idx;
+	C->ID[idx] = (Config->RoundNumber + 1) * FIT_COUNT + idx;		// TODO: Check this
 }
 
-__global__ void IDTempSave(CraftPtrArr *C)
+__global__ void IDTempSave(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
-
-	if (C->Warp[WarpID]->Place[ID] < FIT_COUNT)
+	if (C->Place[idx] < FIT_COUNT)
 	{
-		int PlaceWarpID = C->Warp[WarpID]->Place[ID] / WARP_SIZE;
-		int PlaceID = C->Warp[WarpID]->Place[ID] % WARP_SIZE;
+		int PlaceID = C->Place[idx];
 
-		C->Warp[PlaceWarpID]->TempID[PlaceID] = C->Warp[WarpID]->ID[ID];
+		C->TempID[PlaceID] = C->ID[idx];
 	}
 }
 
-__global__ void IDTransfer(CraftPtrArr *C)
+__global__ void IDTransfer(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	C->Warp[WarpID]->ID[ID] = C->Warp[WarpID]->TempID[ID];
+	C->ID[idx] = C->TempID[idx];
 }
 
-__global__ void WeightsTempSave(CraftPtrArr *C, TempPtrArr *Temp)
+__global__ void WeightsTempSave(CraftState *C, temp *Temp)	// TODO: Fix this. Higher place is better
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	if (C->Warp[WarpID]->Place[ID] < FIT_COUNT)
+	if (C->Place[idx] < FIT_COUNT)
 	{
-		int PlaceWarpID = C->Warp[WarpID]->Place[ID] / WARP_SIZE;
-		int PlaceID = C->Warp[WarpID]->Place[ID] % WARP_SIZE;
+		int PlaceID = C->Place[idx];
 
 		for (int i = 0; i < WEIGHT_COUNT; i++)
-			Temp->Warp[PlaceWarpID]->Weights[WARP_SIZE * i + PlaceID] = C->Warp[WarpID]->Weights[WARP_SIZE * i + ID];
+			Temp->Weights[FIT_COUNT * i + PlaceID] = C->Weights[CRAFT_COUNT * i + idx];
 	}
 }
 
 // TODO: Combine transfer and mutate kernels
-__global__ void WeightsTransfer(CraftPtrArr *C, TempPtrArr *Temp)
+__global__ void WeightsTransfer(CraftState *C, temp *Temp)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 	
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Warp[WarpID]->Weights[WARP_SIZE * i + ID] = Temp->Warp[WarpID]->Weights[WARP_SIZE * i + ID];
+		C->Weights[CRAFT_COUNT * i + idx] = Temp->Weights[FIT_COUNT * i + idx];
 }
 
-__global__ void WeightsMutate(CraftPtrArr *C, config *Config)
+__global__ void WeightsMutate(CraftState *C, config *Config)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
 #pragma unroll
 	for (int i = 1; i < CRAFT_COUNT / FIT_COUNT; i++)
 		WeightsMutateAndTransfer(C, Config, idx, FIT_COUNT * i + idx);
 }
 
-__global__ void ScoreTempSave(CraftPtrArr *C)
+__global__ void ScoreTempSave(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	int PlaceWarpID = C->Warp[WarpID]->Place[ID] / WARP_SIZE;
-	int PlaceID = C->Warp[WarpID]->Place[ID] % WARP_SIZE;
+	int PlaceID = C->Place[idx] % CRAFT_COUNT;
 
-	C->Warp[PlaceWarpID]->ScoreTemp[PlaceID] = C->Warp[WarpID]->ScoreCumulative[ID];
+	C->ScoreTemp[PlaceID] = C->ScoreCumulative[idx];
 }
 
-__global__ void ScoreTransfer(CraftPtrArr *C)
+__global__ void ScoreTransfer(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	C->Warp[WarpID]->ScoreCumulative[ID] = C->Warp[WarpID]->ScoreTemp[ID];
+	C->ScoreCumulative[idx] = C->ScoreTemp[idx];
 }
 
-__global__ void ResetScoreCumulative(CraftPtrArr *Crafts)
+__global__ void ResetScoreCumulative(CraftState *Crafts)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
 	// Reset Score Cumulative
-	Crafts->Warp[WarpID]->ScoreCumulative[ID] = 0;
-	Crafts->Warp[WarpID]->ScoreCumulative[ID + WARP_SIZE] = 0;
+	Crafts->ScoreCumulative[idx] = 0;
+	Crafts->ScoreCumulative[idx + CRAFT_COUNT] = 0;
 }
 
-__global__ void Init(CraftPtrArr *C)
+__global__ void Init(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
-	curand_init(124, idx, 0, &(C->Warp[WarpID]->RandState[ID]));
+	curand_init(124, idx, 0, &(C->RandState[idx]));
 
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Warp[WarpID]->Weights[WARP_SIZE * i + ID] = (curand_uniform(&C->Warp[WarpID]->RandState[ID]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
+		C->Weights[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
 
 	//if (idx < CRAFT_COUNT)
 	//{
@@ -193,34 +160,34 @@ __global__ void Init(CraftPtrArr *C)
 	//	// Engine 3 Angle = -Engine 0 Angle
 	//	for (int i = 0; i < 3 * LAYER_SIZE_HIDDEN; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//	// Brake output neuron stays the same
 	//	for (int i = 3 * LAYER_SIZE_INPUT; i < 4 * LAYER_SIZE_INPUT; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//	// Thrust Neurons neuron stays the same
 	//	for (int i = 0; i < LAYER_SIZE_INPUT; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 1 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 2 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 3 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * WARP_SIZE + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 1 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 2 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 3 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//}
 
-	C->Warp[WarpID]->ID[ID] = idx;
+	C->ID[idx] = idx;
 
 #pragma unroll
-	for (int i = 0; i < 2; i++)
-		C->Warp[WarpID]->Neuron[(LAYER_SIZE_INPUT - 1) * WARP_SIZE * 2 + ID + WARP_SIZE * i] = 1.f;	// Bias Neuron
+	for (int i = 0; i < SENSORS_BIAS_NEURON_COUNT; i++)
+		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * CRAFT_COUNT * 2 + idx + CRAFT_COUNT * i] = 1.f;	// Bias Neuron
 } // End init function
 
-__device__ void Reset(CraftState *Crafts, int WarpID, int idx, GraphicsObjectPointer Buffer, float PositionX, float PositionY, float AngleStart)
+__device__ void Reset(CraftState *Crafts, int idx, GraphicsObjectPointer Buffer, float PositionX, float PositionY, float AngleStart)
 {
 	Crafts->Position.X[idx] = PositionX;
 	Crafts->Position.Y[idx] = PositionY;
@@ -252,7 +219,7 @@ __device__ void Reset(CraftState *Crafts, int WarpID, int idx, GraphicsObjectPoi
 	for (int i = 0; i < BULLET_COUNT_MAX; i++)
 	{
 		Crafts->Bullet[i].Active[idx] = false;
-		//ConcealBullet(Buffer, WarpID, idx, i);
+		//ConcealBullet(Buffer, idx, i);
 	}
 
 	Crafts->Score[idx] = 0;
@@ -262,14 +229,12 @@ __device__ void Reset(CraftState *Crafts, int WarpID, int idx, GraphicsObjectPoi
 	Crafts->Active[idx] = true;
 
 	for (int i = 0; i < SENSORS_MEMORY_COUNT; i++)
-		Crafts->Neuron[(SENSORS_MEMORY_START + i) * WARP_SIZE * 2 + idx] = 0.f;
+		Crafts->Neuron[(SENSORS_MEMORY_START + i) * CRAFT_COUNT * 2 + idx] = 0.f;
 }	// End Reset function
 
-__global__ void ResetMatch(MatchState *Match, CraftPtrArr *Crafts, GraphicsObjectPointer *Buffer, int PositionNumber, float AngleStart)
+__global__ void ResetMatch(MatchState *Match, CraftState *Crafts, GraphicsObjectPointer *Buffer, int PositionNumber, float AngleStart)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int ID = idx % WARP_SIZE;
 
 	if (idx == 0)
 		Match->TournamentEpochNumber++;
@@ -279,17 +244,17 @@ __global__ void ResetMatch(MatchState *Match, CraftPtrArr *Crafts, GraphicsObjec
 
 	if (PositionNumber == 0)
 	{
-		Reset(Crafts->Warp[WarpID], WarpID, ID, *Buffer, -LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
-		Reset(Crafts->Warp[WarpID], WarpID, ID + WARP_SIZE, *Buffer, LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
+		Reset(Crafts, idx, *Buffer, -LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
+		Reset(Crafts, idx + CRAFT_COUNT, *Buffer, LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
 	}
 	else if (PositionNumber == 1)
 	{
-		Reset(Crafts->Warp[WarpID], WarpID, ID, *Buffer, LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
-		Reset(Crafts->Warp[WarpID], WarpID, ID + WARP_SIZE, *Buffer, -LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
+		Reset(Crafts, idx, *Buffer,  LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
+		Reset(Crafts, idx + CRAFT_COUNT, *Buffer, -LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
 	}
 
 	// TODO: Optimize this
-	ConcealVertices(*Buffer, WarpID, ID, ID + WARP_SIZE);
+	ConcealVertices(*Buffer, idx, idx + CRAFT_COUNT);
 
-	ShowVertices(Crafts->Warp[WarpID], *Buffer, WarpID, ID, ID + WARP_SIZE);
+	ShowVertices(Crafts, *Buffer, idx, idx + CRAFT_COUNT);
 }	// End reset function

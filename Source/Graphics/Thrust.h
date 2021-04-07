@@ -29,33 +29,33 @@ namespace Craft
 			GLCheck(glBindVertexArray(VA));
 			
 			GLCheck(glBindBuffer(GL_ARRAY_BUFFER, VB));
-			GLCheck(glBufferData(GL_ARRAY_BUFFER, 15 * WARP_SIZE * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ARRAY_BUFFER, 15 * CRAFT_COUNT * 2 * sizeof(float), NULL, GL_DYNAMIC_DRAW));
 
 			// Vertex Positions
 			GLCheck(glEnableVertexAttribArray(0));
 			GLCheck(glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0));
 
 			GLCheck(glEnableVertexAttribArray(1));
-			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * 3 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(1 * 3 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			// Vertex Colors
 			GLCheck(glEnableVertexAttribArray(2));
-			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * 3 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(2 * 3 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(3));
-			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * 3 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(3 * 3 * CRAFT_COUNT * 2 * sizeof(float))));
 
 			GLCheck(glEnableVertexAttribArray(4));
-			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * 3 * WARP_SIZE * 2 * sizeof(float))));
+			GLCheck(glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)(4 * 3 * CRAFT_COUNT * 2 * sizeof(float))));
 
-			unsigned int* ThrustIndexOrder = new unsigned int[3 * WARP_SIZE * 2];
+			unsigned int* ThrustIndexOrder = new unsigned int[3 * CRAFT_COUNT * 2];
 
-			for (int i = 0; i < WARP_SIZE * 2; i++)
+			for (int i = 0; i < CRAFT_COUNT * 2; i++)
 				for (int j = 0; j < 3; j++)
-					ThrustIndexOrder[3 * i + j] = WARP_SIZE * 2 * j + i;
+					ThrustIndexOrder[3 * i + j] = CRAFT_COUNT * 2 * j + i;
 
 			GLCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EB));
-			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * WARP_SIZE * 2 * sizeof(unsigned int), ThrustIndexOrder, GL_DYNAMIC_DRAW));
+			GLCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * CRAFT_COUNT * 2 * sizeof(unsigned int), ThrustIndexOrder, GL_DYNAMIC_DRAW));
 			delete[] ThrustIndexOrder;
 			
 			//std::cout << "Register Thrust" << std::endl;
@@ -86,11 +86,11 @@ namespace Craft
 		void Draw()
 		{
 			GLCheck(glBindVertexArray(VA));
-			GLCheck(glDrawElements(GL_TRIANGLES, 3 * WARP_SIZE * 2, GL_UNSIGNED_INT, (void*)0));
+			GLCheck(glDrawElements(GL_TRIANGLES, 3 * CRAFT_COUNT * 2, GL_UNSIGNED_INT, (void*)0));
 			GLCheck(glBindVertexArray(0));
 		}
 	};
 
-	Thrust* ThrustLong[WARP_COUNT][4];
-	Thrust* ThrustShort[WARP_COUNT][4];
+	Thrust* ThrustLong[4];
+	Thrust* ThrustShort[4];
 }

@@ -16,79 +16,75 @@
 
 //namespace GPGPU
 //{
-__global__ void RunEpoch(MatchState *Match, CraftPtrArr *C, GraphicsObjectPointer *Buffer, config *Config, int OpponentID)
+__global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer *Buffer, config *Config, int OpponentID)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int id = idx % WARP_SIZE;
 
 	// Process a few physics time steps
 	for (int TimeStepIteration = 0; TimeStepIteration < Config->IterationsPerCall && !Match->Done[idx]; TimeStepIteration++)
 	{
 		if (Match->ElapsedSteps[idx] % (FRAMERATE_NN_PHYSICS) == 0)
 		{
-			if (C->Warp[WarpID]->Active[id])
-				NeuralNet(C->Warp[WarpID], *Buffer, WarpID, id,				false,	0,						C->Warp[OpponentID / WARP_SIZE]);	// TODO: Just make weights to read from a float*
-			if (C->Warp[WarpID]->Active[id + WARP_SIZE])
-				NeuralNet(C->Warp[WarpID], *Buffer, WarpID, id + WARP_SIZE,	true,	OpponentID % WARP_SIZE, C->Warp[OpponentID / WARP_SIZE]);
+			if (C->Active[idx])
+				NeuralNet(C, *Buffer, idx,				 false,	0,          &C[0]);	// TODO: Just make weights to read from a float*
+			if (C->Active[idx + CRAFT_COUNT])
+				NeuralNet(C, *Buffer, idx + CRAFT_COUNT, true,	OpponentID, &C[0]);
 		}
 
-		if (C->Warp[WarpID]->Active[id])
-			Physic(Match, C->Warp[WarpID], id, Config);
-		if (C->Warp[WarpID]->Active[id + WARP_SIZE])
-			Physic(Match, C->Warp[WarpID], id + WARP_SIZE, Config);
+		if (C->Active[idx] )
+			Physic(Match, C, idx, Config);
+		if (C->Active[idx + CRAFT_COUNT])
+			Physic(Match, C, idx + CRAFT_COUNT, Config);
 
-		if (C->Warp[WarpID]->Active[id])
-			CollisionDetect(C->Warp[WarpID], id, id + WARP_SIZE);
+		if (C->Active[idx] )
+			CollisionDetect(C, idx, idx + CRAFT_COUNT);
 
 		// TODO: Convert to single function
-		BulletMechanics(*Buffer, C->Warp[WarpID], WarpID, id, id + WARP_SIZE, Config);
-		BulletMechanics(*Buffer, C->Warp[WarpID], WarpID, id + WARP_SIZE, id, Config);
+		BulletMechanics(*Buffer, C, idx, idx + CRAFT_COUNT, Config);
+		BulletMechanics(*Buffer, C, idx + CRAFT_COUNT, idx, Config);
 
 		Match->ElapsedSteps[idx]++;
 
 		if (Match->ElapsedSteps[idx] > Config->TimeStepLimit)
 			Match->Done[idx] = true;
-		else  if (!C->Warp[WarpID]->Active[id])
+		else  if (!C->Active[idx] )
 			Match->Done[idx] = true;
 
 		if (Match->Done[idx])
 		{
-			ConcealVertices(*Buffer, WarpID, id, id + WARP_SIZE);
-			C->Warp[WarpID]->Score[id]				= C->Warp[WarpID]->ScoreTime[id]			 + C->Warp[WarpID]->ScoreDistance[id] / 1000				+ C->Warp[WarpID]->ScoreBullet[id]				- C->Warp[WarpID]->ScoreBullet[id + WARP_SIZE] / 4;
-			C->Warp[WarpID]->Score[id + WARP_SIZE]	= C->Warp[WarpID]->ScoreTime[id + WARP_SIZE] + C->Warp[WarpID]->ScoreDistance[id + WARP_SIZE] / 1000	+ C->Warp[WarpID]->ScoreBullet[id + WARP_SIZE]	- C->Warp[WarpID]->ScoreBullet[id] / 4;	// Score of opponent does not matter
+			ConcealVertices(*Buffer, idx, idx + CRAFT_COUNT);
+			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreDistance[idx]  / 1000				+ C->ScoreBullet[idx] 				- C->ScoreBullet[idx + CRAFT_COUNT] / 4;
+			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000	+ C->ScoreBullet[idx + CRAFT_COUNT]	- C->ScoreBullet[idx]  / 4;	// Score of opponent does not matter
 		}
 	} // End main step iteration for loop 
 
 	// If craft is going from rendering to hidden, conceal its vertices
 	if (Match->RenderOffFirstFrame[idx] == true)
 	{
-		ConcealVertices(*Buffer, WarpID, id, id + WARP_SIZE);
+		ConcealVertices(*Buffer, idx, idx + CRAFT_COUNT);
 		Match->RenderOffFirstFrame[idx] = false;
 	}
 
 	// If craft is going from hidden to rendering, create its vertices
 	if (Match->RenderOnFirstFrame[idx] == true)
 	{
-		ShowVertices(C->Warp[WarpID], *Buffer, WarpID, id, id + WARP_SIZE);
+		ShowVertices(C, *Buffer, idx, idx + CRAFT_COUNT);
 		Match->RenderOnFirstFrame[idx] = false;
 	}
 
 	// If match has render turned on, process its vertices
 	if (Match->RenderOn[idx] && !Match->Done[idx])
-		GraphicsProcessing(C->Warp[WarpID], *Buffer, WarpID, id, id + WARP_SIZE);
+		GraphicsProcessing(C, *Buffer, idx, idx + CRAFT_COUNT);
 
 	if (!Match->Done[idx])
 		Match->AllDone = false;
 }	// End RunEpoch function	
 
-__global__ void ScoreCumulativeCalc(CraftPtrArr *C)
+__global__ void ScoreCumulativeCalc(CraftState *C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = idx / WARP_SIZE;
-	int id = idx % WARP_SIZE;
 
-	C->Warp[WarpID]->ScoreCumulative[id] += C->Warp[WarpID]->Score[id];
-	C->Warp[WarpID]->ScoreCumulative[id + WARP_SIZE] += C->Warp[WarpID]->Score[id + WARP_SIZE];
+	C->ScoreCumulative[idx]				  += C->Score[idx];
+	C->ScoreCumulative[idx + CRAFT_COUNT] += C->Score[idx + CRAFT_COUNT];
 }
 //} // End namespace GPGPU

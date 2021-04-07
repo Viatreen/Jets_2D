@@ -10,89 +10,79 @@
 //{
 struct Vec2
 {
-	float X[2 * WARP_SIZE];
-	float Y[2 * WARP_SIZE];
+	float X[2 * CRAFT_COUNT];
+	float Y[2 * CRAFT_COUNT];
 };
 
 struct engine
 {
-	float Angle[2 * WARP_SIZE];
-	float AngularVelocity[2 * WARP_SIZE];
-	float AngularAcceleration[2 * WARP_SIZE];
-	float Thrust[2 * WARP_SIZE];
-	float ThrustNormalized[2 * WARP_SIZE];
-	float ThrustNormalizedTemp[2 * WARP_SIZE];
+	float Angle[2 * CRAFT_COUNT];
+	float AngularVelocity[2 * CRAFT_COUNT];
+	float AngularAcceleration[2 * CRAFT_COUNT];
+	float Thrust[2 * CRAFT_COUNT];
+	float ThrustNormalized[2 * CRAFT_COUNT];
+	float ThrustNormalizedTemp[2 * CRAFT_COUNT];
 };
 
 struct cannon
 {
-	float Angle[2 * WARP_SIZE];
-	float AngularVelocity[2 * WARP_SIZE];
-	float AngularAcceleration[2 * WARP_SIZE];
+	float Angle[2 * CRAFT_COUNT];
+	float AngularVelocity[2 * CRAFT_COUNT];
+	float AngularAcceleration[2 * CRAFT_COUNT];
 };
 
 struct bullet
 {
 	Vec2 Position;
 	Vec2 Velocity;
-	bool Active[2 * WARP_SIZE];
+	bool Active[2 * CRAFT_COUNT];
 };
 
 struct temp
 {
-	float Weights[WARP_SIZE * WEIGHT_COUNT];
-};
-
-struct TempPtrArr
-{
-	temp *Warp[WARP_COUNT];	// This only needs to be fit count
+	float Weights[FIT_COUNT * WEIGHT_COUNT];
 };
 
 struct CraftState
 {
-	float Weights[WARP_SIZE * WEIGHT_COUNT];
+	float Weights[CRAFT_COUNT * WEIGHT_COUNT];
 
-	float Neuron[2 * WARP_SIZE * NEURON_COUNT];
+	float Neuron[2 * CRAFT_COUNT * NEURON_COUNT];
 	Vec2 Position;
 	Vec2 Velocity;
 	Vec2 Acceleration;
-	float Angle[2 * WARP_SIZE];	// Up is 0.f
-	float AngularVelocity[2 * WARP_SIZE];
-	float AngularAcceleration[2 * WARP_SIZE];
+	float Angle[2 * CRAFT_COUNT];	// Up is 0.f
+	float AngularVelocity[2 * CRAFT_COUNT];
+	float AngularAcceleration[2 * CRAFT_COUNT];
 	engine Engine[4];
 	
 	cannon Cannon;							// Up is 0.f
 	bullet Bullet[10];
-	short BulletCounter[2 * WARP_SIZE];		// Number of active bullets
-	short BulletTimer[2 * WARP_SIZE];		// Craft can only shoot a bullet every so often
+	short BulletCounter[2 * CRAFT_COUNT];		// Number of active bullets
+	short BulletTimer[2 * CRAFT_COUNT];		// Craft can only shoot a bullet every so often
 
-	curandState RandState[2 * WARP_SIZE];
-	int Score[2 * WARP_SIZE];
-	int ScoreTime[2 * WARP_SIZE];
-	int ScoreBullet[2 * WARP_SIZE];
-	int ScoreDistance[2 * WARP_SIZE];
+	curandState RandState[2 * CRAFT_COUNT];
+	int Score[2 * CRAFT_COUNT];
+	int ScoreTime[2 * CRAFT_COUNT];
+	int ScoreBullet[2 * CRAFT_COUNT];
+	int ScoreDistance[2 * CRAFT_COUNT];
 	
 	// Tournament Variables
-	int ScoreCumulative[2 * WARP_SIZE];
-	int ScoreTemp[2 * WARP_SIZE];
-	int Place[WARP_SIZE];
-	int ID[WARP_SIZE];
-	int TempID[WARP_SIZE];
+	int ScoreCumulative[2 * CRAFT_COUNT];
+	int ScoreTemp[2 * CRAFT_COUNT];
+	int Place[CRAFT_COUNT];
+	int ID[CRAFT_COUNT];
+	int TempID[CRAFT_COUNT];
 	
-	bool Active[2 * WARP_SIZE];	// Craft becomes inactive when colliding with wall. Other craft still active and able to shoot.
+	bool Active[2 * CRAFT_COUNT];	// Craft becomes inactive when colliding with wall. Other craft still active and able to shoot.
 
 	// For output only
-	float CannonCommandAngle[2 * WARP_SIZE];
-	float CannonStrength[2 * WARP_SIZE];
+	float CannonCommandAngle[2 * CRAFT_COUNT];
+	float CannonStrength[2 * CRAFT_COUNT];
 
 	// TODO: More points for earlier bullet hits
 	// TODO: Make score bars fixed on the window for each side
 	// TODO: Move MatchState parameters to CraftState
-};
-
-struct CraftPtrArr
-{
-	CraftState *Warp[WARP_COUNT];
 };
 
 struct MatchState
@@ -152,11 +142,11 @@ struct state
 
 struct GraphicsObjectPointer
 {
-	float *Fuselage[WARP_COUNT]					= { nullptr };
-	float *Wing[WARP_COUNT]						= { nullptr };
-	float *Cannon[WARP_COUNT]					= { nullptr };
-	float *Engine[WARP_COUNT][4]				= { nullptr };
-	float *ThrustLong[WARP_COUNT][4]			= { nullptr };
-	float *ThrustShort[WARP_COUNT][4]			= { nullptr };
-	float *Bullet[WARP_COUNT][BULLET_COUNT_MAX] = { nullptr };
+	float *Fuselage					= { nullptr };
+	float *Wing						= { nullptr };
+	float *Cannon					= { nullptr };
+	float *Engine[4]				= { nullptr };
+	float *ThrustLong[4]			= { nullptr };
+	float *ThrustShort[4]			= { nullptr };
+	float *Bullet[BULLET_COUNT_MAX]	= { nullptr };
 };

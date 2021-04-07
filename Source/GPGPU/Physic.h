@@ -295,7 +295,7 @@ __device__ void CollisionDetect(CraftState *C, int idx1, int idx2)
 	}	// End check for collision detection
 }	// End CollisionDetect function
 
-__device__ void BulletMechanics(GraphicsObjectPointer Buffer, CraftState *CS, int WarpID, int ID1, int ID2, config *Config)
+__device__ void BulletMechanics(GraphicsObjectPointer Buffer, CraftState *CS, int ID1, int ID2, config *Config)
 {
 	for (int i = 0; i < BULLET_COUNT_MAX; i++)
 	{
@@ -311,7 +311,7 @@ __device__ void BulletMechanics(GraphicsObjectPointer Buffer, CraftState *CS, in
 			{
 				CS->Bullet[i].Active[ID1] = false;
 				CS->BulletCounter[ID1]--;
-				ConcealBullet(Buffer, WarpID, ID1, i);
+				ConcealBullet(Buffer, ID1, i);
 			}
 			else if (pow(CS->Bullet[i].Position.X[ID1] - CS->Position.X[ID2], 2.f)
 				+ pow(CS->Bullet[i].Position.Y[ID1] - CS->Position.Y[ID2], 2.f)
@@ -319,14 +319,14 @@ __device__ void BulletMechanics(GraphicsObjectPointer Buffer, CraftState *CS, in
 			{
 				CS->Bullet[i].Active[ID1] = false;
 				CS->BulletCounter[ID1]--;
-				ConcealBullet(Buffer, WarpID, ID1, i);
+				ConcealBullet(Buffer, ID1, i);
 				CS->ScoreBullet[ID1] += Config->BulletDamage;		// Score increases more than total possible boundary score
 			}
 		}
 	}
 }
 
-__device__ void ShootBullet(CraftState *CS, int WarpID, int ID, GraphicsObjectPointer Buffer)
+__device__ void ShootBullet(CraftState *CS, int ID, GraphicsObjectPointer Buffer)
 {
 	// Check which bullets are avialable to be launched
 	int i = 0;
@@ -341,7 +341,7 @@ __device__ void ShootBullet(CraftState *CS, int WarpID, int ID, GraphicsObjectPo
 	CS->Bullet[i].Velocity.X[ID] = BULLET_VELOCITY_INITIAL * ComponentX;
 	CS->Bullet[i].Velocity.Y[ID] = BULLET_VELOCITY_INITIAL * ComponentY;
 
-	ShowBullet(Buffer, WarpID, ID, i);
+	ShowBullet(Buffer, ID, i);
 
 	CS->BulletTimer[ID]			 = 0;
 	CS->BulletCounter[ID]++;

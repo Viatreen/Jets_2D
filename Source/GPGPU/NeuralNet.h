@@ -13,13 +13,13 @@
 #include "GPGPU/Physic.h"
 
 
-__device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpID, int ID, bool IsOpponent, int OpponentID, CraftState *C_Opponent)
+__device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int ID, bool IsOpponent, int OpponentID, CraftState *C_Opponent)
 {
 	int IdxOpponent;
 	if (IsOpponent)
-		IdxOpponent = ID - WARP_SIZE;
+		IdxOpponent = ID - CRAFT_COUNT;
 	else
-		IdxOpponent = ID + WARP_SIZE;
+		IdxOpponent = ID + CRAFT_COUNT;
 
 #ifdef _DEBUGs
 	if (C->Position.X[ID] != C->Position.X[ID])
@@ -64,10 +64,10 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	}
 
 	for (int i = 0; i < NEURON_COUNT; i++)
-		if (C->Neuron[WARP_SIZE * 2 * i + ID] != C->Neuron[WARP_SIZE * 2 * i + ID])
+		if (C->Neuron[CRAFT_COUNT * 2 * i + ID] != C->Neuron[CRAFT_COUNT * 2 * i + ID])
 		{
-			printf("1 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[WARP_SIZE * 2 * i + ID]);
-			C->Neuron[WARP_SIZE * 2 * i + ID] = 0.f;
+			printf("1 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[CRAFT_COUNT * 2 * i + ID]);
+			C->Neuron[CRAFT_COUNT * 2 * i + ID] = 0.f;
 		}
 #endif
 
@@ -143,8 +143,8 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	// Velocity Input
 	// TODO: Get more creative with this
 	{
-		C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = C->Velocity.X[ID] * SENSORS_VELOCITY_SCALE;
-		C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = C->Velocity.Y[ID] * SENSORS_VELOCITY_SCALE;
+		C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = C->Velocity.X[ID] * SENSORS_VELOCITY_SCALE;
+		C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = C->Velocity.Y[ID] * SENSORS_VELOCITY_SCALE;
 
 		// Versed Velocity
 		float VelocityXSign;
@@ -159,14 +159,14 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 		else
 			VelocityYSign = 1.f;
 
-		C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 2 + ID] = VelocityXSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID]));
-		C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 3 + ID] = VelocityYSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID]));
+		C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 2 + ID] = VelocityXSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID]));
+		C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 3 + ID] = VelocityYSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID]));
 	}
 
 	// Angular Velocity Input
 	// TODO: Get more creative with this
 	{
-		C->Neuron[SENSORS_ANG_VEL_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = C->AngularVelocity[ID] * SENSORS_ANG_VEL_SCALE;
+		C->Neuron[SENSORS_ANG_VEL_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = C->AngularVelocity[ID] * SENSORS_ANG_VEL_SCALE;
 
 		// Versed Angular Velocity
 		float AngVelSign;
@@ -175,7 +175,7 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 		else
 			AngVelSign = 1.f;
 
-		C->Neuron[SENSORS_ANG_VEL_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = AngVelSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID]));
+		C->Neuron[SENSORS_ANG_VEL_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = AngVelSign * (1.f - fabs(C->Neuron[SENSORS_VELOCITY_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID]));
 	}
 
 	// TODO: Add inertial force of acceleration to this
@@ -193,13 +193,13 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 		if (Angle > PI / 2.f || Angle < -PI / 2.f)
 		{
-			C->Neuron[SENSORS_EXTERNAL_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 0.f;
-			C->Neuron[(SENSORS_EXTERNAL_START + SENSORS_EXTERNAL_FORCE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = Magnitude;
+			C->Neuron[SENSORS_EXTERNAL_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 0.f;
+			C->Neuron[(SENSORS_EXTERNAL_START + SENSORS_EXTERNAL_FORCE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = Magnitude;
 		}
 		else
 		{
-			C->Neuron[SENSORS_EXTERNAL_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = Magnitude * __cosf(Angle);
-			C->Neuron[(SENSORS_EXTERNAL_START + SENSORS_EXTERNAL_FORCE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 1 - Magnitude * __cosf(Angle);
+			C->Neuron[SENSORS_EXTERNAL_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = Magnitude * __cosf(Angle);
+			C->Neuron[(SENSORS_EXTERNAL_START + SENSORS_EXTERNAL_FORCE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 1 - Magnitude * __cosf(Angle);
 		}
 	}
 
@@ -218,13 +218,13 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 			if (SensorAngle > PI / 2.f || SensorAngle < -PI / 2.f)
 			{
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * WARP_SIZE * 2 + WARP_SIZE * 2 * j + ID] = 0.f;
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * j + ID] = 1.f;
+				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID] = 0.f;
+				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID] = 1.f;
 			}
 			else
 			{
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * WARP_SIZE * 2 + WARP_SIZE * 2 * j + ID] = __cosf(SensorAngle);
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * j + ID] = 1 - __cosf(SensorAngle);
+				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID] = __cosf(SensorAngle);
+				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID] = 1 - __cosf(SensorAngle);
 			}
 		}
 	}
@@ -244,13 +244,13 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 		if (Angle > PI / 2.f || Angle < -PI / 2.f)
 		{
-			C->Neuron[SENSORS_OPPONENT_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 0.f;
-			C->Neuron[(SENSORS_OPPONENT_ANGLE_START + SENSORS_OPPONENT_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 1.f;
+			C->Neuron[SENSORS_OPPONENT_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 0.f;
+			C->Neuron[(SENSORS_OPPONENT_ANGLE_START + SENSORS_OPPONENT_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 1.f;
 		}
 		else
 		{
-			C->Neuron[SENSORS_OPPONENT_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = __cosf(Angle);
-			C->Neuron[(SENSORS_OPPONENT_ANGLE_START + SENSORS_OPPONENT_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 1 - __cosf(Angle);
+			C->Neuron[SENSORS_OPPONENT_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = __cosf(Angle);
+			C->Neuron[(SENSORS_OPPONENT_ANGLE_START + SENSORS_OPPONENT_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 1 - __cosf(Angle);
 		}
 	}
 
@@ -258,8 +258,8 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	{
 		float Distance = sqrt(pow(C->Position.Y[IdxOpponent] - C->Position.Y[ID], 2.f) + pow(C->Position.X[IdxOpponent] - C->Position.X[ID], 2.f));
 
-		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
-		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
+		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
+		C->Neuron[SENSORS_OPPONENT_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
 	}
 
 	// Bullet Angle
@@ -278,13 +278,13 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 		if (Angle > PI / 2.f || Angle < -PI / 2.f)
 		{
-			C->Neuron[SENSORS_BULLET_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 0.f;
-			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 1.f;
+			C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 0.f;
+			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 1.f;
 		}
 		else
 		{
-			C->Neuron[SENSORS_BULLET_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = __cosf(Angle);
-			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * WARP_SIZE * 2 + WARP_SIZE * 2 * i + ID] = 1 - __cosf(Angle);
+			C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = __cosf(Angle);
+			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID] = 1 - __cosf(Angle);
 		}
 	}
 
@@ -294,13 +294,13 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 		{
 			float Distance = sqrt(pow(C->Bullet->Position.Y[IdxOpponent] - C->Position.Y[ID], 2.f) + pow(C->Bullet->Position.X[IdxOpponent] - C->Position.X[ID], 2.f));
 
-			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
-			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
+			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = Distance * (1.f / (2.f * LIFE_RADIUS));
+			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
 		}
 		else
 		{
-			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = 1.f;
-			C->Neuron[SENSORS_BULLET_DISTANCE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = 0.f;
+			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = 1.f;
+			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = 0.f;
 		}
 	}
 
@@ -312,25 +312,25 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	else
 		sign = 1.f;
 
-	C->Neuron[SENSORS_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 0 + ID] = C->Angle[ID] / PI;
-	C->Neuron[SENSORS_ANGLE_START * WARP_SIZE * 2 + WARP_SIZE * 2 * 1 + ID] = sign * (1.f - fabs(C->Angle[ID] / PI));
+	C->Neuron[SENSORS_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID] = C->Angle[ID] / PI;
+	C->Neuron[SENSORS_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID] = sign * (1.f - fabs(C->Angle[ID] / PI));
 
 	// Memory from Feedback
-	//C->Neuron[WARP_SIZE * 2 * (SENSORS_MEMORY_START + 0) + ID] = C->Neuron[WARP_SIZE * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + 0) + ID];
+	//C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + 0) + ID] = C->Neuron[CRAFT_COUNT * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + 0) + ID];
 
 #pragma unroll
 	//for (int i = 1; i < SENSORS_MEMORY_COUNT; i++)
 	//{
-	//	C->Neuron[WARP_SIZE * 2 * (SENSORS_MEMORY_START + i) + ID] *= float((1 << i) - 1) / float(1 << i);
-	//	C->Neuron[WARP_SIZE * 2 * (SENSORS_MEMORY_START + i) + ID] += C->Neuron[WARP_SIZE * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + i) + ID] / float(1 << i);
+	//	C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + i) + ID] *= float((1 << i) - 1) / float(1 << i);
+	//	C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + i) + ID] += C->Neuron[CRAFT_COUNT * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + i) + ID] / float(1 << i);
 	//}
 
 #ifdef _DEBUGs
 	for (int i = 0; i < NEURON_COUNT; i++)
-		if (C->Neuron[WARP_SIZE * 2 * i + ID] != C->Neuron[WARP_SIZE * 2 * i + ID])
+		if (C->Neuron[CRAFT_COUNT * 2 * i + ID] != C->Neuron[CRAFT_COUNT * 2 * i + ID])
 		{
-			printf("2 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[WARP_SIZE * 2 * i + ID]);
-			C->Neuron[WARP_SIZE * 2 * i + ID] = 0.f;
+			printf("2 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[CRAFT_COUNT * 2 * i + ID]);
+			C->Neuron[CRAFT_COUNT * 2 * i + ID] = 0.f;
 		}
 #endif
 
@@ -339,17 +339,17 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	///////////////////////////////////////////////////////////////////////////
 	//// Hidden Layer and Output
 
-	int WeightID;
+	int CraftID;
 
 	if (IsOpponent)
-		WeightID = OpponentID;
+		CraftID = OpponentID;
 	else
-		WeightID = ID;
+		CraftID = ID;
 
 	// Clear hidden and output neurons for loop addition
 //#pragma unroll
 	for (int i = LAYER_SIZE_INPUT; i < NEURON_COUNT; i++)
-		C->Neuron[WARP_SIZE * 2 * i + ID] = 0.f;
+		C->Neuron[CRAFT_COUNT * 2 * i + ID] = 0.f;
 
 	int LayerCountArray[]	= LAYER_ARRAY;
 	int LayerBeginIndex[]	= LAYER_BEGIN_INDEX;
@@ -363,18 +363,18 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 			for (short int OriginatingNeuron = 0; OriginatingNeuron < LayerCountArray[LayerNumber]; OriginatingNeuron++)		// Loop through originating gm_Neurons for each target neuron
 			{
 				if (IsOpponent)
-					C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID]
-					+= C_Opponent->Weights[(WeightBegin[LayerNumber] + TargetNeuron * LayerCountArray[LayerNumber] + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[LayerBeginIndex[LayerNumber] + OriginatingNeuron * WARP_SIZE * 2 + ID];
+					C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+					+= C_Opponent->Weights[(WeightBegin[LayerNumber] + TargetNeuron * LayerCountArray[LayerNumber] + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[LayerBeginIndex[LayerNumber] + OriginatingNeuron * CRAFT_COUNT * 2 + ID];
 				else
-					C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID]
-					+= C->Weights[(WeightBegin[LayerNumber] + TargetNeuron * LayerCountArray[LayerNumber] + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[LayerBeginIndex[LayerNumber] + OriginatingNeuron * WARP_SIZE * 2 + ID];
+					C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+					+= C->Weights[(WeightBegin[LayerNumber] + TargetNeuron * LayerCountArray[LayerNumber] + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[LayerBeginIndex[LayerNumber] + OriginatingNeuron * CRAFT_COUNT * 2 + ID];
 			}
 
 			// Rectify
-			if (C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID] > 1.f)
-				C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID] = 1.f;
-			else if (C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID] < -1.f)
-				C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * WARP_SIZE * 2 + ID] = -1.f;
+			if (C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID] > 1.f)
+				C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID] = 1.f;
+			else if (C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID] < -1.f)
+				C->Neuron[(LayerBeginIndex[LayerNumber + 1] + TargetNeuron) * CRAFT_COUNT * 2 + ID] = -1.f;
 		}
 	}
 
@@ -386,18 +386,18 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 //		for (short int OriginatingNeuron = 0; OriginatingNeuron < LAYER_SIZE_INPUT; OriginatingNeuron++)		// Loop through originating gm_Neurons for each target neuron
 //		{
 //			if (IsOpponent)
-//				C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID]
-//				+= C_Opponent->Weights[(TargetNeuron * LAYER_SIZE_INPUT + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[OriginatingNeuron * WARP_SIZE * 2 + ID];
+//				C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+//				+= C_Opponent->Weights[(TargetNeuron * LAYER_SIZE_INPUT + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[OriginatingNeuron * CRAFT_COUNT * 2 + ID];
 //			else
-//				C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID]
-//				+= C->Weights[(TargetNeuron * LAYER_SIZE_INPUT + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[OriginatingNeuron * WARP_SIZE * 2 + ID];
+//				C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+//				+= C->Weights[(TargetNeuron * LAYER_SIZE_INPUT + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[OriginatingNeuron * CRAFT_COUNT * 2 + ID];
 //		}
 //
 //		// Rectify
-//		if (C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID] > 1.f)
-//			C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID] = 1.f;
-//		else if (C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID] < -1.f)
-//			C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * WARP_SIZE * 2 + ID] = -1.f;
+//		if (C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID] > 1.f)
+//			C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID] = 1.f;
+//		else if (C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID] < -1.f)
+//			C->Neuron[(LAYER_SIZE_INPUT + TargetNeuron) * CRAFT_COUNT * 2 + ID] = -1.f;
 //	}
 //
 //	// Hidden to output
@@ -407,22 +407,22 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 //		for (short int OriginatingNeuron = 0; OriginatingNeuron < LAYER_SIZE_HIDDEN; OriginatingNeuron++)
 //		{
 //			if (IsOpponent)
-//				C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID]
-//				+= C_Opponent->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + TargetNeuron * LAYER_SIZE_HIDDEN + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[(LAYER_SIZE_INPUT + OriginatingNeuron) * WARP_SIZE * 2 + ID];
+//				C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+//				+= C_Opponent->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + TargetNeuron * LAYER_SIZE_HIDDEN + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[(LAYER_SIZE_INPUT + OriginatingNeuron) * CRAFT_COUNT * 2 + ID];
 //			else
-//			C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID]
-//				+= C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + TargetNeuron * LAYER_SIZE_HIDDEN + OriginatingNeuron) * WARP_SIZE + WeightID] * C->Neuron[(LAYER_SIZE_INPUT + OriginatingNeuron) * WARP_SIZE * 2 + ID];
+//			C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID]
+//				+= C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + TargetNeuron * LAYER_SIZE_HIDDEN + OriginatingNeuron) * CRAFT_COUNT + CraftID] * C->Neuron[(LAYER_SIZE_INPUT + OriginatingNeuron) * CRAFT_COUNT * 2 + ID];
 //		}
 //
 //		// Clamp output neurons [0.0,1.0]
 //		//if (TargetNeuron < LAYER_SIZE_OUTPUT - SENSORS_MEMORY_COUNT)
-//			__saturatef(C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID]);
+//			__saturatef(C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID]);
 //		// Memory neurons can be negative
 //		//else
-//		//	if (C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID] > 1.f)
-//		//		C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID] = 1.f;
-//		//	else if (C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID] < -1.f)
-//		//		C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * WARP_SIZE * 2 + ID] = -1.f;
+//		//	if (C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID] > 1.f)
+//		//		C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID] = 1.f;
+//		//	else if (C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID] < -1.f)
+//		//		C->Neuron[(LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + TargetNeuron) * CRAFT_COUNT * 2 + ID] = -1.f;
 //	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -432,10 +432,10 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 #pragma unroll
 	for (int i = 0; i < 4; i++)	// 4 Engines
 	{
-		float P0	= C->Neuron[(0 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float P1	= C->Neuron[(1 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float P2	= C->Neuron[(2 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float Brake = C->Neuron[(3 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
+		float P0	= C->Neuron[(0 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float P1	= C->Neuron[(1 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float P2	= C->Neuron[(2 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float Brake = C->Neuron[(3 + 4 * i + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
 
 		if (P0 + P1 + P2 == 0.f)
 			P0 += 0.01f;
@@ -489,10 +489,10 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 
 	// Cannon Angle Command
 	{
-		float P0 = C->Neuron[(16 + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float P1 = C->Neuron[(17 + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float P2 = C->Neuron[(18 + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
-		float Brake = C->Neuron[(19 + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
+		float P0	= C->Neuron[(16 + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float P1	= C->Neuron[(17 + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float P2	= C->Neuron[(18 + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
+		float Brake = C->Neuron[(19 + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
 
 		if (P0 + P1 + P2 == 0.f)
 			P0 += 0.01f;
@@ -545,23 +545,23 @@ __device__ void NeuralNet(CraftState *C, GraphicsObjectPointer Buffer, int WarpI
 	}
 
 	// Cannon fire decision
-	if (C->Neuron[(20 + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID] > 0.5f)
+	if (C->Neuron[(20 + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID] > 0.5f)
 		if (C->BulletTimer[ID] > (int)(BULLET_INTERVAL_MIN / TIME_STEP))
 			if (C->BulletCounter[ID] < BULLET_COUNT_MAX)
-				ShootBullet(C, WarpID, ID, Buffer);
+				ShootBullet(C, ID, Buffer);
 	C->BulletTimer[ID]++;
 
 	// Thrust
 #pragma unroll
 	for (int i = 0; i < 4; i++)
-		C->Engine[i].ThrustNormalized[ID] = C->Neuron[((21 + i) + LayerBeginIndex[LAYER_AMOUNT - 1]) * WARP_SIZE * 2 + ID];
+		C->Engine[i].ThrustNormalized[ID] = C->Neuron[((21 + i) + LayerBeginIndex[LAYER_AMOUNT - 1]) * CRAFT_COUNT * 2 + ID];
 
 #ifdef _DEBUGs
 	for (int i = 0; i < NEURON_COUNT; i++)
-		if (C->Neuron[WARP_SIZE * 2 * i + ID] != C->Neuron[WARP_SIZE * 2 * i + ID])
+		if (C->Neuron[CRAFT_COUNT * 2 * i + ID] != C->Neuron[CRAFT_COUNT * 2 * i + ID])
 		{
-			printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[WARP_SIZE * 2 * i + ID]);
-			C->Neuron[WARP_SIZE * 2 * i + ID] = 0.f;
+			printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID, i, C->Neuron[CRAFT_COUNT * 2 * i + ID]);
+			C->Neuron[CRAFT_COUNT * 2 * i + ID] = 0.f;
 		}
 
 	if (C->Position.X[ID] != C->Position.X[ID])

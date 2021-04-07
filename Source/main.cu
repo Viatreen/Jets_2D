@@ -53,7 +53,7 @@ int main()
 	cudaCheck(cudaDeviceSynchronize());
 
 	// Output estimated memory usage for backpropagating advantage function
-	unsigned long long StateSize = (sizeof(CraftState) - sizeof(float) * WARP_SIZE * WEIGHT_COUNT - 2 * WARP_SIZE * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) * WARP_COUNT / 2 / 1024 / 1024;
+	unsigned long long StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
 	std::cout << "Size of state: " << StateSize << " MB" << std::endl;
 
 	unsigned long long AdvantageSize = StateSize * FRAMERATE_PHYSICS * int(TIME_MATCH);
@@ -100,18 +100,21 @@ int main()
 		cudaCheck(cudaDeviceSynchronize());
 
 		int ScoreCumulative[CRAFT_COUNT];
-		for (int i = 0; i < WARP_COUNT; i++)
-			cudaCheck(cudaMemcpy(&ScoreCumulative[WARP_SIZE * i], CraftsDevicePointers.Warp[i]->ScoreCumulative, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
+		cudaCheck(cudaMemcpy(ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
 
-		int ID[WARP_SIZE];
-		cudaCheck(cudaMemcpy(ID, CraftsDevicePointers.Warp[0]->ID, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
+		int ID[CRAFT_COUNT];
+		cudaCheck(cudaMemcpy(ID, Crafts->ID, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
 
-		int Place[WARP_SIZE];
-		cudaCheck(cudaMemcpy(Place, CraftsDevicePointers.Warp[0]->Place, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
+		int Place[CRAFT_COUNT];
+		cudaCheck(cudaMemcpy(Place, Crafts->Place, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
 
-		/*std::cout << "Results" << std::endl;
-		for (int i = 0; i < WARP_SIZE; i++)
-			std::cout << std::setw(3) << i << " ID: " << std::setw(5) << ID[i] << " Score: " << std::setw(4) << ScoreCumulative[i] << " Place: " << std::setw(3) << Place[i] << std::endl;*/
+		float FirstWeight1[CRAFT_COUNT];
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			cudaCheck(cudaMemcpy(&FirstWeight1[i], &Crafts->Weights[i], sizeof(float), cudaMemcpyDeviceToHost));
+
+		float ThirtiethWeight1[CRAFT_COUNT];
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			cudaCheck(cudaMemcpy(&ThirtiethWeight1[i], &Crafts->Weights[29 * WEIGHT_COUNT + i], sizeof(float), cudaMemcpyDeviceToHost));
 		
 		WeightsTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
 		cudaCheck(cudaDeviceSynchronize());
@@ -128,12 +131,31 @@ int main()
 		ScoreTransfer<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());
 
-		for (int i = 0; i < WARP_COUNT; i++)
-			cudaCheck(cudaMemcpy(&ScoreCumulative[WARP_SIZE * i], CraftsDevicePointers.Warp[i]->ScoreCumulative, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
+		int ScoreCumulative2[CRAFT_COUNT];
+		cudaCheck(cudaMemcpy(ScoreCumulative2, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+
+		float FirstWeight2[CRAFT_COUNT];
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			cudaCheck(cudaMemcpy(&FirstWeight2[i], &Crafts->Weights[i], sizeof(float), cudaMemcpyDeviceToHost));
+
+		float ThirtiethWeight2[CRAFT_COUNT];
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			cudaCheck(cudaMemcpy(&ThirtiethWeight2[i], &Crafts->Weights[29 * WEIGHT_COUNT + i], sizeof(float), cudaMemcpyDeviceToHost));
+
+		std::cout << "Results" << std::endl;
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			std::cout << std::setw(3) << i << " ID: " << std::setw(5) << ID[i] 
+			<< " Score: " << std::setw(4) << ScoreCumulative[i] 
+			<< " Place: " << std::setw(3) << Place[i] 
+			<< " 1st Weight: " << std::setw(12) << FirstWeight1[i]
+			<< " 30th Weight: " << std::setw(12) << ThirtiethWeight1[i]
+			<< " Sorted:: Score: " << std::setw(5) << ScoreCumulative2[i]
+			<< " 1st Weight: " << std::setw(12) << FirstWeight2[i]
+			<< " 30th Weight: " << std::setw(12) << ThirtiethWeight2[i] << std::endl;
 
 		/*std::cout << "Score" << std::endl;
-		for (int i = 0; i < WARP_SIZE; i++)
-			std::cout << std::setw(3) << i << " Score: " << std::setw(5) << ScoreCumulative[i] << std::endl;*/
+		for (int i = 0; i < CRAFT_COUNT; i++)
+			std::cout << std::setw(3) << i << " Score: " << std::setw(5) << ScoreCumulative2[i] << std::endl;*/
 
 		ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());

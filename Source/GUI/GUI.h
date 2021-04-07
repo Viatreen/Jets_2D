@@ -39,74 +39,67 @@ struct CraftWeights
 };
 
 // Kernel called from Save()
-__global__ void SaveWeights(CraftWeights *Weights, CraftPtrArr *Crafts, int IndexFrom)
+__global__ void SaveWeights(CraftWeights *Weights, CraftState *Crafts, int IndexFrom)
 {
-	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = IndexFrom / WARP_SIZE;
-	int ID = IndexFrom % WARP_SIZE;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if (idx < WEIGHT_COUNT)
-		Weights->w[idx] = Crafts->Warp[WarpID]->Weights[WARP_SIZE * idx + ID];
+		Weights->w[idx] = Crafts->Weights[CRAFT_COUNT * idx + IndexFrom];
 }
 
 // Kernel called from Load()
-__global__ void LoadWeights(CraftWeights *Weights, CraftPtrArr *Crafts, int IndexTo)
+__global__ void LoadWeights(CraftWeights *Weights, CraftState*Crafts, int IndexTo)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-	int WarpID = IndexTo / WARP_SIZE;
-	int ID = IndexTo % WARP_SIZE;
 
 	if (idx < WEIGHT_COUNT)
-		Crafts->Warp[WarpID]->Weights[WARP_SIZE * idx + ID] = Weights->w[idx];
+		Crafts->Weights[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
 }
 
-__global__ void CopyState(CraftPtrArr *C, state *State, int Index)
+__global__ void CopyState(CraftState* C, state *State, int Index)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-
-	int WarpID = Index / (WARP_SIZE * 2);
-	int ID = Index % (WARP_SIZE * 2);
 
 	if (idx == 0)
 	{
 		//printf("WarpID: %d ID: %d\n", WarpID, ID);
 
-		State->Score = C->Warp[WarpID]->Score[ID];
+		State->Score = C->Score[idx];
 
-		State->ScoreBullet = C->Warp[WarpID]->ScoreBullet[ID];
-		State->ScoreTime = C->Warp[WarpID]->ScoreTime[ID];
-		State->ScoreDistance = C->Warp[WarpID]->ScoreDistance[ID] / 1000;
+		State->ScoreBullet = C->ScoreBullet[idx];
+		State->ScoreTime = C->ScoreTime[idx];
+		State->ScoreDistance = C->ScoreDistance[idx] / 1000;
 
-		State->ScoreCumulative = C->Warp[WarpID]->ScoreCumulative[ID];
+		State->ScoreCumulative = C->ScoreCumulative[idx];
 
-		State->PositionX = C->Warp[WarpID]->Position.X[ID];
-		State->PositionY = C->Warp[WarpID]->Position.Y[ID];
+		State->PositionX = C->Position.X[idx];
+		State->PositionY = C->Position.Y[idx];
 
-		State->VelocityX = C->Warp[WarpID]->Velocity.X[ID];
-		State->VelocityY = C->Warp[WarpID]->Velocity.Y[ID];
+		State->VelocityX = C->Velocity.X[idx];
+		State->VelocityY = C->Velocity.Y[idx];
 
-		State->AccelerationX = C->Warp[WarpID]->Acceleration.X[ID];
-		State->AccelerationY = C->Warp[WarpID]->Acceleration.Y[ID];
+		State->AccelerationX = C->Acceleration.X[idx];
+		State->AccelerationY = C->Acceleration.Y[idx];
 
-		State->Angle = C->Warp[WarpID]->Angle[ID] * 180.f / PI;
-		State->AngularVelocity = C->Warp[WarpID]->AngularVelocity[ID] * 180.f / PI;
-		State->AngularAcceleration = C->Warp[WarpID]->AngularAcceleration[ID] * 180.f / PI;
+		State->Angle = C->Angle[idx] * 180.f / PI;
+		State->AngularVelocity = C->AngularVelocity[idx] * 180.f / PI;
+		State->AngularAcceleration = C->AngularAcceleration[idx] * 180.f / PI;
 
-		State->CannonAngle = C->Warp[WarpID]->Cannon.Angle[ID] * 180.f / PI;
-		State->Active = C->Warp[WarpID]->Active[ID];
+		State->CannonAngle = C->Cannon.Angle[idx] * 180.f / PI;
+		State->Active = C->Active[idx];
 
-		State->CannonCommandAngle = C->Warp[WarpID]->CannonCommandAngle[ID] * 180.f / PI;
-		State->CannonStrength = C->Warp[WarpID]->CannonStrength[ID];
+		State->CannonCommandAngle = C->CannonCommandAngle[idx] * 180.f / PI;
+		State->CannonStrength = C->CannonStrength[idx];
 
 		for (int i = 0; i < NEURON_COUNT; i++)
-			State->Neuron[i] = C->Warp[WarpID]->Neuron[i * WARP_SIZE * 2 + ID];
+			State->Neuron[i] = C->Neuron[i * CRAFT_COUNT * 2 + idx];
 
 		for (int i = 0; i < 4; i++)
 		{
-			State->EngineAngle[i] = C->Warp[WarpID]->Engine[i].Angle[ID] * 180.f / PI;
-			State->EngineAngularVelocity[i] = C->Warp[WarpID]->Engine[i].AngularVelocity[ID] * 180.f / PI;
-			State->EngineAngularAcceleration[i] = C->Warp[WarpID]->Engine[i].AngularAcceleration[ID] * 180.f / PI;
-			State->EngineThrustNormalized[i] = C->Warp[WarpID]->Engine[i].ThrustNormalized[ID];
+			State->EngineAngle[i] = C->Engine[i].Angle[idx] * 180.f / PI;
+			State->EngineAngularVelocity[i] = C->Engine[i].AngularVelocity[idx] * 180.f / PI;
+			State->EngineAngularAcceleration[i] = C->Engine[i].AngularAcceleration[idx] * 180.f / PI;
+			State->EngineThrustNormalized[i] = C->Engine[i].ThrustNormalized[idx];
 		}
 	}
 }
@@ -260,14 +253,11 @@ void SaveCSV()
 
 		int h_ScoreCumulative[CRAFT_COUNT];
 		int h_CraftPlace[CRAFT_COUNT];
-		for (int i = 0; i < WARP_COUNT; i++)
-		{
-			cudaCheck(cudaMemcpy(&h_ScoreCumulative + 32 * i, Crafts->Warp[i]->ScoreCumulative, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
-			cudaCheck(cudaDeviceSynchronize());
+		cudaCheck(cudaMemcpy(&h_ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+		cudaCheck(cudaDeviceSynchronize());
 
-			cudaCheck(cudaMemcpy(h_CraftPlace + 32 * i, Crafts->Warp[i]->Place, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
-			cudaCheck(cudaDeviceSynchronize());
-		}
+		cudaCheck(cudaMemcpy(h_CraftPlace, Crafts->Place, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+		cudaCheck(cudaDeviceSynchronize());
 
 		for (int i = 0; i < CRAFT_COUNT; i++)
 		{
@@ -640,8 +630,7 @@ void RoundEnd()
 	RoundNumber++;
 
 	int ScoreCumulative[CRAFT_COUNT];
-	for (int i = 0; i < WARP_COUNT; i++)
-		cudaCheck(cudaMemcpy(&ScoreCumulative[WARP_SIZE * i], CraftsDevicePointers.Warp[i]->ScoreCumulative, WARP_SIZE * sizeof(int), cudaMemcpyDeviceToHost));
+	cudaCheck(cudaMemcpy(&ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
 
 	/*std::cout << "Score Cumulative:" << std::endl;
 	for (int i = 0; i < CRAFT_COUNT; i++)
@@ -723,7 +712,7 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state *d_State, floa
 	if (PositionNumber == Side)
 		CopyState << <1, 1 >> > (Crafts, d_State, 0);
 	else
-		CopyState << <1, 1 >> > (Crafts, d_State, 0 + WARP_SIZE);
+		CopyState << <1, 1 >> > (Crafts, d_State, 0 + CRAFT_COUNT);
 	cudaCheck(cudaDeviceSynchronize());
 
 	state h_State;
@@ -1034,7 +1023,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			ImGui::Text("Match Progress");
 
 			sprintf(GenericString, "%d/%d", MatchNumber % (OPPONENT_COUNT * 2 * 2) + 1, OPPONENT_COUNT * 2 * 2);
-			float RoundProgressRatio = float(MatchNumber % (OPPONENT_COUNT * 2 * 2)) / OPPONENT_COUNT / 2.f / 2.f + IterationProgressRatio / OPPONENT_COUNT / 2.f / 2.f;
+			float RoundProgressRatio = float(MatchNumber % (OPPONENT_COUNT * 2 * 2)) / (OPPONENT_COUNT * 2.f * 2.f) + IterationProgressRatio / (OPPONENT_COUNT * 2.f * 2.f);
 			ImGui::ProgressBar(RoundProgressRatio, ImVec2(0.f, 0.f), GenericString);
 			ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 			ImGui::Text("Round Progress");
@@ -1122,7 +1111,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Total GPU Mem Size: %d MB", (sizeof(CraftState) * WARP_COUNT + sizeof(MatchState) + sizeof(temp) * WARP_COUNT + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
+			sprintf(GenericString, "Total GPU Mem Size: %d MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Weight Array Size: %d MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
