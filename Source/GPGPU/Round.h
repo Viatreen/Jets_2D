@@ -20,7 +20,7 @@ std::chrono::steady_clock::time_point Timer;
  
 void Round()
 {
-	int OpponentID = rand() % OpponentRankRange;
+	int Opponent_ID_Weights = rand() % OpponentRankRange;
 	float AngleStart;
 
 	for (int Angle = 0; Angle < 2; Angle++)
@@ -60,7 +60,15 @@ void Round()
 						cudaCheck(cudaDeviceSynchronize());
 						
 						GPGPU::CUDA_Map();
-						RunEpoch<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Match, Crafts, d_Buffer, d_Config, OpponentID);
+						cudaCheck(cudaDeviceSynchronize());
+
+						// std::cout << "Match: " << Match << std::endl;
+						// std::cout << "Crafts: " << Crafts << std::endl;
+						// std::cout << "d_Buffer: " << d_Buffer << std::endl;
+						// std::cout << "d_Config: " << d_Config << std::endl;
+						// std::cout << "Opponent_ID_Weights: " << Opponent_ID_Weights << std::endl;
+
+						RunEpoch<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Match, Crafts, d_Buffer, d_Config, Opponent_ID_Weights);
 						cudaCheck(cudaDeviceSynchronize());
 						GPGPU::CUDA_Unmap();
 						
@@ -70,7 +78,7 @@ void Round()
 						Graphics::Draw();
 					}
 
-					Run(OpponentID, PositionNumber, AngleStart);
+					Run(Opponent_ID_Weights, PositionNumber, AngleStart);
 					glfwSwapBuffers(window);
 				}
 			}

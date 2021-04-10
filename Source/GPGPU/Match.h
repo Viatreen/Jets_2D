@@ -17,19 +17,19 @@ __device__ void WeightsMutateAndTransfer(CraftState *C, config *Config, int Sour
 		float Chance = curand_uniform(&C->RandState[SourceIndex]);
 
 		if (Chance < Config->MutationFlipChance)
-			C->Weights[CRAFT_COUNT * i + TargetIndex] = -C->Weights[CRAFT_COUNT * i + SourceIndex];
+			C->Weight[CRAFT_COUNT * i + TargetIndex] = -C->Weight[CRAFT_COUNT * i + SourceIndex];
 		else if (Chance < Config->MutationFlipChance + Config->MutationScaleChance)
-			C->Weights[CRAFT_COUNT * i + TargetIndex]
-			= (1.f - Config->MutationScale + 2.f * Config->MutationScale * curand_uniform(&C->RandState[TargetIndex])) * C->Weights[CRAFT_COUNT * i + SourceIndex];
+			C->Weight[CRAFT_COUNT * i + TargetIndex]
+			= (1.f - Config->MutationScale + 2.f * Config->MutationScale * curand_uniform(&C->RandState[TargetIndex])) * C->Weight[CRAFT_COUNT * i + SourceIndex];
 		else if (Chance < Config->MutationFlipChance + Config->MutationScaleChance + Config->MutationSlideChance)
-			C->Weights[CRAFT_COUNT * i + TargetIndex] = C->Weights[CRAFT_COUNT * i + SourceIndex] + Config->MutationSigma * curand_normal(&C->RandState[SourceIndex]);
+			C->Weight[CRAFT_COUNT * i + TargetIndex] = C->Weight[CRAFT_COUNT * i + SourceIndex] + Config->MutationSigma * curand_normal(&C->RandState[SourceIndex]);
 		else
-			C->Weights[CRAFT_COUNT * i + TargetIndex] = C->Weights[CRAFT_COUNT * i + SourceIndex];
+			C->Weight[CRAFT_COUNT * i + TargetIndex] = C->Weight[CRAFT_COUNT * i + SourceIndex];
 
-		if (C->Weights[CRAFT_COUNT * i + TargetIndex] > Config->WeightMax)
-			C->Weights[CRAFT_COUNT * i + TargetIndex] = Config->WeightMax;
-		if (C->Weights[CRAFT_COUNT * i + TargetIndex] < -Config->WeightMax)
-			C->Weights[CRAFT_COUNT * i + TargetIndex] = -Config->WeightMax;
+		if (C->Weight[CRAFT_COUNT * i + TargetIndex] > Config->WeightMax)
+			C->Weight[CRAFT_COUNT * i + TargetIndex] = Config->WeightMax;
+		if (C->Weight[CRAFT_COUNT * i + TargetIndex] < -Config->WeightMax)
+			C->Weight[CRAFT_COUNT * i + TargetIndex] = -Config->WeightMax;
 	}
 }
 
@@ -66,29 +66,15 @@ __global__ void IDAssign(CraftState *C, config *Config)
 	/*if (idx == 0)
 		printf("Round Number: %d\n", Config->RoundNumber);*/
 
-	C->ID[idx] = (Config->RoundNumber + 1) * FIT_COUNT + idx;		// TODO: Check this
-}
-
-__global__ void IDTempSave(CraftState *C)
-{
-	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-
-	if (C->Place[idx] < FIT_COUNT)
+	if (idx < CRAFT_COUNT - FIT_COUNT)
 	{
-		int PlaceID = C->Place[idx];
-
-		C->TempID[PlaceID] = C->ID[idx];
+		for (int i = 1; i < CRAFT_COUNT / FIT_COUNT; i++)
+			// Round number starts at 1 and is initialized. First round encountered by this function is round 2
+			C->ID[FIT_COUNT + idx] = CRAFT_COUNT + (Config->RoundNumber - 2) * (CRAFT_COUNT - FIT_COUNT) + idx;
 	}
 }
 
-__global__ void IDTransfer(CraftState *C)
-{
-	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-
-	C->ID[idx] = C->TempID[idx];
-}
-
-__global__ void WeightsTempSave(CraftState *C, temp *Temp)	// TODO: Fix this. Higher place is better
+__global__ void WeightsAndIDTempSave(CraftState *C, temp *Temp)	// TODO: Fix this. Higher place is better
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
@@ -97,17 +83,21 @@ __global__ void WeightsTempSave(CraftState *C, temp *Temp)	// TODO: Fix this. Hi
 		int PlaceID = C->Place[idx];
 
 		for (int i = 0; i < WEIGHT_COUNT; i++)
-			Temp->Weights[FIT_COUNT * i + PlaceID] = C->Weights[CRAFT_COUNT * i + idx];
+			Temp->Weight[FIT_COUNT * i + PlaceID] = C->Weight[CRAFT_COUNT * i + idx];
+
+		C->TempID[PlaceID] = C->ID[idx];
 	}
 }
 
 // TODO: Combine transfer and mutate kernels
-__global__ void WeightsTransfer(CraftState *C, temp *Temp)
+__global__ void WeightsAndIDTransfer(CraftState *C, temp *Temp)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 	
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Weights[CRAFT_COUNT * i + idx] = Temp->Weights[FIT_COUNT * i + idx];
+		C->Weight[CRAFT_COUNT * i + idx] = Temp->Weight[FIT_COUNT * i + idx];
+
+	C->ID[idx] = C->TempID[idx];
 }
 
 __global__ void WeightsMutate(CraftState *C, config *Config)
@@ -151,7 +141,7 @@ __global__ void Init(CraftState *C)
 	curand_init(124, idx, 0, &(C->RandState[idx]));
 
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Weights[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
+		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
 
 	//if (idx < CRAFT_COUNT)
 	//{
@@ -160,23 +150,23 @@ __global__ void Init(CraftState *C)
 	//	// Engine 3 Angle = -Engine 0 Angle
 	//	for (int i = 0; i < 3 * LAYER_SIZE_HIDDEN; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = -C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//	// Brake output neuron stays the same
 	//	for (int i = 3 * LAYER_SIZE_INPUT; i < 4 * LAYER_SIZE_INPUT; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  4 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN +  8 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 12 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] =  C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//	// Thrust Neurons neuron stays the same
 	//	for (int i = 0; i < LAYER_SIZE_INPUT; i++)
 	//	{
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 1 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 2 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
-	//		C[WarpID]->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 3 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weights[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 1 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 2 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
+	//		C[WarpID]->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + 3 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx] = C->Weight[(LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + 21 * LAYER_SIZE_HIDDEN + i) * CRAFT_COUNT + idx];
 	//	}
 	//}
 

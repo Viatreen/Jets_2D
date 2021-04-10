@@ -71,12 +71,6 @@ namespace Inputs
 			if (keys[GLFW_KEY_M] & keys[GLFW_KEY_S])	{	h_Config->MutationFlipChance	= 0.0001f;		SyncConfigArray(); }
 			if (keys[GLFW_KEY_W] & keys[GLFW_KEY_M])	{	h_Config->WeightMax				-= 0.1f;		SyncConfigArray(); }
 		}
-
-		// Pass commands to ImGui
-		if (key >= 0 && key < 1024)
-		{
-			ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mode);
-		}
 	}
 
 	void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
@@ -85,9 +79,6 @@ namespace Inputs
 		{
 			Camera.ProcessMouseScroll(yOffset, 1.0 / FRAMES_PER_SECOND);	// TODO: Use actual delta time
 		}
-
-		// Pass commands to ImGui
-		ImGui_ImplGlfw_ScrollCallback(window, xOffset, yOffset);
 	}
 
 	static double lastX;
@@ -106,11 +97,7 @@ namespace Inputs
 		{
 			if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 				Camera.DefaultView();
-
 		}
-
-		// Pass commands to ImGui
-		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 	}
 
 	void DoMovement()

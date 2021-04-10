@@ -14,9 +14,7 @@
 #include "GPGPU/Physic.h"
 #include "GPGPU/State.h"
 
-//namespace GPGPU
-//{
-__global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer *Buffer, config *Config, int OpponentID)
+__global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer *Buffer, config *Config, int Opponent_ID_Weights)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
@@ -25,10 +23,29 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 	{
 		if (Match->ElapsedSteps[idx] % (FRAMERATE_NN_PHYSICS) == 0)
 		{
+			// Trainee neural network
 			if (C->Active[idx])
-				NeuralNet(C, *Buffer, idx,				 false,	0,          &C[0]);	// TODO: Just make weights to read from a float*
+				NeuralNet(C, *Buffer, idx + CRAFT_COUNT, idx, idx);
+			// Opponent neural network
 			if (C->Active[idx + CRAFT_COUNT])
-				NeuralNet(C, *Buffer, idx + CRAFT_COUNT, true,	OpponentID, &C[0]);
+				// Each opponent has their own set of neurons but use the same weights as every other oppenent
+				NeuralNet(C, *Buffer, idx, idx + CRAFT_COUNT, Opponent_ID_Weights);
+
+			if (idx == 1)
+			{
+				printf("Craft %d\n", idx);
+				for (int i = 0; i < LAYER_SIZE_INPUT; i++)
+				{
+					printf("%2.6f ", C->Neuron[2 * CRAFT_COUNT * i + idx]);
+					for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
+						if (i < NEURONS_PER_LAYER)
+							printf("%2.6f ", C->Neuron[2 * CRAFT_COUNT * (i + LAYER_SIZE_INPUT + j * NEURONS_PER_LAYER) + idx]);
+					if (i < LAYER_SIZE_OUTPUT)
+						printf("%2.6f", C->Neuron[2 * CRAFT_COUNT * (i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) + idx]);
+					printf("\n");
+				}
+			}
+			__syncthreads();
 		}
 
 		if (C->Active[idx] )
@@ -87,4 +104,3 @@ __global__ void ScoreCumulativeCalc(CraftState *C)
 	C->ScoreCumulative[idx]				  += C->Score[idx];
 	C->ScoreCumulative[idx + CRAFT_COUNT] += C->Score[idx + CRAFT_COUNT];
 }
-//} // End namespace GPGPU

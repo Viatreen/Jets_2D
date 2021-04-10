@@ -3,7 +3,6 @@
 // Standard Library
 #include <cmath>
 
-#define SMALL_CRAFT_AMOUNT
 #define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
@@ -14,14 +13,14 @@
 
 // Graphics
 #define FRAMES_PER_SECOND					  30
-#define FRAMERATE_NN							30
+#define FRAMERATE_NN						  60
 #define FRAMERATE_PHYSICS					  60
-#define FRAMERATE_NN_PHYSICS					( FRAMERATE_PHYSICS / FRAMERATE_NN)
+#define FRAMERATE_NN_PHYSICS				( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP							( 1.f / float(FRAMERATE_PHYSICS) )	// Divide by a power of 2 for bit manipulation+
 #define TIME_MATCH							  30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE							  32
+#define BLOCK_SIZE							  256
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
@@ -32,12 +31,12 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT							  64 //( 128 * 8 * SM_COUNT  )
+#define CRAFT_COUNT							( 128 * 8 * SM_COUNT  )
 #define FIT_COUNT							( CRAFT_COUNT / 2 )
-// TODO: Fix issue. For now, FIT_COUNT must be half of CRAFT_COUNT
+// FIT_COUNT must be a factor of CRAFT_COUNT
 #define OPPONENT_COUNT						  2
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  32		// TODO: Allow this to be opponent for other warp
+#define OPPONENT_RANK_RANGE_DEFAULT			  8		// TODO: Allow this to be opponent for other warp
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -78,7 +77,7 @@
 #define CANNON_VELOCITY_MAX					  64.f
 #define ENGINE_ANGLE_MAX_IN					( 15.f / 180.f * PI)
 #define ENGINE_INBOARD_ANGLE_MAX_OUT		( 60.f / 180.f * PI)
-#define ENGINE_OUTBOARD_ANGLE_MAX_OUT		( -90.f / 180.f * PI)
+#define ENGINE_OUTBOARD_ANGLE_MAX_OUT		(-90.f / 180.f * PI)
 
 #define THRUST_MAX							( CRAFT_MASS / 2.4f * 9.8f)									// N
 #define THRUST_MIN							  0.25f														// Normalized thrust kgf. Thrust max is 1.f
@@ -158,25 +157,37 @@
 #define SENSORS_MEMORY_COUNT				  0	// From 1/32 seconds to 32 seconds
 #define SENSORS_BIAS_NEURON_COUNT			  1
 
-#define LAYER_AMOUNT						  4		// Input, Hidden, and Output
+
 #define LAYER_SIZE_INPUT					( SENSORS_EDGE_DISTANCE_COUNT * 2 + SENSORS_VELOCITY_COUNT + SENSORS_ANG_VEL_COUNT\
 												+ SENSORS_EXTERNAL_FORCE_COUNT * 2 + SENSORS_ENGINE_ANGLE_COUNT * 4 * 2\
 												 + SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT\
 												 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
 												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
-#define LAYER_SIZE_HIDDEN					  32
+
+#define LAYER_AMOUNT_HIDDEN					  2
+#define NEURONS_PER_LAYER					  16
+#define LAYER_AMOUNT						( 2 + LAYER_AMOUNT_HIDDEN )		// Input, Hidden, and Output
+#define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
+
 #define LAYER_SIZE_OUTPUT					( 25 + SENSORS_MEMORY_COUNT)
-#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }
-#define LAYER_BEGIN_INDEX					{ 0, LAYER_SIZE_INPUT, LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT + 2 * LAYER_SIZE_HIDDEN }
+//#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }
+//#define LAYER_BEGIN_INDEX					{ 0, LAYER_SIZE_INPUT, LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT + 2 * LAYER_SIZE_HIDDEN }
+#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, NEURONS_PER_LAYER, NEURONS_PER_LAYER, LAYER_SIZE_OUTPUT }
 
-#define NEURON_COUNT						( LAYER_SIZE_INPUT + 2 * LAYER_SIZE_HIDDEN + LAYER_SIZE_OUTPUT )							// Sum of layer array
-#define WEIGHT_COUNT						( LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_OUTPUT )		// Number of weights ~4500
-#define WEIGHT_BEGIN_INDEX_ARRAY			{ 0, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN }
+#define NEURON_COUNT						( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER + LAYER_SIZE_OUTPUT )							// Sum of layer array
+#define WEIGHT_COUNT						( LAYER_SIZE_INPUT * NEURONS_PER_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * NEURONS_PER_LAYER * NEURONS_PER_LAYER + NEURONS_PER_LAYER * LAYER_SIZE_OUTPUT )		// Number of weights ~4500
+//#define WEIGHT_BEGIN_INDEX_ARRAY			{ 0, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN }
+#define OUTPUT_LAYER_NEURON_BEGIN_INDEX		( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
-#define WEIGHTS_MULTIPLIER					  0.02f		// Initial weights are random from -1 to 1 times this number. TODO: Study this
+#define WEIGHTS_MULTIPLIER					  1.f		// Initial weights are random from -1 to 1 times this number. TODO: Study this
+
+#define NETWORK_ACTIVATION_SLOPE			  0.01
+#define NETWORK_INVERSE_ACTIVATION_SLOPE	( 1.f / NETWORK_ACTIVATION_SLOPE )
 
 #define SAVE_COUNT_DEFAULT					( CRAFT_COUNT / 2)
+
+#define SHRINK_COEFFICIENT_WEIGHTS			  0.9999f
 
 // Set floating point of neural net to half2 for arch that supports it (Volta)
 // Else, use standard float (32-bit)
@@ -208,11 +219,11 @@ namespace Config_
 // Initial Values
 struct config
 {
-	float MutationFlipChance	= 0.01f;	// Percent chance of each weight flipping sign
+	float MutationFlipChance	= 0.03f;	// Percent chance of each weight flipping sign
 	float MutationScaleChance	= 0.1f;		// Percent chance of each weight mutating		
-	float MutationScale			= 0.1f;		// Percent that each weight could possibly change
-	float MutationSlideChance	= 0.05f;
-	float MutationSigma			= 0.05f;	// Sigma parameter of normal distribution
+	float MutationScale			= 0.2f;		// Percent that each weight could possibly change
+	float MutationSlideChance	= 0.2f;
+	float MutationSigma			= 0.2f;	// Sigma parameter of normal distribution
 	float WeightMax				= 1.f;		// Maximum magnitude of a weight
 	
 	float TimeLimitMatch		= TIME_MATCH;

@@ -36,10 +36,6 @@ namespace Mem
 		cudaCheck(cudaMalloc(&Temp, sizeof(temp)));
 		cudaCheck(cudaDeviceSynchronize());
 		
-		//cudaCheck(cudaMalloc(&WeightsTempDevicePointers.Craft[0], sizeof(temp)));
-		//cudaCheck(cudaMemcpy(&Temp->Craft[0], &WeightsTempDevicePointers.Craft[0], sizeof(TempPtrArr*), cudaMemcpyHostToDevice));	// TODO: Free this
-		//cudaCheck(cudaDeviceSynchronize());
-		
 		h_Config = new config();
 
 		cudaCheck(cudaMalloc(&d_Config, sizeof(config)));

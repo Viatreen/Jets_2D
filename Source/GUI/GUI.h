@@ -44,7 +44,7 @@ __global__ void SaveWeights(CraftWeights *Weights, CraftState *Crafts, int Index
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if (idx < WEIGHT_COUNT)
-		Weights->w[idx] = Crafts->Weights[CRAFT_COUNT * idx + IndexFrom];
+		Weights->w[idx] = Crafts->Weight[CRAFT_COUNT * idx + IndexFrom];
 }
 
 // Kernel called from Load()
@@ -53,7 +53,7 @@ __global__ void LoadWeights(CraftWeights *Weights, CraftState*Crafts, int IndexT
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
 	if (idx < WEIGHT_COUNT)
-		Crafts->Weights[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
+		Crafts->Weight[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
 }
 
 __global__ void CopyState(CraftState* C, state *State, int Index)
@@ -806,7 +806,7 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state *d_State, floa
 		sprintf(GenericString, "                                   Input Hidden Hidden Output");
 		ImGui::Text(GenericString);
 
-		for (int i = 0; i < LAYER_SIZE_INPUT || i < LAYER_SIZE_HIDDEN || i < LAYER_SIZE_OUTPUT; i++)
+		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_LAYER || i < LAYER_SIZE_OUTPUT; i++)
 		{
 			// TODO: Move numbering to GUI setup function
 			if (i < 9)
@@ -833,7 +833,7 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state *d_State, floa
 				strcat(GenericString, NeuronValue);
 			}
 
-			if (i < LAYER_SIZE_HIDDEN)
+			if (i < NEURONS_PER_LAYER)
 			{
 				if (h_State.Neuron[i + LAYER_SIZE_INPUT] < 0.f)
 					sprintf(NeuronValue, " %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT]);
@@ -847,12 +847,12 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state *d_State, floa
 				strcat(GenericString, NeuronValue);
 			}
 
-			if (i < LAYER_SIZE_HIDDEN)
+			if (i < NEURONS_PER_LAYER)
 			{
-				if (h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN] < 0.f)
-					sprintf(NeuronValue, " %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN]);
+				if (h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER] < 0.f)
+					sprintf(NeuronValue, " %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER]);
 				else
-					sprintf(NeuronValue, "  %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN]);
+					sprintf(NeuronValue, "  %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER]);
 				strcat(GenericString, NeuronValue);
 			}
 			else
@@ -863,10 +863,10 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state *d_State, floa
 
 			if (i < LAYER_SIZE_OUTPUT)
 			{
-				if (h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN] < 0.f)
-					sprintf(NeuronValue, "  %1.2f: %s", h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN], NeuronOutputString[i].c_str());
+				if (h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX] < 0.f)
+					sprintf(NeuronValue, "  %1.2f: %s", h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX], NeuronOutputString[i].c_str());
 				else
-					sprintf(NeuronValue, "   %1.2f: %s", h_State.Neuron[i + LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN], NeuronOutputString[i].c_str());
+					sprintf(NeuronValue, "   %1.2f: %s", h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX], NeuronOutputString[i].c_str());
 				strcat(GenericString, NeuronValue);
 			}
 
@@ -1105,7 +1105,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Bullet Damage: %d", h_Config->BulletDamage);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d \tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT);
+			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d \tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_LAYER, LAYER_SIZE_OUTPUT);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
@@ -1240,11 +1240,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 
 				if (SimulateFastFlag)
 				{
-#ifdef _DEBUG
-					h_Config->TimeSpeed = 32;
-#else
 					h_Config->TimeSpeed = h_Config->TimeSpeedFast;
-#endif
 
 					RenderNone = true;
 					RenderAll = false;
@@ -1305,7 +1301,8 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		ImGui::SetNextWindowPos(ImVec2(0, MenuHeight), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(GL::ScreenWidth, ProgressHeight), ImGuiCond_Always);
 
-		ImGui::Begin("High Scores Per Round", &ShowProgress, WindowFlags); // | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+		//ImGuiWindowFlags_HorizontalScrollbar
+		ImGui::Begin("High Scores Per Round", &ShowProgress, WindowFlags | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
 		float *HighScoreCumulativeVecReverseData = static_cast<float *>(HighScoreCumulativeVecReverse.data());
 		ImGui::PlotLines("", HighScoreCumulativeVecReverseData, HighScoreCumulativeVecReverse.size(), 0, "", 0.f,
 			(float)HighScoreCumulativeAllTime, ImVec2(ProgressDataWidth, ProgressHeight - 55.f), 4);

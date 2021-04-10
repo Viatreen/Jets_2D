@@ -40,12 +40,12 @@ struct bullet
 
 struct temp
 {
-	float Weights[FIT_COUNT * WEIGHT_COUNT];
+	float Weight[FIT_COUNT * WEIGHT_COUNT];
 };
 
 struct CraftState
 {
-	float Weights[CRAFT_COUNT * WEIGHT_COUNT];
+	float Weight[CRAFT_COUNT * WEIGHT_COUNT];
 
 	float Neuron[2 * CRAFT_COUNT * NEURON_COUNT];
 	Vec2 Position;
