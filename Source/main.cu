@@ -59,6 +59,8 @@ int main()
 	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 	cudaCheck(cudaDeviceSynchronize());
 
+	std::cout << "Number of crafts: " << CRAFT_COUNT << std::endl;
+	std::cout << "Number of wieghts: " << WEIGHT_COUNT << std::endl;
 	// Output estimated memory usage for backpropagating advantage function
 	unsigned long long StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
 	std::cout << "Size of state: " << StateSize << " MB" << std::endl;
@@ -68,6 +70,9 @@ int main()
 
 	std::cout << "Number of Layers: " << LAYER_AMOUNT << std::endl;
 	std::cout << "Number of Neurons: " << NEURON_COUNT << std::endl;
+	std::cout << "Input neuron amount: " << LAYER_SIZE_INPUT << std::endl;
+	std::cout << "Neurons per layer: " << NEURONS_PER_LAYER << std::endl;
+	std::cout << "Output neuron amount: " << LAYER_SIZE_OUTPUT << std::endl;
 
 	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 

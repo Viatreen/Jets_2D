@@ -30,11 +30,15 @@ __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, i
 	///////////////////////////////////////////////////////////////////////////
 	//// Environment Input to Input Neuron Conversion
 
-	Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
+	for (int i = 0; i < NEURON_COUNT; i++)
+		C->Neuron[2 * CRAFT_COUNT * i + ID_Craft] = 1.f;
+	// TODO: Reinstate
+	//Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
 
 	///////////////////////////////////////////////////////////////////////////
 	//// Neural Net Processing
 
+	// TODO: Change activation back to true
 	Run_Neural_Net(C, true, ID_Craft, ID_Weight);
 
 	////////////////////////////////////////////////////////////////////////////
@@ -349,12 +353,12 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 	//	C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + i) + ID_Craft] += C->Neuron[CRAFT_COUNT * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + i) + ID_Craft] / float(1 << i);
 	//}
 
-	for (int i = 0; i < NEURON_COUNT; i++)
+	/*for (int i = 0; i < NEURON_COUNT; i++)
 		if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
 		{
 			printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
 			C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
-		}
+		}*/
 
 	// TODO: Add opponent and bullet detection
 }
@@ -370,7 +374,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 	{
 		for (unsigned int Output = LAYER_SIZE_INPUT; Output < LAYER_SIZE_INPUT + NEURONS_PER_LAYER; Output++)
 		{
-			unsigned int Weight_Index = Input * LAYER_SIZE_INPUT + Output; // TODO: Investigate. This is never 0
+			unsigned int Weight_Index = Input * NEURONS_PER_LAYER + Output; // TODO: Investigate. This is never 0
 
 			C->Neuron[2 * CRAFT_COUNT * Output + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
 		}
@@ -423,16 +427,16 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 			unsigned int Output_Index = LAYER_SIZE_INPUT + NEURONS_PER_LAYER * NEURONS_PER_LAYER + Output;
 			unsigned int Input_Index = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * NEURONS_PER_LAYER + Input;
 
-			if (ID_Neurons == 0)
+			/*if (ID_Neurons == 0)
 			{
 				printf("Output Index: %d\n", Output_Index);
 				printf("Input Index: %d\n", Input_Index);
-			}
+			}*/
 
 			unsigned int Weight_Index
 				= LAYER_SIZE_INPUT * NEURONS_PER_LAYER
 				+ NEURONS_PER_LAYER * NEURONS_PER_LAYER * (LAYER_AMOUNT_HIDDEN - 1)
-				+ Input * NEURONS_PER_LAYER
+				+ Input * LAYER_SIZE_OUTPUT
 				+ Output;
 
 			C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];

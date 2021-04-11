@@ -143,7 +143,7 @@ __global__ void Init(CraftState* C)
 	curand_init(124, idx, 0, &(C->RandState[idx]));
 
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
+		C->Weight[CRAFT_COUNT * i + idx] = 1.f; // (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;	// TODO: Change back to random
 
 	//if (idx < CRAFT_COUNT)
 	//{

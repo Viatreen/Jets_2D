@@ -1111,7 +1111,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Total GPU Mem Size: %d MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Weight Array Size: %d MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
+			sprintf(GenericString, "Weight Array Size: %ul MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Startup Time: %4.2f Seconds", TimerStartup);

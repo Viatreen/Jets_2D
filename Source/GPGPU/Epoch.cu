@@ -33,23 +33,39 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 				// Each opponent has their own set of neurons but use the same weights as every other oppenent
 				State_Processing(C, Buffer, idx, idx + CRAFT_COUNT, Opponent_ID_Weights);
 
-			/*if (idx == 1)
+			/*if (idx == 0)
 			{
 				printf("Craft %d\n", idx);
+				for (int i = 0; i < 2 * CRAFT_COUNT * NEURON_COUNT; i++)
+				{
+					printf("C->Neuron[%3d]: %46.6f\n", i, C->Neuron[i]);
+				}
+
+				printf("Craft %d\n", idx);
+				for (int i = 0; i < CRAFT_COUNT * WEIGHT_COUNT; i++)
+				{
+					printf("C->Weight[%3d]: %46.6f\n", i, C->Weight[i]);
+				}
+
 				for (int i = 0; i < LAYER_SIZE_INPUT; i++)
 				{
 					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
-					printf("%40.6f ", Value);
-					for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
-						if (i < NEURONS_PER_LAYER)
+					printf("%46.6f ", Value);
+					if (i < NEURONS_PER_LAYER)
+					{
+						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)						
 						{
 							float Value = C->Neuron[2 * CRAFT_COUNT * (i + LAYER_SIZE_INPUT + j * NEURONS_PER_LAYER) + idx];
-							printf("%40.6f ", Value);
+							printf("%46.6f ", Value);
 						}
+					}
 					if (i < LAYER_SIZE_OUTPUT)
 					{
 						float Value = C->Neuron[2 * CRAFT_COUNT * (i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) + idx];
-						printf("%40.6f", Value);
+						if (i >= NEURONS_PER_LAYER)
+							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
+								printf(" ");
+						printf("%46.6f", Value);
 					}
 					printf("\n");
 				}
@@ -80,7 +96,7 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		{
 			ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
 			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreDistance[idx]  / 1000				+ C->ScoreBullet[idx] 				- C->ScoreBullet[idx + CRAFT_COUNT] / 4;
-			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000	+ C->ScoreBullet[idx + CRAFT_COUNT]	- C->ScoreBullet[idx]  / 4;	// Score of opponent does not matter
+			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000	+ C->ScoreBullet[idx + CRAFT_COUNT]	- C->ScoreBullet[idx]  / 4;				 // Score of opponent does not matter
 		}
 	} // End main step iteration for loop 
 

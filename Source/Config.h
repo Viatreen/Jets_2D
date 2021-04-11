@@ -20,7 +20,7 @@
 #define TIME_MATCH							  30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE							  32
+#define BLOCK_SIZE							  1 //32
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
@@ -31,12 +31,12 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT							64 // ( 128 * 8 * SM_COUNT  )
-#define FIT_COUNT							32 // ( CRAFT_COUNT / 2 )	// Must be a factor of CRAFT_COUNT
+#define CRAFT_COUNT							1 // ( 128 * 8 * SM_COUNT  )
+#define FIT_COUNT							1 // ( CRAFT_COUNT / 2 )	// Must be a factor of CRAFT_COUNT
 // FIT_COUNT must be a factor of CRAFT_COUNT
 #define OPPONENT_COUNT						  2
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  8		// Must be equal or less than FIT_COUNT
+#define OPPONENT_RANK_RANGE_DEFAULT			  1		// Must be equal or less than FIT_COUNT
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -164,9 +164,8 @@
 												 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
 												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
-
 #define LAYER_AMOUNT_HIDDEN					  2
-#define NEURONS_PER_LAYER					  16
+#define NEURONS_PER_LAYER					  2
 #define LAYER_AMOUNT						( 2 + LAYER_AMOUNT_HIDDEN )		// Input, Hidden, and Output
 #define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
