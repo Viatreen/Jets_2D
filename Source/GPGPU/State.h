@@ -6,8 +6,6 @@
 // Project Headers
 #include "Config.h"
 
-//namespace GPGPU
-//{
 struct Vec2
 {
 	float X[2 * CRAFT_COUNT];

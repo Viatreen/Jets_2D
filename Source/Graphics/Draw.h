@@ -9,7 +9,9 @@
 #include "Graphics/CircleOfLife.h"
 #include "Graphics/Component.h"
 #include "Graphics/GrSetup.h"
+#include "Graphics/Thrust.h"
 #include "GUI/GUI.h"
+#include "Graphics/Camera.h"
 
 glm::mat4 Projection;
 glm::mat4 View;

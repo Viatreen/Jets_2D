@@ -30,6 +30,7 @@ include_directories(
 include_directories(${OpenglIncludeSubdir})
 
 if (_GLFW_WIN32)
+    add_definitions(-D_GLFW_WIN32)
     list(APPEND glfw_PKG_LIBS "-lgdi32")
 
     if (GLFW_USE_HYBRID_HPG)
@@ -53,7 +54,8 @@ if (WIN32)
     endif()
 endif()
 
-add_definitions(-D_GLFW_USE_CONFIG_H)
+# add_definitions(-D_GLFW_USE_CONFIG_H)
+# add_definitions(-DGLFW_INCLUDE_NONE)
 # add_definitions(-D_DEBUG)
 
 set(sources
@@ -62,6 +64,28 @@ set(sources
 
     # Program
     Source/main.cu
+    Source/Inputs.cu
+    Source/ErrorCheck.cpp
+    Source/Config.cpp
+    Source/GPGPU/NeuralNet.cu
+    Source/GPGPU/Epoch.cu
+    Source/GPGPU/GPSetup.cu
+    Source/GPGPU/MapVertexBuffer.cu
+    Source/GPGPU/Match.cu
+    Source/GPGPU/Physic.cu
+    Source/GPGPU/Round.cu
+    Source/GPGPU/SetVariables.cu
+    Source/GPGPU/Vertices.cu
+    Source/GUI/GUI.cu
+    Source/Graphics/Axis.cpp
+    Source/Graphics/Camera.cpp
+    Source/Graphics/Circle.cu
+    Source/Graphics/CircleOfLife.cu
+    Source/Graphics/Component.cu
+    Source/Graphics/GrSetup.cu
+    Source/Graphics/Thrust.cu
+    Source/GL/GLSetup.cpp
+    Source/GL/Shader.cpp
 
     # Dear ImGUI
     lib/imgui/imgui.cpp
@@ -119,8 +143,8 @@ if (_GLFW_WIN32)
 endif()
 
 if (NOT CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
-    set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++11")
-    set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++11")
+    # set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++11")
+    # set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++11")
 endif()
 
 if (UNIX)
@@ -133,6 +157,7 @@ target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:C>:   >
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>: >
 )
+    add_definitions(-D_GLFW_WIN32)
 endif()
 
 target_compile_options(${CMAKE_PROJECT_NAME}
@@ -140,10 +165,10 @@ target_compile_options(${CMAKE_PROJECT_NAME}
     #PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -G -arch=sm_72 -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored>
 )
 
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _GLFW_USE_CONFIG_H)
+# target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _GLFW_USE_CONFIG_H)
 
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 72)
+set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61) #60 61 62 72) # 61 = GTX 1080 Ti
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES}

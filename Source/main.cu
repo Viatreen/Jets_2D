@@ -12,6 +12,8 @@
 #include <sstream>
 #include <stdlib.h>
 
+#define GLFW_INCLUDE_NONE
+
 // OpenGL
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -33,6 +35,7 @@
 
 // Project Headers
 #include "ErrorCheck.h"
+#include "GPGPU/GPU_Error_Check.h"
 #include "GL/GLSetup.h"
 #include "GPGPU/Round.h"
 #include "GPGPU/GPSetup.h"
@@ -40,6 +43,7 @@
 #include "GPGPU/Match.h"
 #include "GPGPU/State.h"
 #include "GUI/GUI.h"
+#include "Graphics/GrSetup.h"
 
 float PrintWeights[CRAFT_COUNT * WEIGHT_COUNT];
 

@@ -20,7 +20,7 @@
 #define TIME_MATCH							  30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE							  256
+#define BLOCK_SIZE							  32
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
@@ -31,12 +31,12 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT							( 128 * 8 * SM_COUNT  )
-#define FIT_COUNT							( CRAFT_COUNT / 2 )
+#define CRAFT_COUNT							64 // ( 128 * 8 * SM_COUNT  )
+#define FIT_COUNT							32 // ( CRAFT_COUNT / 2 )	// Must be a factor of CRAFT_COUNT
 // FIT_COUNT must be a factor of CRAFT_COUNT
 #define OPPONENT_COUNT						  2
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  8		// TODO: Allow this to be opponent for other warp
+#define OPPONENT_RANK_RANGE_DEFAULT			  8		// Must be equal or less than FIT_COUNT
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -204,16 +204,15 @@
 // #endif
 
 // TODO: Add a few rounds where the unfit are replaced by random NNs
- 
 namespace Config_
 {
 	// Default rendering
-	bool RenderAllDefault	= false;
-	bool RenderOneDefault	= false;
-	bool RenderFitDefault	= true;
-	bool RenderNoneDefault	= false;		// Setting this true defaults fast simulation
+	extern bool RenderAllDefault;
+	extern bool RenderOneDefault;
+	extern bool RenderFitDefault;
+	extern bool RenderNoneDefault;		// Setting this true defaults fast simulation
 	
-	int LayerSizeArray[LAYER_AMOUNT] = LAYER_ARRAY;
+	extern int LayerSizeArray[LAYER_AMOUNT];
 }
 
 // Initial Values
