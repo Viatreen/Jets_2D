@@ -22,7 +22,6 @@ __forceinline__ __device__ void RELU_Activate(float& Neuron)
 		Neuron = (-NETWORK_INVERSE_ACTIVATION_SLOPE + 1.f + Neuron) * NETWORK_ACTIVATION_SLOPE;
 }
 
-// TODO: Change Buffer to pointer
 __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, int ID_Opponent, int ID_Craft, int ID_Weight)
 {
 	// TODO: Break up (input environment to input neuron) and (output neuron to output forces) into separate functions
@@ -30,10 +29,10 @@ __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, i
 	///////////////////////////////////////////////////////////////////////////
 	//// Environment Input to Input Neuron Conversion
 
-	for (int i = 0; i < NEURON_COUNT; i++)
-		C->Neuron[2 * CRAFT_COUNT * i + ID_Craft] = 1.f;
+	// for (int i = 0; i < NEURON_COUNT; i++)
+	// 	C->Neuron[2 * CRAFT_COUNT * i + ID_Craft] = 1.f;
 	// TODO: Reinstate
-	//Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
+	Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
 
 	///////////////////////////////////////////////////////////////////////////
 	//// Neural Net Processing
@@ -424,14 +423,8 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 	{
 		for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
 		{
-			unsigned int Output_Index = LAYER_SIZE_INPUT + NEURONS_PER_LAYER * NEURONS_PER_LAYER + Output;
-			unsigned int Input_Index = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * NEURONS_PER_LAYER + Input;
-
-			/*if (ID_Neurons == 0)
-			{
-				printf("Output Index: %d\n", Output_Index);
-				printf("Input Index: %d\n", Input_Index);
-			}*/
+			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER + Output;
+			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * NEURONS_PER_LAYER + Input;
 
 			unsigned int Weight_Index
 				= LAYER_SIZE_INPUT * NEURONS_PER_LAYER
@@ -450,9 +443,9 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 #pragma unroll
 	for (int i = 0; i < 4; i++)	// 4 Engines
 	{
-		float P0 = C->Neuron[(0 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
-		float P1 = C->Neuron[(1 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
-		float P2 = C->Neuron[(2 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P0	= C->Neuron[(0 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P1	= C->Neuron[(1 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P2	= C->Neuron[(2 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 		float Brake = C->Neuron[(3 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
 		if (P0 + P1 + P2 == 0.f)
@@ -507,9 +500,9 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 
 	// Cannon Angle Command
 	{
-		float P0 = C->Neuron[(16 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
-		float P1 = C->Neuron[(17 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
-		float P2 = C->Neuron[(18 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P0	= C->Neuron[(16 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P1	= C->Neuron[(17 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
+		float P2	= C->Neuron[(18 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 		float Brake = C->Neuron[(19 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
 		if (P0 + P1 + P2 == 0.f)

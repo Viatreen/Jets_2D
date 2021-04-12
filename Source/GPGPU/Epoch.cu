@@ -33,9 +33,9 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 				// Each opponent has their own set of neurons but use the same weights as every other oppenent
 				State_Processing(C, Buffer, idx, idx + CRAFT_COUNT, Opponent_ID_Weights);
 
-			/*if (idx == 0)
+			if (false) //idx == 0)
 			{
-				printf("Craft %d\n", idx);
+				/*printf("Craft %d\n", idx);
 				for (int i = 0; i < 2 * CRAFT_COUNT * NEURON_COUNT; i++)
 				{
 					printf("C->Neuron[%3d]: %46.6f\n", i, C->Neuron[i]);
@@ -45,7 +45,7 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 				for (int i = 0; i < CRAFT_COUNT * WEIGHT_COUNT; i++)
 				{
 					printf("C->Weight[%3d]: %46.6f\n", i, C->Weight[i]);
-				}
+				}*/
 
 				for (int i = 0; i < LAYER_SIZE_INPUT; i++)
 				{
@@ -69,8 +69,9 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 					}
 					printf("\n");
 				}
+				printf("\n");
 			}
-			__syncthreads();*/
+			//__syncthreads();
 		}
 
 		if (C->Active[idx])

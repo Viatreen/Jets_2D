@@ -11,6 +11,7 @@
 // Project Headers
 #include "GPGPU/Vertices.h"
 #include "GPGPU/State.h"
+#include "NeuralNet.h"
 
 __device__ void WeightsMutateAndTransfer(CraftState* C, config* Config, int SourceIndex, int TargetIndex)
 {
@@ -136,6 +137,101 @@ __global__ void ResetScoreCumulative(CraftState* Crafts)
 	Crafts->ScoreCumulative[idx + CRAFT_COUNT] = 0;
 }
 
+__device__ void Shrink_Weights(CraftState* C)
+{
+	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
+
+	for (int i = 0; i < LAYER_SIZE_INPUT; i++)
+	{
+		C->Neuron[2 * CRAFT_COUNT * i + idx] = 1.f;
+	}
+
+	bool Too_Large = true;
+	int Shrink_Count = 0;
+	while (Too_Large)
+	{
+		Run_Neural_Net(C, false, idx, idx);
+
+		float Sum = 0.f;
+		for (int i = 0; i < LAYER_SIZE_OUTPUT; i++)
+		{
+			Sum += abs(C->Neuron[2 * CRAFT_COUNT * ( OUTPUT_LAYER_NEURON_BEGIN_INDEX + i ) + idx]);
+		}
+		if (Sum > float(LAYER_SIZE_OUTPUT))
+		{
+			if (idx == 0)
+			{
+				Shrink_Count++;
+			}
+			for (int i = 0; i < WEIGHT_COUNT; i++)
+			{
+				C->Weight[CRAFT_COUNT * i + idx] *= SHRINK_COEFFICIENT_WEIGHTS;
+			}
+		}
+		else
+		{
+			/*if (idx == 0)
+			{
+				printf("Number of shrink cycles for idx(0): %d\n", Shrink_Count);
+
+				for (int i = 0; i < LAYER_SIZE_INPUT; i++)
+				{
+					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
+					printf("%46.6f ", Value);
+					if (i < NEURONS_PER_LAYER)
+					{
+						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
+						{
+							float Value = C->Neuron[2 * CRAFT_COUNT * ( j * NEURONS_PER_LAYER + LAYER_SIZE_INPUT + i ) + idx];
+							printf("%46.6f ", Value);
+						}
+					}
+					if (i < LAYER_SIZE_OUTPUT)
+					{
+						float Value = C->Neuron[2 * CRAFT_COUNT * ( OUTPUT_LAYER_NEURON_BEGIN_INDEX + i ) + idx];
+						if (i >= NEURONS_PER_LAYER)
+							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
+								printf(" ");
+						printf("%46.6f", Value);
+					}
+					printf("\n");
+				}
+
+				printf("With activation:\n");
+				Run_Neural_Net(C, true, idx, idx);
+				for (int i = 0; i < LAYER_SIZE_INPUT; i++)
+				{
+					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
+					printf("%46.6f ", Value);
+					if (i < NEURONS_PER_LAYER)
+					{
+						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
+						{
+							float Value = C->Neuron[2 * CRAFT_COUNT * (j * NEURONS_PER_LAYER + LAYER_SIZE_INPUT + i) + idx];
+							printf("%46.6f ", Value);
+						}
+					}
+					if (i < LAYER_SIZE_OUTPUT)
+					{
+						float Value = C->Neuron[2 * CRAFT_COUNT * (OUTPUT_LAYER_NEURON_BEGIN_INDEX + i) + idx];
+						if (i >= NEURONS_PER_LAYER)
+							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
+								printf(" ");
+						printf("%46.6f", Value);
+					}
+					printf("\n");
+				}
+
+				printf("\n");
+				printf("First 25 weights:\n");
+				for (int i = 0; i < 25; i++)
+					printf("Weight(%d): %10.6f\n", i, C->Weight[2 * CRAFT_COUNT * i + idx]);
+			}*/
+			Too_Large = false;
+		}
+	}
+}
+
 __global__ void Init(CraftState* C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
@@ -143,7 +239,9 @@ __global__ void Init(CraftState* C)
 	curand_init(124, idx, 0, &(C->RandState[idx]));
 
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Weight[CRAFT_COUNT * i + idx] = 1.f; // (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;	// TODO: Change back to random
+		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f;
+
+	Shrink_Weights(C);
 
 	//if (idx < CRAFT_COUNT)
 	//{

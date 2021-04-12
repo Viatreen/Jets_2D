@@ -20,7 +20,7 @@
 #define TIME_MATCH							  30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE							  1 //32
+#define BLOCK_SIZE							  256
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
@@ -31,12 +31,12 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT							1 // ( 128 * 8 * SM_COUNT  )
-#define FIT_COUNT							1 // ( CRAFT_COUNT / 2 )	// Must be a factor of CRAFT_COUNT
+#define CRAFT_COUNT							( 128 * 8 * SM_COUNT  )
+#define FIT_COUNT							( CRAFT_COUNT / 2 )		// Must be a factor of CRAFT_COUNT
 // FIT_COUNT must be a factor of CRAFT_COUNT
 #define OPPONENT_COUNT						  2
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  1		// Must be equal or less than FIT_COUNT
+#define OPPONENT_RANK_RANGE_DEFAULT			  8		// Must be equal or less than FIT_COUNT
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -165,7 +165,7 @@
 												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
 #define LAYER_AMOUNT_HIDDEN					  2
-#define NEURONS_PER_LAYER					  2
+#define NEURONS_PER_LAYER					  16
 #define LAYER_AMOUNT						( 2 + LAYER_AMOUNT_HIDDEN )		// Input, Hidden, and Output
 #define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
@@ -179,9 +179,7 @@
 //#define WEIGHT_BEGIN_INDEX_ARRAY			{ 0, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN }
 #define OUTPUT_LAYER_NEURON_BEGIN_INDEX		( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
-#define WEIGHTS_MULTIPLIER					  1.f		// Initial weights are random from -1 to 1 times this number. TODO: Study this
-
-#define NETWORK_ACTIVATION_SLOPE			  0.01
+#define NETWORK_ACTIVATION_SLOPE			  0.01f
 #define NETWORK_INVERSE_ACTIVATION_SLOPE	( 1.f / NETWORK_ACTIVATION_SLOPE )
 
 #define SAVE_COUNT_DEFAULT					( CRAFT_COUNT / 2)
@@ -217,11 +215,11 @@ namespace Config_
 // Initial Values
 struct config
 {
-	float MutationFlipChance	= 0.03f;	// Percent chance of each weight flipping sign
-	float MutationScaleChance	= 0.1f;		// Percent chance of each weight mutating		
-	float MutationScale			= 0.2f;		// Percent that each weight could possibly change
-	float MutationSlideChance	= 0.2f;
-	float MutationSigma			= 0.2f;	// Sigma parameter of normal distribution
+	float MutationFlipChance	= 0.01f;	// Percent chance of each weight flipping sign
+	float MutationScaleChance	= 0.05f;		// Percent chance of each weight mutating		
+	float MutationScale			= 0.1f;		// Percent that each weight could possibly change
+	float MutationSlideChance	= 0.08f;
+	float MutationSigma			= 0.08f;	// Sigma parameter of normal distribution
 	float WeightMax				= 1.f;		// Maximum magnitude of a weight
 	
 	float TimeLimitMatch		= TIME_MATCH;

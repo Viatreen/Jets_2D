@@ -10,5 +10,3 @@ __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, i
 __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons, int ID_Weights);
 __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Neurons, int ID_Weights);
 __device__ void Output_Neurons_To_Action(CraftState* C, int ID_Craft, GraphicsObjectPointer* Buffer);
-
-// TODO: Change Buffer to pointer
