@@ -292,10 +292,10 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 	// Bullet Angle
 	// TODO: Figure out something for non-active bullet
 #pragma unroll
+	float BulletAngleAbsolute = atan2(C->Bullet->Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], C->Bullet->Position.X[ID_Opponent] - C->Position.X[ID_Craft]);
+
 	for (int i = 0; i < SENSORS_BULLET_ANGLE_COUNT; i++)
 	{
-		float BulletAngleAbsolute = atan2(C->Bullet->Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], C->Bullet->Position.X[ID_Opponent] - C->Position.X[ID_Craft]);
-
 		float Angle = C->Angle[ID_Craft] - BulletAngleAbsolute + i * (2.f * PI) / SENSORS_BULLET_ANGLE_COUNT + PI / 2.f;
 
 		while (Angle > PI)

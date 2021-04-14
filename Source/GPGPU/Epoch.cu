@@ -75,9 +75,9 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		}
 
 		if (C->Active[idx])
-			Physic(Match, C, idx, Config);
+			Physic(Match, C, Config, false);
 		if (C->Active[idx + CRAFT_COUNT])
-			Physic(Match, C, idx + CRAFT_COUNT, Config);
+			Physic(Match, C, Config, true);
 
 		if (C->Active[idx] )
 			CollisionDetect(C, idx, idx + CRAFT_COUNT);
@@ -96,8 +96,8 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		if (Match->Done[idx])
 		{
 			ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
-			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreDistance[idx]  / 1000.f					+ C->ScoreBullet[idx] 				- C->ScoreBullet[idx + CRAFT_COUNT] / 4.f;
-			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f	+ C->ScoreBullet[idx + CRAFT_COUNT]	- C->ScoreBullet[idx]  / 4.f;				 // Score of opponent does not matter
+			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreFuelEfficiency[idx]		          + C->ScoreDistance[idx]  / 1000.f			     + C->ScoreBullet[idx] 				 - C->ScoreBullet[idx + CRAFT_COUNT] / 4.f;
+			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreFuelEfficiency[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f + C->ScoreBullet[idx + CRAFT_COUNT] - C->ScoreBullet[idx]  / 4.f;				 // Score of opponent does not matter
 		}
 	} // End main step iteration for loop 
 

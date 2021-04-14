@@ -47,9 +47,6 @@ __global__ void RoundAssignPlace(CraftState* Crafts)
 		if (i != idx)
 			if (Crafts->ScoreCumulative[idx] < Crafts->ScoreCumulative[i])
 				Crafts->Place[idx]++;
-
-	if (Crafts->Place[idx] == 0)
-		printf(" First place ID: %6d, Score: %7.2f\n", idx, Crafts->ScoreCumulative[idx] / ( TOURNAMENTS_PER_ROUND * 4) );
 }
 
 __global__ void RoundTieFix(CraftState* Crafts)
@@ -57,10 +54,10 @@ __global__ void RoundTieFix(CraftState* Crafts)
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
 	// Deal with score ties
-	// This function isn't completely thread-safe, but errors are unlikely and will not cause program to fail
-	for (int i = 0; i < CRAFT_COUNT; i++)
+	// This function isn't completely thread-safe, but errors are unlikely and will not cause program to fail and will hardly interfere with learning
+	for (int i = 0; i < CRAFT_COUNT; i++)	// TODO: Lookup: Will parallelism be affected if I use "int i = idx"?
 	{
-		if (i != idx && Crafts->Place[idx] == Crafts->Place[i] && i > idx)
+		if (i > idx && i != idx && Crafts->Place[idx] == Crafts->Place[i] )
 		{
 			for (int j = 0; j < CRAFT_COUNT; j++)
 			{
@@ -72,6 +69,9 @@ __global__ void RoundTieFix(CraftState* Crafts)
 			atomicAdd(&Crafts->Place[idx], 1);			// Only compatible with compute >=6.0
 		}
 	}
+
+	if (Crafts->Place[idx] == 0)
+		printf(" First place ID: %6d, Score: %7.2f\n", idx, Crafts->ScoreCumulative[idx] / (TOURNAMENTS_PER_ROUND * 4));
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -326,6 +326,7 @@ __device__ void Reset(CraftState* Crafts, int idx, GraphicsObjectPointer* Buffer
 
 	Crafts->Score[idx] = 0.f;
 	Crafts->ScoreTime[idx] = 0.f;
+	Crafts->ScoreFuelEfficiency[idx] = 0.f;
 	Crafts->ScoreBullet[idx] = 0.f;
 	Crafts->ScoreDistance[idx] = 0.f;
 	Crafts->Active[idx] = true;

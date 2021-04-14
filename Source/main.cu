@@ -65,7 +65,7 @@ int main()
 	unsigned long long StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
 	std::cout << "Size of state: " << StateSize << " MB" << std::endl;
 
-	unsigned long long AdvantageSize = StateSize * FRAMERATE_PHYSICS * int(TIME_MATCH);
+	//unsigned long long StateHistorySize = StateSize * FRAMERATE_PHYSICS * int(TIME_MATCH);
 	std::cout << "GPU memory required: " << ( sizeof(CraftState) + sizeof(temp) + sizeof(MatchState) ) / 1024 / 1024 << " MB" << std::endl;
 
 	std::cout << "Number of Layers: " << LAYER_AMOUNT << std::endl;

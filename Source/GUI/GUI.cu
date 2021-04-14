@@ -68,9 +68,9 @@ std::chrono::steady_clock::time_point TimerSinceStart = std::chrono::steady_cloc
 int StepNumber = 0;
 int MatchNumber = 0;
 int RoundNumber = 1;
-float HighScore = 0;
+float HighScore = 0.f;
 int IndexHighScore = 0;
-float HighScoreCumulative = 0;
+float HighScoreCumulative = 0.f;
 float HighScoreCumulativeAllTime = 0.f;
 std::vector<float> HighScoreVec;
 std::vector<float> HighScoreVecReverse;
@@ -151,6 +151,7 @@ __global__ void CopyState(CraftState* C, state* State, int Index)
 		State->ScoreBullet = C->ScoreBullet[idx];
 		State->ScoreTime = C->ScoreTime[idx];
 		State->ScoreDistance = C->ScoreDistance[idx] / 1000;
+		State->ScoreFuelEfficiency = C->ScoreFuelEfficiency[idx];
 
 		State->ScoreCumulative = C->ScoreCumulative[idx];
 
@@ -663,7 +664,7 @@ void RoundEnd()
 		ProgressDataWidth = (float)(HighScoreCumulativeVec.size()) / 250.f * (GL::ScreenWidth - 15.f);
 
 	char Title[64];
-	sprintf(Title, "Rnd %d, HS %d", RoundNumber, HighScoreCumulative);
+	sprintf(Title, "Rnd %d, HS %1.0f", RoundNumber, HighScoreCumulative);
 	glfwSetWindowTitle(window, Title);
 }
 
@@ -725,7 +726,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		//TODO: Align spaces
 
 		char GenericCharArray[64];
-		sprintf(GenericCharArray, "Score:                  %7.2f", h_State.ScoreBullet + h_State.ScoreTime + h_State.ScoreDistance);
+		sprintf(GenericCharArray, "Score:                  %7.2f", h_State.ScoreBullet + h_State.ScoreTime + h_State.ScoreDistance + h_State.ScoreFuelEfficiency);
 		ImGui::Text(GenericCharArray);
 
 		sprintf(GenericCharArray, "Score Cumulative:       %7.2f", h_State.ScoreCumulative);
@@ -734,48 +735,48 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		std::string GenericString;
 
 		AddSpaces(GenericString, AngleStart);
-		sprintf(GenericCharArray, "Starting Angle:        %s", GenericString);
+		sprintf(GenericCharArray, "Starting Angle:        %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		std::string GenericString2;
 
 		AddSpaces(GenericString, h_State.PositionX);
 		AddSpaces(GenericString2, h_State.PositionY);
-		sprintf(GenericCharArray, "Position X:     %s  Y: %s", GenericString, GenericString2);
+		sprintf(GenericCharArray, "Position X:     %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.VelocityX);
 		AddSpaces(GenericString2, h_State.VelocityY);
-		sprintf(GenericCharArray, "Velocity X:     %s  Y: %s", GenericString, GenericString2);
+		sprintf(GenericCharArray, "Velocity X:     %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AccelerationX);
 		AddSpaces(GenericString2, h_State.AccelerationY);
-		sprintf(GenericCharArray, "Acceleration X: %s  Y: %s", GenericString, GenericString2);
+		sprintf(GenericCharArray, "Acceleration X: %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.Angle);
-		sprintf(GenericCharArray, "Angle:                 %s", GenericString);
+		sprintf(GenericCharArray, "Angle:                 %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AngularVelocity);
-		sprintf(GenericCharArray, "Angular Velocity:      %s", GenericString);
+		sprintf(GenericCharArray, "Angular Velocity:      %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AngularAcceleration);
-		sprintf(GenericCharArray, "Angular Acceleration:  %s", GenericString);
+		sprintf(GenericCharArray, "Angular Acceleration:  %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonAngle);
-		sprintf(GenericCharArray, "Cannon Angle:          %s", GenericString);
+		sprintf(GenericCharArray, "Cannon Angle:          %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonCommandAngle);
-		sprintf(GenericCharArray, "Command Cannon Angle:  %s", GenericString);
+		sprintf(GenericCharArray, "Command Cannon Angle:  %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonStrength);
-		sprintf(GenericCharArray, "Cannon Rot Strength:   %s", GenericString);
+		sprintf(GenericCharArray, "Cannon Rot Strength:   %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
 		sprintf(GenericCharArray, "Engine:          1    2    3    4");
@@ -972,7 +973,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Match: %d", MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2) + 1);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Current High Score:  %d", HighScoreCumulative);
+			sprintf(GenericString, "Current High Score:  %1.0f", HighScoreCumulative);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "All-Time High Score: %1.0f", HighScoreCumulativeAllTime);
@@ -1089,7 +1090,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Craft Weight: %4.0f N\tEngine Max Thrust: %4.0f N", CRAFT_MASS * 9.8f, THRUST_MAX);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Bullet Damage: %d", h_Config->BulletDamage);
+			sprintf(GenericString, "Bullet Damage: %1.0f", h_Config->BulletDamage);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_LAYER, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);

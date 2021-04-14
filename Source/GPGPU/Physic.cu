@@ -8,8 +8,13 @@
 #include "GPGPU/State.h"
 #include "GPGPU/Vertices.h"
 
-__device__ void Physic(MatchState* Match, CraftState* CS, int IdxCraft, config* Config)
+__device__ void Physic(MatchState* Match, CraftState* CS, config* Config, bool IsOpponent)
 {
+	int IdxCraft = BLOCK_SIZE * blockIdx.x + threadIdx.x;
+
+	if (IsOpponent)
+		IdxCraft += CRAFT_COUNT;
+
 #ifdef _DEBUG
 	if (CS->Position.X[IdxCraft] != CS->Position.X[IdxCraft])
 		printf("Physic - Before- Craft(%d), ES(%d), Position X NaN, %f\n", IdxCraft, Match->ElapsedSteps[IdxCraft], CS->Position.X[IdxCraft]);
@@ -73,6 +78,8 @@ __device__ void Physic(MatchState* Match, CraftState* CS, int IdxCraft, config* 
 		CS->Engine[i].Thrust[IdxCraft] = CS->Engine[i].ThrustNormalized[IdxCraft] * THRUST_MAX;
 
 		CS->Engine[i].ThrustNormalizedTemp[IdxCraft] = CS->Engine[i].ThrustNormalized[IdxCraft];
+
+		CS->ScoreFuelEfficiency[IdxCraft] += ( 1.f - ( CS->Engine[i].ThrustNormalized[IdxCraft] / THRUST_MAX ) ) * 0.25f * 0.4f;	// The less thrust, the more points. Multiply by one fourth to account for 4 engines. Multiply by another fraction to still incentivize airtime
 
 		////////////////////////////////////////////////////////////////////////////////////
 		// Process engine rotation

@@ -64,7 +64,7 @@ struct CraftState
 	float ScoreTime[2 * CRAFT_COUNT];
 	float ScoreBullet[2 * CRAFT_COUNT];
 	float ScoreDistance[2 * CRAFT_COUNT];
-	float ScoreFuelEfficiency[2 * CRAFT_COUNT]
+	float ScoreFuelEfficiency[2 * CRAFT_COUNT];
 	
 	// Tournament Variables
 	float ScoreCumulative[2 * CRAFT_COUNT];
@@ -108,6 +108,7 @@ struct state
 	float ScoreBullet;
 	float ScoreTime;
 	float ScoreDistance;
+	float ScoreFuelEfficiency;
 
 	float ScoreCumulative;
 
