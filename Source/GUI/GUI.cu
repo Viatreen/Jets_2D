@@ -7,6 +7,7 @@
 // Standard Library
 #include <stdlib.h>
 #include <stdio.h>
+#include <cstring>
 #include <string.h>
 #include <sstream>
 #include <fstream>
@@ -275,7 +276,7 @@ void SaveCSV()
 			cudaCheck(cudaMalloc(&d_CraftWeights, sizeof(CraftWeights)));
 			cudaCheck(cudaDeviceSynchronize());
 
-			SaveWeights << <WEIGHT_COUNT / BLOCK_SIZE, BLOCK_SIZE >> > (d_CraftWeights, Crafts, i);
+			SaveWeights<<<WEIGHT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
 			cudaCheck(cudaDeviceSynchronize());
 
 			CraftWeights* h_CraftWeights = new CraftWeights;
@@ -355,7 +356,7 @@ void SaveTopBinary(int CraftCount)
 			cudaCheck(cudaMalloc(&d_CraftWeights, sizeof(CraftWeights)));
 			cudaCheck(cudaDeviceSynchronize());
 
-			SaveWeights << <WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE >> > (d_CraftWeights, Crafts, i);
+			SaveWeights<<<WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
 			cudaCheck(cudaDeviceSynchronize());
 
 			CraftWeights* h_CraftWeights = new CraftWeights;
@@ -480,7 +481,7 @@ void LoadTopBinary2()
 
 		for (int i = 0; i < LoadCraftCount; i++)
 		{
-			LoadWeights << <WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE >> > (&d_CraftWeights[i], Crafts, FIT_COUNT - 1 - i);
+			LoadWeights<<<WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(&d_CraftWeights[i], Crafts, FIT_COUNT - 1 - i);
 			cudaCheck(cudaDeviceSynchronize());
 		}
 
@@ -506,7 +507,8 @@ void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, i
 void NeuronStringAdder(std::vector<std::string>& Vec, std::string Suffix, int Value, int LengthNumber, int LengthString)
 {
 	std::string OutString = std::to_string(Value);
-	// Prefix nubmer with spaces
+	// This function is only run at setup, so don't worry about efficiency
+	// Prefix number with spaces
 	while (OutString.length() < LengthNumber)
 		OutString = " " + OutString;
 
@@ -523,7 +525,7 @@ void Setup()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	const char* glsl_version = "#version 450";
 	ImGui_ImplOpenGL3_Init(glsl_version);
-	io.Fonts->AddFontFromFileTTF("res/fonts/Roboto-Medium.ttf", 16.0f);
+	io.Fonts->AddFontFromFileTTF("res/fonts/Inconsolata-Medium.ttf", 14.0f);
 	ImGui::StyleColorsDark();
 
 	if (RenderAll)
@@ -552,7 +554,7 @@ void Setup()
 
 	GL::Timer = std::chrono::steady_clock::now();
 
-	int TextLength = 28;
+	int TextLength = 25;
 
 	for (int i = 0; i < SENSORS_EDGE_DISTANCE_COUNT; i++)
 		NeuronStringAdder(NeuronInputString, "Edge ", 360 / SENSORS_EDGE_DISTANCE_COUNT * i, 3, TextLength);
@@ -645,7 +647,7 @@ void RoundEnd()
 			IndexHighScore = i;
 		}
 
-	HighScoreCumulative /= OPPONENT_COUNT * 2 * 2;  // Find average
+	HighScoreCumulative /= TOURNAMENTS_PER_ROUND * 2 * 2;  // Find average
 
 	if ((float)HighScoreCumulative > HighScoreCumulativeAllTime)
 		HighScoreCumulativeAllTime = (float)HighScoreCumulative;
@@ -696,29 +698,29 @@ void AddSpaces(std::string& Output, float Input)
 		Output.insert(0, " ");
 }
 
-void StateBar(int OpponentID, int PositionNumber, int Side, state* d_State, float AngleStart)
+void StateBar(bool LeftSide, state* d_State, float AngleStart)
 {
 	char Title[16];
 
-	if (PositionNumber == Side)
+	if (LeftSide)
 		sprintf(Title, "Trainee");
 	else
 		sprintf(Title, "Opponent");
 
-	ImGui::Begin(Title, &ShowStateBar, WindowFlags);
+	ImGui::Begin(Title, &ShowStateBar, WindowFlags | ImGuiWindowFlags_HorizontalScrollbar);
 
 	// TODO: Test opponent craft index
-	if (PositionNumber == Side)
-		CopyState << <1, 1 >> > (Crafts, d_State, 0);
+	if (LeftSide)
+		CopyState<<<1, 1>>>(Crafts, d_State, 0);
 	else
-		CopyState << <1, 1 >> > (Crafts, d_State, 0 + CRAFT_COUNT);
+		CopyState<<<1, 1>>>(Crafts, d_State, 0 + CRAFT_COUNT);
 	cudaCheck(cudaDeviceSynchronize());
 
 	state h_State;
 	cudaCheck(cudaMemcpy(&h_State, d_State, sizeof(state), cudaMemcpyDeviceToHost));
 	cudaCheck(cudaDeviceSynchronize());
 
-	if (ImGui::CollapsingHeader("Physical State")) // , ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Physical State", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		//TODO: Align spaces
 
@@ -773,7 +775,7 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state* d_State, floa
 		ImGui::Text(GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonStrength);
-		sprintf(GenericCharArray, "Cannon Rot Strength:     %s", GenericString);
+		sprintf(GenericCharArray, "Cannon Rot Strength:   %s", GenericString);
 		ImGui::Text(GenericCharArray);
 
 		sprintf(GenericCharArray, "Engine:          1    2    3    4");
@@ -799,10 +801,15 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state* d_State, floa
 		 ImGui::Text(GenericCharArray);*/
 	}
 
-	if (ImGui::CollapsingHeader("Neural Network")) //, ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Neural Network", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		char GenericString[128];
-		sprintf(GenericString, "                                   Input Hidden Hidden Output");
+		char GenericString[256];
+		sprintf(GenericString, "                                Input ");
+		for (int i = 0; i < LAYER_AMOUNT_HIDDEN; i++)
+		{
+			std::strcat(GenericString, "      ");
+		}
+		std::strcat(GenericString, "Output");
 		ImGui::Text(GenericString);
 
 		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_LAYER || i < LAYER_SIZE_OUTPUT; i++)
@@ -832,32 +839,18 @@ void StateBar(int OpponentID, int PositionNumber, int Side, state* d_State, floa
 				strcat(GenericString, NeuronValue);
 			}
 
-			if (i < NEURONS_PER_LAYER)
+			for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 			{
-				if (h_State.Neuron[i + LAYER_SIZE_INPUT] < 0.f)
-					sprintf(NeuronValue, " %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT]);
+				if (i < NEURONS_PER_LAYER)
+				{
+					sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + NEURONS_PER_LAYER * j + i]);
+					strcat(GenericString, NeuronValue);
+				}
 				else
-					sprintf(NeuronValue, "  %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT]);
-				strcat(GenericString, NeuronValue);
-			}
-			else
-			{
-				sprintf(NeuronValue, "      ");
-				strcat(GenericString, NeuronValue);
-			}
-
-			if (i < NEURONS_PER_LAYER)
-			{
-				if (h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER] < 0.f)
-					sprintf(NeuronValue, " %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER]);
-				else
-					sprintf(NeuronValue, "  %1.2f", h_State.Neuron[i + LAYER_SIZE_INPUT + NEURONS_PER_LAYER]);
-				strcat(GenericString, NeuronValue);
-			}
-			else
-			{
-				sprintf(NeuronValue, "      ");
-				strcat(GenericString, NeuronValue);
+				{
+					sprintf(NeuronValue, "      ");
+					strcat(GenericString, NeuronValue);
+				}
 			}
 
 			if (i < LAYER_SIZE_OUTPUT)
@@ -898,13 +891,13 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		ImGui::SetNextWindowPos(ImVec2(0, ProgressHeight + MenuHeight), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(StateBarWidth, GL::ScreenHeight - ProgressHeight - MenuHeight), ImGuiCond_Always);
 
-		StateBar(OpponentID, PositionNumber, 0, d_State, AngleStart);
+		StateBar(true, d_State, AngleStart);
 
 		// Right
 		ImGui::SetNextWindowPos(ImVec2(GL::ScreenWidth - SideBarWidth - StateBarWidth, ProgressHeight + MenuHeight), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(StateBarWidth, GL::ScreenHeight - ProgressHeight - MenuHeight), ImGuiCond_Always);
 
-		StateBar(OpponentID, PositionNumber, 1, d_State, AngleStart);
+		StateBar(false, d_State, AngleStart);
 
 		cudaCheck(cudaFree(d_State));
 		cudaCheck(cudaDeviceSynchronize());
@@ -976,7 +969,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Round: %d", RoundNumber);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Match: %d", MatchNumber % (OPPONENT_COUNT * 2 * 2) + 1);
+			sprintf(GenericString, "Match: %d", MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2) + 1);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Current High Score:  %d", HighScoreCumulative);
@@ -1019,8 +1012,8 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 			ImGui::Text("Match Progress");
 
-			sprintf(GenericString, "%d/%d", MatchNumber % (OPPONENT_COUNT * 2 * 2) + 1, OPPONENT_COUNT * 2 * 2);
-			float RoundProgressRatio = float(MatchNumber % (OPPONENT_COUNT * 2 * 2)) / (OPPONENT_COUNT * 2.f * 2.f) + IterationProgressRatio / (OPPONENT_COUNT * 2.f * 2.f);
+			sprintf(GenericString, "%d/%d", MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2) + 1, TOURNAMENTS_PER_ROUND * 2 * 2);
+			float RoundProgressRatio = float(MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2)) / (TOURNAMENTS_PER_ROUND * 2.f * 2.f) + IterationProgressRatio / (TOURNAMENTS_PER_ROUND * 2.f * 2.f);
 			ImGui::ProgressBar(RoundProgressRatio, ImVec2(0.f, 0.f), GenericString);
 			ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 			ImGui::Text("Round Progress");
@@ -1081,7 +1074,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Craft Count: %d \tFit Count: %d", CRAFT_COUNT, FIT_COUNT);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Opponent Count: %d", OPPONENT_COUNT);
+			sprintf(GenericString, "Opponent Count: %d", TOURNAMENTS_PER_ROUND);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Time Limit: %3.0f Seconds", h_Config->TimeLimitMatch);
@@ -1339,3 +1332,5 @@ void Shutdown()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
+
+// TODO: Add List of all best IDs from each round

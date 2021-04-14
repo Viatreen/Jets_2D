@@ -84,9 +84,10 @@ int main()
 		cudaCheck(cudaDeviceSynchronize());
 
 		// Original Side of the Circle
-		for (int i = 0; i < OPPONENT_COUNT && !glfwWindowShouldClose(window); i++)
+		for (int i = 0; i < TOURNAMENTS_PER_ROUND && !glfwWindowShouldClose(window); i++)
 			Round();
 
+		std::cout << "Round " << RoundNumber;
 		RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());
 

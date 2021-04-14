@@ -12,19 +12,19 @@
 #define LIFE_RADIUS							  15.f 
 
 // Graphics
-#define FRAMES_PER_SECOND					  30
-#define FRAMERATE_NN						  60
-#define FRAMERATE_PHYSICS					  60
+#define FRAMES_PER_SECOND					  64
+#define FRAMERATE_NN						  8
+#define FRAMERATE_PHYSICS					  64
 #define FRAMERATE_NN_PHYSICS				( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP							( 1.f / float(FRAMERATE_PHYSICS) )	// Divide by a power of 2 for bit manipulation+
-#define TIME_MATCH							  30.f  // Seconds
+#define TIME_MATCH							  32.f  // Seconds
 
 // CUDA
 #define BLOCK_SIZE							  256
 
 #ifdef GTX_1080TI							  
 #define SM_COUNT							  28 
-#define TIME_SPEED_FAST_DEFAULT				  128
+#define TIME_SPEED_FAST_DEFAULT				  512
 #else
 #define SM_COUNT							  2
 #define TIME_SPEED_FAST_DEFAULT				  32
@@ -34,9 +34,9 @@
 #define CRAFT_COUNT							( 128 * 8 * SM_COUNT  )
 #define FIT_COUNT							( CRAFT_COUNT / 2 )		// Must be a factor of CRAFT_COUNT
 // FIT_COUNT must be a factor of CRAFT_COUNT
-#define OPPONENT_COUNT						  2
+#define TOURNAMENTS_PER_ROUND				  1
 #define MATCH_COUNT							( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT			  8		// Must be equal or less than FIT_COUNT
+#define OPPONENT_RANK_RANGE_DEFAULT			  128		// Must be equal or less than FIT_COUNT
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y							  0.2f	// CG is this far below graphical center
@@ -164,8 +164,8 @@
 												 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
 												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
-#define LAYER_AMOUNT_HIDDEN					  2
-#define NEURONS_PER_LAYER					  16
+#define LAYER_AMOUNT_HIDDEN					  6
+#define NEURONS_PER_LAYER					  32
 #define LAYER_AMOUNT						( 2 + LAYER_AMOUNT_HIDDEN )		// Input, Hidden, and Output
 #define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
@@ -179,6 +179,7 @@
 //#define WEIGHT_BEGIN_INDEX_ARRAY			{ 0, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN }
 #define OUTPUT_LAYER_NEURON_BEGIN_INDEX		( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )
 
+#define WEIGHTS_MULTIPLIER					  0.25f
 #define NETWORK_ACTIVATION_SLOPE			  0.01f
 #define NETWORK_INVERSE_ACTIVATION_SLOPE	( 1.f / NETWORK_ACTIVATION_SLOPE )
 
@@ -215,8 +216,8 @@ namespace Config_
 // Initial Values
 struct config
 {
-	float MutationFlipChance	= 0.01f;	// Percent chance of each weight flipping sign
-	float MutationScaleChance	= 0.05f;		// Percent chance of each weight mutating		
+	float MutationFlipChance	= 0.005f;	// Percent chance of each weight flipping sign
+	float MutationScaleChance	= 0.08f;	// Percent chance of each weight mutating		
 	float MutationScale			= 0.1f;		// Percent that each weight could possibly change
 	float MutationSlideChance	= 0.08f;
 	float MutationSigma			= 0.08f;	// Sigma parameter of normal distribution

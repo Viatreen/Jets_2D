@@ -131,6 +131,6 @@ void RoundEnd2();
 //bool show_demo_window = true;
 
 void AddSpaces(std::string& Output, float Input);
-void StateBar(int OpponentID, int PositionNumber, int Side, state* d_State, float AngleStart);
+void StateBar(bool LeftSide, state* d_State, float AngleStart);
 void Run(int OpponentID, int PositionNumber, float AngleStart);
 void Shutdown();

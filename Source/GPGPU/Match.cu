@@ -47,6 +47,9 @@ __global__ void RoundAssignPlace(CraftState* Crafts)
 		if (i != idx)
 			if (Crafts->ScoreCumulative[idx] < Crafts->ScoreCumulative[i])
 				Crafts->Place[idx]++;
+
+	if (Crafts->Place[idx] == 0)
+		printf(" First place ID: %6d, Score: %5d\n", idx, Crafts->ScoreCumulative[idx] / ( TOURNAMENTS_PER_ROUND * 4) );
 }
 
 __global__ void RoundTieFix(CraftState* Crafts)
@@ -54,12 +57,21 @@ __global__ void RoundTieFix(CraftState* Crafts)
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
 	// Deal with score ties
+	// This function isn't completely thread-safe, but errors are unlikely and will not cause program to fail
 	for (int i = 0; i < CRAFT_COUNT; i++)
-		if (i != idx)
-			if (Crafts->Place[idx] == Crafts->Place[i])
-				if (i > idx)
-					atomicAdd(&(Crafts->Place[idx]), 1);					// Only compatible with compute >=6.0
-					// TODO: Add one place to all crafts below it
+	{
+		if (i != idx && Crafts->Place[idx] == Crafts->Place[i] && i > idx)
+		{
+			for (int j = 0; j < CRAFT_COUNT; j++)
+			{
+				if (j != idx && j != i && Crafts->Place[j] > Crafts->Place[idx])
+				{
+					atomicAdd(&Crafts->Place[j], 1);	// Only compatible with compute >=6.0
+				}
+			}
+			atomicAdd(&Crafts->Place[idx], 1);			// Only compatible with compute >=6.0
+		}
+	}
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -239,7 +251,7 @@ __global__ void Init(CraftState* C)
 	curand_init(124, idx, 0, &(C->RandState[idx]));
 
 	for (int i = 0; i < WEIGHT_COUNT; i++)
-		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f;
+		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
 
 	Shrink_Weights(C);
 
