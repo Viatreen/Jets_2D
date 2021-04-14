@@ -68,9 +68,9 @@ std::chrono::steady_clock::time_point TimerSinceStart = std::chrono::steady_cloc
 int StepNumber = 0;
 int MatchNumber = 0;
 int RoundNumber = 1;
-int HighScore = 0;
+float HighScore = 0;
 int IndexHighScore = 0;
-int HighScoreCumulative = 0;
+float HighScoreCumulative = 0;
 float HighScoreCumulativeAllTime = 0.f;
 std::vector<float> HighScoreVec;
 std::vector<float> HighScoreVecReverse;
@@ -632,12 +632,12 @@ void RoundEnd()
 {
 	RoundNumber++;
 
-	int ScoreCumulative[CRAFT_COUNT];
-	cudaCheck(cudaMemcpy(&ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+	float ScoreCumulative[CRAFT_COUNT];
+	cudaCheck(cudaMemcpy(&ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));
 
 	/*std::cout << "Score Cumulative:" << std::endl;
 	for (int i = 0; i < CRAFT_COUNT; i++)
-		std::cout << std::setw(3) << i << " " << ScoreCumulative[i] / 8 << std::endl;*/
+		std::cout << std::setw(3) << i << " " << ScoreCumulative[i] / 8.f << std::endl;*/
 
 	HighScoreCumulative = 0;
 	for (int i = 0; i < CRAFT_COUNT; i++)
@@ -647,10 +647,10 @@ void RoundEnd()
 			IndexHighScore = i;
 		}
 
-	HighScoreCumulative /= TOURNAMENTS_PER_ROUND * 2 * 2;  // Find average
+	HighScoreCumulative /= TOURNAMENTS_PER_ROUND * 2.f * 2.f;  // Find average
 
-	if ((float)HighScoreCumulative > HighScoreCumulativeAllTime)
-		HighScoreCumulativeAllTime = (float)HighScoreCumulative;
+	if (HighScoreCumulative > HighScoreCumulativeAllTime)
+		HighScoreCumulativeAllTime = HighScoreCumulative;
 
 	HighScoreCumulativeVec.push_back(HighScoreCumulative);
 	HighScoreCumulativeVecReverse.push_back(0.f);
@@ -725,10 +725,10 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		//TODO: Align spaces
 
 		char GenericCharArray[64];
-		sprintf(GenericCharArray, "Score:                  %d", h_State.ScoreBullet + h_State.ScoreTime + h_State.ScoreDistance);
+		sprintf(GenericCharArray, "Score:                  %7.2f", h_State.ScoreBullet + h_State.ScoreTime + h_State.ScoreDistance);
 		ImGui::Text(GenericCharArray);
 
-		sprintf(GenericCharArray, "Score Cumulative:       %d", h_State.ScoreCumulative);
+		sprintf(GenericCharArray, "Score Cumulative:       %7.2f", h_State.ScoreCumulative);
 		ImGui::Text(GenericCharArray);
 
 		std::string GenericString;

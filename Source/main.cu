@@ -103,8 +103,8 @@ int main()
 		h_Config->RoundNumber = RoundNumber;
 		SyncConfigArray();
 
-		/*int ScoreCumulative[CRAFT_COUNT];
-		cudaCheck(cudaMemcpy(ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+		/*float ScoreCumulative[CRAFT_COUNT];
+		cudaCheck(cudaMemcpy(ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));
 
 		int ID[CRAFT_COUNT];
 		cudaCheck(cudaMemcpy(ID, Crafts->ID, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
@@ -157,8 +157,8 @@ int main()
 		ScoreTransfer<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());
 		
-		int ScoreCumulative2[CRAFT_COUNT];
-		cudaCheck(cudaMemcpy(ScoreCumulative2, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(int), cudaMemcpyDeviceToHost));
+		float ScoreCumulative2[CRAFT_COUNT];
+		cudaCheck(cudaMemcpy(ScoreCumulative2, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));
 
 		float FirstWeight2[CRAFT_COUNT];
 		cudaCheck(cudaMemcpy(&FirstWeight2, &Crafts->Weights, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));

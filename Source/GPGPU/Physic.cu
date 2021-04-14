@@ -109,8 +109,8 @@ __device__ void Physic(MatchState* Match, CraftState* CS, int IdxCraft, config* 
 	}
 	else
 	{
-		CS->ScoreTime[IdxCraft]++;
-		//CS->ScoreDistance[IdxCraft] += int(1000.f * pow((LIFE_RADIUS - Distance) / LIFE_RADIUS, 2.f));
+		CS->ScoreTime[IdxCraft] += 1.f;
+		//CS->ScoreDistance[IdxCraft] += 1000.f * pow((LIFE_RADIUS - Distance) / LIFE_RADIUS, 2.f);
 
 #pragma unroll
 		for (int i = 0; i < 4; i++)
@@ -172,12 +172,12 @@ __device__ void Physic(MatchState* Match, CraftState* CS, int IdxCraft, config* 
 		while (CS->Angle[IdxCraft] > PI)
 		{
 			CS->Angle[IdxCraft] -= 2 * PI;
-			//CS->ScoreTime[IdxCraft] -= 200;
+			//CS->ScoreTime[IdxCraft] -= 200.f;
 		}
 		while (CS->Angle[IdxCraft] < -PI)
 		{
 			CS->Angle[IdxCraft] += 2 * PI;
-			//CS->ScoreTime[IdxCraft] -= 200;
+			//CS->ScoreTime[IdxCraft] -= 200.f;
 		}
 
 		// Canon

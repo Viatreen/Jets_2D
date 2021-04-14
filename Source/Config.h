@@ -232,5 +232,5 @@ struct config
 	int IterationsPerCall		= round(float(TimeSpeed) / TIME_STEP / FRAMES_PER_SECOND);
 	int RoundNumber				= 0;
 
-	int BulletDamage			= (TimeStepLimit / 2);
+	float BulletDamage			= float(TimeStepLimit / 2);
 };

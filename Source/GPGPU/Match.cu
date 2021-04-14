@@ -49,7 +49,7 @@ __global__ void RoundAssignPlace(CraftState* Crafts)
 				Crafts->Place[idx]++;
 
 	if (Crafts->Place[idx] == 0)
-		printf(" First place ID: %6d, Score: %5d\n", idx, Crafts->ScoreCumulative[idx] / ( TOURNAMENTS_PER_ROUND * 4) );
+		printf(" First place ID: %6d, Score: %7.2f\n", idx, Crafts->ScoreCumulative[idx] / ( TOURNAMENTS_PER_ROUND * 4) );
 }
 
 __global__ void RoundTieFix(CraftState* Crafts)
@@ -145,8 +145,8 @@ __global__ void ResetScoreCumulative(CraftState* Crafts)
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
 	// Reset Score Cumulative
-	Crafts->ScoreCumulative[idx] = 0;
-	Crafts->ScoreCumulative[idx + CRAFT_COUNT] = 0;
+	Crafts->ScoreCumulative[idx] = 0.f;
+	Crafts->ScoreCumulative[idx + CRAFT_COUNT] = 0.f;
 }
 
 __device__ void Shrink_Weights(CraftState* C)
@@ -324,10 +324,10 @@ __device__ void Reset(CraftState* Crafts, int idx, GraphicsObjectPointer* Buffer
 		//ConcealBullet(Buffer, idx, i);
 	}
 
-	Crafts->Score[idx] = 0;
-	Crafts->ScoreTime[idx] = 0;
-	Crafts->ScoreBullet[idx] = 0;
-	Crafts->ScoreDistance[idx] = 0;
+	Crafts->Score[idx] = 0.f;
+	Crafts->ScoreTime[idx] = 0.f;
+	Crafts->ScoreBullet[idx] = 0.f;
+	Crafts->ScoreDistance[idx] = 0.f;
 	Crafts->Active[idx] = true;
 
 	for (int i = 0; i < SENSORS_MEMORY_COUNT; i++)

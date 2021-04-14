@@ -60,14 +60,15 @@ struct CraftState
 	short BulletTimer[2 * CRAFT_COUNT];		// Craft can only shoot a bullet every so often
 
 	curandState RandState[2 * CRAFT_COUNT];
-	int Score[2 * CRAFT_COUNT];
-	int ScoreTime[2 * CRAFT_COUNT];
-	int ScoreBullet[2 * CRAFT_COUNT];
-	int ScoreDistance[2 * CRAFT_COUNT];
+	float Score[2 * CRAFT_COUNT];
+	float ScoreTime[2 * CRAFT_COUNT];
+	float ScoreBullet[2 * CRAFT_COUNT];
+	float ScoreDistance[2 * CRAFT_COUNT];
+	float ScoreFuelEfficiency[2 * CRAFT_COUNT]
 	
 	// Tournament Variables
-	int ScoreCumulative[2 * CRAFT_COUNT];
-	int ScoreTemp[2 * CRAFT_COUNT];
+	float ScoreCumulative[2 * CRAFT_COUNT];
+	float ScoreTemp[2 * CRAFT_COUNT];
 	int Place[CRAFT_COUNT];
 	int ID[CRAFT_COUNT];
 	int TempID[CRAFT_COUNT];
@@ -102,13 +103,13 @@ struct MatchState
  
 struct state
 {
-	int Score;
+	float Score;
 
-	int ScoreBullet;
-	int ScoreTime;
-	int ScoreDistance;
+	float ScoreBullet;
+	float ScoreTime;
+	float ScoreDistance;
 
-	int ScoreCumulative;
+	float ScoreCumulative;
 
 	float PositionX;
 	float PositionY;
