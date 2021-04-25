@@ -138,52 +138,45 @@ __global__ void LoadWeights(CraftWeights* Weights, CraftState* Crafts, int Index
 		Crafts->Weight[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
 }
 
-__global__ void CopyState(CraftState* C, state* State, int Index)
+__global__ void CopyState(CraftState* C, state* State, int Index)	// Must only call 1 thread from kernel call
 {
-	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
+	State->Score = C->Score[Index];
 
-	if (idx == 0)
+	State->ScoreBullet = C->ScoreBullet[Index];
+	State->ScoreTime = C->ScoreTime[Index];
+	State->ScoreDistance = C->ScoreDistance[Index] / 1000;
+	State->ScoreFuelEfficiency = C->ScoreFuelEfficiency[Index];
+
+	State->ScoreCumulative = C->ScoreCumulative[Index];
+
+	State->PositionX = C->Position.X[Index];
+	State->PositionY = C->Position.Y[Index];
+
+	State->VelocityX = C->Velocity.X[Index];
+	State->VelocityY = C->Velocity.Y[Index];
+
+	State->AccelerationX = C->Acceleration.X[Index];
+	State->AccelerationY = C->Acceleration.Y[Index];
+
+	State->Angle = C->Angle[Index] * 180.f / PI;
+	State->AngularVelocity = C->AngularVelocity[Index] * 180.f / PI;
+	State->AngularAcceleration = C->AngularAcceleration[Index] * 180.f / PI;
+
+	State->CannonAngle = C->Cannon.Angle[Index] * 180.f / PI;
+	State->Active = C->Active[Index];
+
+	State->CannonCommandAngle = C->CannonCommandAngle[Index] * 180.f / PI;
+	State->CannonStrength = C->CannonStrength[Index];
+
+	for (int i = 0; i < NEURON_COUNT; i++)
+		State->Neuron[i] = C->Neuron[i * CRAFT_COUNT * 2 + Index];
+
+	for (int i = 0; i < 4; i++)
 	{
-		//printf("WarpID: %d ID: %d\n", WarpID, ID);
-
-		State->Score = C->Score[idx];
-
-		State->ScoreBullet = C->ScoreBullet[idx];
-		State->ScoreTime = C->ScoreTime[idx];
-		State->ScoreDistance = C->ScoreDistance[idx] / 1000;
-		State->ScoreFuelEfficiency = C->ScoreFuelEfficiency[idx];
-
-		State->ScoreCumulative = C->ScoreCumulative[idx];
-
-		State->PositionX = C->Position.X[idx];
-		State->PositionY = C->Position.Y[idx];
-
-		State->VelocityX = C->Velocity.X[idx];
-		State->VelocityY = C->Velocity.Y[idx];
-
-		State->AccelerationX = C->Acceleration.X[idx];
-		State->AccelerationY = C->Acceleration.Y[idx];
-
-		State->Angle = C->Angle[idx] * 180.f / PI;
-		State->AngularVelocity = C->AngularVelocity[idx] * 180.f / PI;
-		State->AngularAcceleration = C->AngularAcceleration[idx] * 180.f / PI;
-
-		State->CannonAngle = C->Cannon.Angle[idx] * 180.f / PI;
-		State->Active = C->Active[idx];
-
-		State->CannonCommandAngle = C->CannonCommandAngle[idx] * 180.f / PI;
-		State->CannonStrength = C->CannonStrength[idx];
-
-		for (int i = 0; i < NEURON_COUNT; i++)
-			State->Neuron[i] = C->Neuron[i * CRAFT_COUNT * 2 + idx];
-
-		for (int i = 0; i < 4; i++)
-		{
-			State->EngineAngle[i] = C->Engine[i].Angle[idx] * 180.f / PI;
-			State->EngineAngularVelocity[i] = C->Engine[i].AngularVelocity[idx] * 180.f / PI;
-			State->EngineAngularAcceleration[i] = C->Engine[i].AngularAcceleration[idx] * 180.f / PI;
-			State->EngineThrustNormalized[i] = C->Engine[i].ThrustNormalized[idx];
-		}
+		State->EngineAngle[i] = C->Engine[i].Angle[Index] * 180.f / PI;
+		State->EngineAngularVelocity[i] = C->Engine[i].AngularVelocity[Index] * 180.f / PI;
+		State->EngineAngularAcceleration[i] = C->Engine[i].AngularAcceleration[Index] * 180.f / PI;
+		State->EngineThrustNormalized[i] = C->Engine[i].ThrustNormalized[Index];
 	}
 }
 
@@ -288,11 +281,9 @@ void SaveCSV()
 
 			for (int j = 0; j < WEIGHT_COUNT - 1; j++)
 			{
-				CraftString.fixed;
 				CraftString << h_CraftWeights->w[j] << ",";
 			}
 
-			CraftString.fixed;
 			CraftString << h_CraftWeights->w[WEIGHT_COUNT - 1] << "\n";
 
 			delete h_CraftWeights;
@@ -334,9 +325,6 @@ void SaveTopBinary(int CraftCount)
 
 	if (!File)
 	{
-		char ErrorMessage[512];
-
-		ErrorMessage[0] = '\0';
 		perror("The following error occurred");
 
 		std::cout << "Unable to save crafts file" << std::endl;
@@ -691,8 +679,6 @@ void AddSpaces(std::string& Output, float Input)
 {
 	Output = std::to_string(Input);
 
-	size_t beginning = 0;
-
 	if (Input > 0.f)
 		Output.insert(0, " ");
 	if (Input < 10.f && Input > -10.f)
@@ -779,7 +765,19 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		sprintf(GenericCharArray, "Cannon Rot Strength:   %s", GenericString.c_str());
 		ImGui::Text(GenericCharArray);
 
-		sprintf(GenericCharArray, "Engine:          1    2    3    4");
+		sprintf(GenericCharArray, "Engine:           1       2       3       4");
+		ImGui::Text(GenericCharArray);
+
+		sprintf(GenericCharArray, "Angle:          %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngle[0], h_State.EngineAngle[1], h_State.EngineAngle[2], h_State.EngineAngle[3]);
+		ImGui::Text(GenericCharArray);
+
+		sprintf(GenericCharArray, "Angle Vel:      %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngularVelocity[0], h_State.EngineAngularVelocity[1], h_State.EngineAngularVelocity[2], h_State.EngineAngularVelocity[3]);
+		ImGui::Text(GenericCharArray);
+
+		sprintf(GenericCharArray, "Angle Acc:      %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngularAcceleration[0], h_State.EngineAngularAcceleration[1], h_State.EngineAngularAcceleration[2], h_State.EngineAngularAcceleration[3]);
+		ImGui::Text(GenericCharArray);
+
+		sprintf(GenericCharArray, "Thrust Norm:    %7.2f %7.2f %7.2f %7.2f", h_State.EngineThrustNormalized[0], h_State.EngineThrustNormalized[1], h_State.EngineThrustNormalized[2], h_State.EngineThrustNormalized[3]);
 		ImGui::Text(GenericCharArray);
 
 		/* std::string GenericString3;
@@ -1099,10 +1097,10 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Total GPU Mem Size: %d MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
+			sprintf(GenericString, "Total GPU Mem Size: %I64u MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Weight Array Size: %u MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
+			sprintf(GenericString, "Weight Array Size: %I64u MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Startup Time: %4.2f Seconds", TimerStartup);

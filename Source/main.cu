@@ -92,11 +92,14 @@ int main()
 		cudaCheck(cudaDeviceSynchronize());
 
 		// TODO: Build 1 kernel from these
-		for (int i = 0; i < 10; i++)
-		{
-			RoundTieFix<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-			cudaCheck(cudaDeviceSynchronize());
-		}
+		//for (int i = 0; i < 10; i++)
+		//{
+		//	RoundTieFix<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+		//	cudaCheck(cudaDeviceSynchronize());
+		//}
+
+		RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+		cudaCheck(cudaDeviceSynchronize());
 		
 		RoundEnd();
 

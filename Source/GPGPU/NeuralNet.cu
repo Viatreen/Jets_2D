@@ -245,13 +245,19 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 
 			if (SensorAngle > PI / 2.f || SensorAngle < -PI / 2.f)
 			{
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 0.f;
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 1.f;
+				//.C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 0.f;
+				//C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 1.f;
+
+				C->Neuron[2 * CRAFT_COUNT * (SENSORS_ENGINE_ANGLE_START + 2 * SENSORS_ENGINE_ANGLE_COUNT * i + j) + ID_Craft] = 0.f;
+				C->Neuron[2 * CRAFT_COUNT * (SENSORS_ENGINE_ANGLE_START + 2 * SENSORS_ENGINE_ANGLE_COUNT * i + j + SENSORS_ENGINE_ANGLE_COUNT) + ID_Craft] = 1.f;
 			}
 			else
 			{
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = __cosf(SensorAngle);
-				C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 1 - __cosf(SensorAngle);
+				// C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = __cosf(SensorAngle);
+				// C->Neuron[(6 * i + SENSORS_ENGINE_ANGLE_START + SENSORS_ENGINE_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * j + ID_Craft] = 1 - __cosf(SensorAngle);
+
+				C->Neuron[2 * CRAFT_COUNT * (SENSORS_ENGINE_ANGLE_START + 2 * SENSORS_ENGINE_ANGLE_COUNT * i + j) + ID_Craft] = __cosf(SensorAngle);
+				C->Neuron[2 * CRAFT_COUNT * (SENSORS_ENGINE_ANGLE_START + 2 * SENSORS_ENGINE_ANGLE_COUNT * i + j + SENSORS_ENGINE_ANGLE_COUNT) + ID_Craft] = 1 - __cosf(SensorAngle);
 			}
 		}
 	}
@@ -290,36 +296,44 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 	}
 
 	// Bullet Angle
-	// TODO: Figure out something for non-active bullet
+	// TODO: Figure out something for bullets that aren't in index 0
 #pragma unroll
-	float BulletAngleAbsolute = atan2(C->Bullet->Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], C->Bullet->Position.X[ID_Opponent] - C->Position.X[ID_Craft]);
+	float BulletAngleAbsolute = atan2(C->Bullet[0].Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], C->Bullet[0].Position.X[ID_Opponent] - C->Position.X[ID_Craft]);
 
 	for (int i = 0; i < SENSORS_BULLET_ANGLE_COUNT; i++)
 	{
-		float Angle = C->Angle[ID_Craft] - BulletAngleAbsolute + i * (2.f * PI) / SENSORS_BULLET_ANGLE_COUNT + PI / 2.f;
-
-		while (Angle > PI)
-			Angle -= 2.f * PI;
-		while (Angle < -PI)
-			Angle += 2.f * PI;
-
-		if (Angle > PI / 2.f || Angle < -PI / 2.f)
+		if (C->BulletCounter[ID_Opponent] > 0)
 		{
-			C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
-			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 1.f;
+			float Angle = C->Angle[ID_Craft] - BulletAngleAbsolute + i * (2.f * PI) / SENSORS_BULLET_ANGLE_COUNT + PI / 2.f;
+
+			while (Angle > PI)
+				Angle -= 2.f * PI;
+			while (Angle < -PI)
+				Angle += 2.f * PI;
+
+			if (Angle > PI / 2.f || Angle < -PI / 2.f)
+			{
+				C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
+				C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 1.f;
+			}
+			else
+			{
+				C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = __cosf(Angle);
+				C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 1 - __cosf(Angle);
+			}
 		}
 		else
 		{
-			C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = __cosf(Angle);
-			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 1 - __cosf(Angle);
+			C->Neuron[SENSORS_BULLET_ANGLE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
+			C->Neuron[(SENSORS_BULLET_ANGLE_START + SENSORS_BULLET_ANGLE_COUNT) * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * i + ID_Craft] = 1.f;
 		}
 	}
 
 	// Bullet Distance
 	{
-		if (C->Bullet->Active[ID_Opponent])
+		if (C->Bullet[0].Active[ID_Opponent])
 		{
-			float Distance = sqrt(pow(C->Bullet->Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], 2.f) + pow(C->Bullet->Position.X[ID_Opponent] - C->Position.X[ID_Craft], 2.f));
+			float Distance = sqrt(pow(C->Bullet[0].Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], 2.f) + pow(C->Bullet[0].Position.X[ID_Opponent] - C->Position.X[ID_Craft], 2.f));
 
 			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 0 + ID_Craft] = Distance * (1.f / (2.f * LIFE_RADIUS));
 			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID_Craft] = 1.f - Distance * (1.f / (2.f * LIFE_RADIUS));
@@ -330,6 +344,7 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 			C->Neuron[SENSORS_BULLET_DISTANCE_START * CRAFT_COUNT * 2 + CRAFT_COUNT * 2 * 1 + ID_Craft] = 0.f;
 		}
 	}
+
 
 	// Angle
 	// TODO: Move to right above angular velocity
@@ -495,6 +510,11 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 				C->Engine[i].AngularAcceleration[ID_Craft] = -AngleSign * ENGINE_ANGULAR_ACCEL * Strength;
 			else
 				C->Engine[i].AngularAcceleration[ID_Craft] = AngleSign * ENGINE_ANGULAR_ACCEL * Strength;
+
+			if (C->Engine[i].AngularAcceleration[ID_Craft] > ENGINE_ANGULAR_ACCEL)
+				C->Engine[i].AngularAcceleration[ID_Craft] = ENGINE_ANGULAR_ACCEL;
+			else if (C->Engine[i].AngularAcceleration[ID_Craft] < -ENGINE_ANGULAR_ACCEL)
+				C->Engine[i].AngularAcceleration[ID_Craft] = -ENGINE_ANGULAR_ACCEL;
 		}
 	}
 
@@ -550,6 +570,11 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 				C->Cannon.AngularAcceleration[ID_Craft] = -AngleSign * CANNON_ANGULAR_ACCEL * Strength;
 			else
 				C->Cannon.AngularAcceleration[ID_Craft] = AngleSign * CANNON_ANGULAR_ACCEL * Strength;
+
+			if (C->Cannon.AngularAcceleration[ID_Craft] > CANNON_MAX_ANGULAR_ACCEL)
+				C->Cannon.AngularAcceleration[ID_Craft] = CANNON_MAX_ANGULAR_ACCEL;
+			else if (C->Cannon.AngularAcceleration[ID_Craft] < -CANNON_MAX_ANGULAR_ACCEL)
+				C->Cannon.AngularAcceleration[ID_Craft] = -CANNON_MAX_ANGULAR_ACCEL;
 		}
 
 		// TODO: Evaluate

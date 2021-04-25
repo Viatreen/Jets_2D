@@ -79,7 +79,7 @@ __device__ void Physic(MatchState* Match, CraftState* CS, config* Config, bool I
 
 		CS->Engine[i].ThrustNormalizedTemp[IdxCraft] = CS->Engine[i].ThrustNormalized[IdxCraft];
 
-		CS->ScoreFuelEfficiency[IdxCraft] += ( 1.f - ( CS->Engine[i].ThrustNormalized[IdxCraft] / THRUST_MAX ) ) * 0.25f * 0.4f;	// The less thrust, the more points. Multiply by one fourth to account for 4 engines. Multiply by another fraction to still incentivize airtime
+		CS->ScoreFuelEfficiency[IdxCraft] += ( 1.f - ( CS->Engine[i].ThrustNormalized[IdxCraft] ) ) * 0.25f * 0.1f;	// The less thrust, the more points. Multiply by one fourth to account for 4 engines. Multiply by another fraction to still incentivize airtime
 
 		////////////////////////////////////////////////////////////////////////////////////
 		// Process engine rotation
@@ -91,7 +91,6 @@ __device__ void Physic(MatchState* Match, CraftState* CS, config* Config, bool I
 	CS->Acceleration.X[IdxCraft] = 0.f;
 	CS->Acceleration.Y[IdxCraft] = 0.f;
 
-	// TODO: Make this more efficient by removing loop
 #pragma unroll
 	for (int i = 0; i < 4; i++)
 	{
@@ -333,20 +332,30 @@ __device__ void BulletMechanics(GraphicsObjectPointer* Buffer, CraftState* CS, i
 __device__ void ShootBullet(CraftState* CS, int ID, GraphicsObjectPointer* Buffer)
 {
 	// Check which bullets are avialable to be launched
-	int i = 0;
-	while (CS->Bullet[i].Active[ID]) { i++; }
-	CS->Bullet[i].Active[ID] = true;
+	if (CS->BulletCounter[ID] < BULLET_COUNT_MAX)
+	{
+		for (int i = 0; i < BULLET_COUNT_MAX; i++)
+		{
+			if (CS->Bullet[i].Active[ID] == false)
+			{
+				CS->Bullet[i].Active[ID] = true;
 
-	float ComponentX = __cosf(CS->Angle[ID] + CS->Cannon.Angle[ID] + PI / 2);
-	float ComponentY = __sinf(CS->Angle[ID] + CS->Cannon.Angle[ID] + PI / 2);
-	CS->Bullet[i].Position.X[ID] = (FUSELAGE_RADIUS + 3 * BULLET_RADIUS) * ComponentX + CS->Position.X[ID];
-	CS->Bullet[i].Position.Y[ID] = (FUSELAGE_RADIUS + 3 * BULLET_RADIUS) * ComponentY + CS->Position.Y[ID];
+				float ComponentX = __cosf(CS->Angle[ID] + CS->Cannon.Angle[ID] + PI / 2);
+				float ComponentY = __sinf(CS->Angle[ID] + CS->Cannon.Angle[ID] + PI / 2);
+				CS->Bullet[i].Position.X[ID] = (FUSELAGE_RADIUS + 3 * BULLET_RADIUS) * ComponentX + CS->Position.X[ID];
+				CS->Bullet[i].Position.Y[ID] = (FUSELAGE_RADIUS + 3 * BULLET_RADIUS) * ComponentY + CS->Position.Y[ID];
 
-	CS->Bullet[i].Velocity.X[ID] = BULLET_VELOCITY_INITIAL * ComponentX;
-	CS->Bullet[i].Velocity.Y[ID] = BULLET_VELOCITY_INITIAL * ComponentY;
+				CS->Bullet[i].Velocity.X[ID] = BULLET_VELOCITY_INITIAL * ComponentX;
+				CS->Bullet[i].Velocity.Y[ID] = BULLET_VELOCITY_INITIAL * ComponentY;
 
-	ShowBullet(Buffer, ID, i);
+				ShowBullet(Buffer, ID, i);
 
-	CS->BulletTimer[ID] = 0;
-	CS->BulletCounter[ID]++;
+				CS->BulletTimer[ID] = 0;
+				CS->BulletCounter[ID]++;
+
+				break;
+			}
+		}
+	}
+	// If no bullets are inactive, do nothing
 }

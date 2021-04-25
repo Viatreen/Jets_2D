@@ -13,7 +13,7 @@
 
 // Graphics
 #define FRAMES_PER_SECOND					  64
-#define FRAMERATE_NN						  8
+#define FRAMERATE_NN						  32
 #define FRAMERATE_PHYSICS					  64
 #define FRAMERATE_NN_PHYSICS				( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP							( 1.f / float(FRAMERATE_PHYSICS) )	// Divide by a power of 2 for bit manipulation+
@@ -66,24 +66,26 @@
 
 #define ENGINE_WIDTH						  0.24f
 #define ENGINE_HEIGHT						  0.48f
-#define ENGINE_0_DISTANCE					(-WINGSPAN / 2 * 0.9f)		// Meters
-#define ENGINE_1_DISTANCE					(-WINGSPAN / 2 * 0.7f)
-#define ENGINE_2_DISTANCE					( WINGSPAN / 2 * 0.7f)
-#define ENGINE_3_DISTANCE					( WINGSPAN / 2 * 0.9f)
+#define ENGINE_0_DISTANCE					(-WINGSPAN / 2 * 0.9f )		// Meters
+#define ENGINE_1_DISTANCE					(-WINGSPAN / 2 * 0.7f )
+#define ENGINE_2_DISTANCE					( WINGSPAN / 2 * 0.7f )
+#define ENGINE_3_DISTANCE					( WINGSPAN / 2 * 0.9f )
 #define THRUST_LENGTH_FULL					  0.76f
 #define THRUST_LENGTH_FULL_SHORT			( THRUST_LENGTH_FULL / 3)
 #define ENGINE_ANGULAR_ACCEL				  16.f
+#define ENGINE_MAX_ANGULAR_ACCEL			( 2 * PI * 4 )
 #define CANNON_ANGULAR_ACCEL				  16.f
+#define CANNON_MAX_ANGULAR_ACCEL			( 2 * PI * 4 )
 #define CANNON_VELOCITY_MAX					  64.f
-#define ENGINE_ANGLE_MAX_IN					( 15.f / 180.f * PI)
-#define ENGINE_INBOARD_ANGLE_MAX_OUT		( 60.f / 180.f * PI)
-#define ENGINE_OUTBOARD_ANGLE_MAX_OUT		(-90.f / 180.f * PI)
+#define ENGINE_ANGLE_MAX_IN					( 15.f / 180.f * PI )
+#define ENGINE_INBOARD_ANGLE_MAX_OUT		( 60.f / 180.f * PI )
+#define ENGINE_OUTBOARD_ANGLE_MAX_OUT		(-90.f / 180.f * PI )
 
-#define THRUST_MAX							( CRAFT_MASS / 2.4f * 9.8f)									// N
+#define THRUST_MAX							( CRAFT_MASS / 2.4f * 9.8f )									// N
 #define THRUST_MIN							  0.25f														// Normalized thrust kgf. Thrust max is 1.f
-#define THRUST_MIN_RAMP_TIME				  3.f														// Seconds. Time to ramp from THRUST_MIN to 1.f thrust.
-#define THRUST_RAMP_MAX						( TIME_STEP / THRUST_MIN_RAMP_TIME * (1.f - THRUST_MIN))	// Max allowable change in thrust per timestep
-#define THRUST_NORMALIZED_INITIAL			  0.75f														// Initial state. Normalized
+#define THRUST_MIN_RAMP_TIME				  1.5f														// Seconds. Time to ramp from THRUST_MIN to 1.f thrust.
+#define THRUST_RAMP_MAX						( TIME_STEP / THRUST_MIN_RAMP_TIME * (1.f - THRUST_MIN) )	// Max allowable change in thrust per timestep
+#define THRUST_NORMALIZED_INITIAL			( CRAFT_MASS * GRAVITY / THRUST_MAX / 4.f )					// Initial state. Normalized
 
 // Engine actuator
 
@@ -164,7 +166,7 @@
 												 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
 												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
-#define LAYER_AMOUNT_HIDDEN					  2
+#define LAYER_AMOUNT_HIDDEN					  3
 #define NEURONS_PER_LAYER					  16
 #define LAYER_AMOUNT						( 2 + LAYER_AMOUNT_HIDDEN )		// Input, Hidden, and Output
 #define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_LAYER )

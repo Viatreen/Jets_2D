@@ -69,9 +69,14 @@ __global__ void RoundTieFix(CraftState* Crafts)
 			atomicAdd(&Crafts->Place[idx], 1);			// Only compatible with compute >=6.0
 		}
 	}
+}
 
-	if (Crafts->Place[idx] == 0)
-		printf(" First place ID: %6d, Score: %7.2f\n", idx, Crafts->ScoreCumulative[idx] / (TOURNAMENTS_PER_ROUND * 4));
+__global__ void RoundPrintFirstPlace(CraftState* C)
+{
+	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
+
+	if (C->Place[idx] == 0)
+		printf(" First place ID: %6d, Score: %7.2f\n", idx, C->ScoreCumulative[idx] / (TOURNAMENTS_PER_ROUND * 4));
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -285,8 +290,12 @@ __global__ void Init(CraftState* C)
 	C->ID[idx] = idx;
 
 #pragma unroll
+	// Set Bias Neurons
 	for (int i = 0; i < SENSORS_BIAS_NEURON_COUNT; i++)
-		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx] = 1.f;	// Bias Neuron
+	{
+		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx] = 1.f;					// Trainee
+		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx + CRAFT_COUNT] = 1.f;	// Opponent
+	}
 } // End init function
 
 __device__ void Reset(CraftState* Crafts, int idx, GraphicsObjectPointer* Buffer, float PositionX, float PositionY, float AngleStart)
@@ -355,6 +364,12 @@ __global__ void ResetMatch(MatchState* Match, CraftState* Crafts, GraphicsObject
 		Reset(Crafts, idx, Buffer, LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
 		Reset(Crafts, idx + CRAFT_COUNT, Buffer, -LIFE_RADIUS * 2.f / 3.f, 0.f, AngleStart);
 	}
+
+	/*if (idx == 0)
+	{
+		printf("Trainee : Position X: %f, Position Y: %f\n", Crafts->Position.X[idx], Crafts->Position.Y[idx]);
+		printf("Opponent: Position X: %f, Position Y: %f\n", Crafts->Position.X[idx + CRAFT_COUNT], Crafts->Position.Y[idx + CRAFT_COUNT]);
+	}*/
 
 	// TODO: Optimize this
 	ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
