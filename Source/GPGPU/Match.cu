@@ -195,18 +195,18 @@ __device__ void Shrink_Weights(CraftState* C)
 				{
 					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
 					printf("%46.6f ", Value);
-					if (i < NEURONS_PER_LAYER)
+					if (i < NEURONS_PER_HIDDEN_LAYER)
 					{
 						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 						{
-							float Value = C->Neuron[2 * CRAFT_COUNT * ( j * NEURONS_PER_LAYER + LAYER_SIZE_INPUT + i ) + idx];
+							float Value = C->Neuron[2 * CRAFT_COUNT * ( j * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_INPUT + i ) + idx];
 							printf("%46.6f ", Value);
 						}
 					}
 					if (i < LAYER_SIZE_OUTPUT)
 					{
 						float Value = C->Neuron[2 * CRAFT_COUNT * ( OUTPUT_LAYER_NEURON_BEGIN_INDEX + i ) + idx];
-						if (i >= NEURONS_PER_LAYER)
+						if (i >= NEURONS_PER_HIDDEN_LAYER)
 							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
 								printf(" ");
 						printf("%46.6f", Value);
@@ -220,18 +220,18 @@ __device__ void Shrink_Weights(CraftState* C)
 				{
 					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
 					printf("%46.6f ", Value);
-					if (i < NEURONS_PER_LAYER)
+					if (i < NEURONS_PER_HIDDEN_LAYER)
 					{
 						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 						{
-							float Value = C->Neuron[2 * CRAFT_COUNT * (j * NEURONS_PER_LAYER + LAYER_SIZE_INPUT + i) + idx];
+							float Value = C->Neuron[2 * CRAFT_COUNT * (j * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_INPUT + i) + idx];
 							printf("%46.6f ", Value);
 						}
 					}
 					if (i < LAYER_SIZE_OUTPUT)
 					{
 						float Value = C->Neuron[2 * CRAFT_COUNT * (OUTPUT_LAYER_NEURON_BEGIN_INDEX + i) + idx];
-						if (i >= NEURONS_PER_LAYER)
+						if (i >= NEURONS_PER_HIDDEN_LAYER)
 							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
 								printf(" ");
 						printf("%46.6f", Value);

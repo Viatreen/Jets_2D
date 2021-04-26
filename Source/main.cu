@@ -71,7 +71,7 @@ int main()
 	std::cout << "Number of Layers: " << LAYER_AMOUNT << std::endl;
 	std::cout << "Number of Neurons: " << NEURON_COUNT << std::endl;
 	std::cout << "Input neuron amount: " << LAYER_SIZE_INPUT << std::endl;
-	std::cout << "Neurons per layer: " << NEURONS_PER_LAYER << std::endl;
+	std::cout << "Neurons per layer: " << NEURONS_PER_HIDDEN_LAYER << std::endl;
 	std::cout << "Output neuron amount: " << LAYER_SIZE_OUTPUT << std::endl;
 
 	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;

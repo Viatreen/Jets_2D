@@ -811,7 +811,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		std::strcat(GenericString, "Output");
 		ImGui::Text(GenericString);
 
-		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_LAYER || i < LAYER_SIZE_OUTPUT; i++)
+		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_HIDDEN_LAYER || i < LAYER_SIZE_OUTPUT; i++)
 		{
 			// TODO: Move numbering to GUI setup function
 			if (i < 9)
@@ -840,9 +840,9 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 
 			for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 			{
-				if (i < NEURONS_PER_LAYER)
+				if (i < NEURONS_PER_HIDDEN_LAYER)
 				{
-					sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + NEURONS_PER_LAYER * j + i]);
+					sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * j + i]);
 					strcat(GenericString, NeuronValue);
 				}
 				else
@@ -1091,7 +1091,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Bullet Damage: %1.0f", h_Config->BulletDamage);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_LAYER, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);
+			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
