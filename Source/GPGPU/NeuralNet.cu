@@ -145,7 +145,7 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 
 		for (int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
 		{
-			int Weight_Begin_Index = LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * HIDDEN_LAYER_AMOUNT;
+			int Weight_Begin_Index = LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * LAYER_AMOUNT_HIDDEN;
 			int Last_Broadcast_Neuron_Weight_Index = Weight_Begin_Index + Target_Output_Neuron + NEURONS_PER_HIDDEN_LAYER * i;
 			float Last_Broadcast_Neuron_Weight = C->Weight[CRAFT_COUNT * Last_Broadcast_Neuron_Weight_Index + Craft_ID];
 
@@ -444,9 +444,9 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 
 	// Bullet Angle
 	// TODO: Figure out something for bullets that aren't in index 0
-#pragma unroll
 	float BulletAngleAbsolute = atan2(C->Bullet[0].Position.Y[ID_Opponent] - C->Position.Y[ID_Craft], C->Bullet[0].Position.X[ID_Opponent] - C->Position.X[ID_Craft]);
-
+	
+#pragma unroll
 	for (int i = 0; i < SENSORS_BULLET_ANGLE_COUNT; i++)
 	{
 		if (C->BulletCounter[ID_Opponent] > 0)

@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-#define GTX_1080TI							  // Sets SM count to 28
+//#define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
 #define PI									  3.14159f
@@ -31,7 +31,7 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT							( 128 * 8 * SM_COUNT  )
+#define CRAFT_COUNT							( 128 * 4 * SM_COUNT  )
 #define FIT_COUNT							( CRAFT_COUNT / 2 )		// Must be a factor of CRAFT_COUNT
 // FIT_COUNT must be a factor of CRAFT_COUNT
 #define TOURNAMENTS_PER_ROUND				  1

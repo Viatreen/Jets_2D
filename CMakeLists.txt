@@ -11,6 +11,7 @@ find_package(Threads REQUIRED)
 
 if (UNIX)
     set(_GLFW_X11 1)
+    add_definitions(-D_GLFW_X11)
     message(STATUS "Using X11 for window creation")
     find_package(X11 REQUIRED)
 endif()
@@ -36,14 +37,6 @@ if (_GLFW_WIN32)
     if (GLFW_USE_HYBRID_HPG)
         set(_GLFW_USE_HYBRID_HPG 1)
     endif()
-endif()
-
-if (UNIX)
-    target_link_libraries(${CMAKE_PROJECT_NAME}
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${X11_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-)
 endif()
 
 if (WIN32)
@@ -145,6 +138,14 @@ endif()
 if (NOT CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
     # set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++11")
     # set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++11")
+endif()
+
+if (UNIX)
+    target_link_libraries(${CMAKE_PROJECT_NAME}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${X11_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+)
 endif()
 
 if (UNIX)
