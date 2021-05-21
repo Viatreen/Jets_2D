@@ -4,7 +4,6 @@ project(Controls.app LANGUAGES CXX C CUDA)
 message("Project name: " ${CMAKE_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_C_STANDARD 99)
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -46,10 +45,6 @@ if (WIN32)
         set(CURL_STATICLIB 1)
     endif()
 endif()
-
-# add_definitions(-D_GLFW_USE_CONFIG_H)
-# add_definitions(-DGLFW_INCLUDE_NONE)
-# add_definitions(-D_DEBUG)
 
 set(sources
     # Glad
@@ -135,11 +130,6 @@ if (_GLFW_WIN32)
 )
 endif()
 
-if (NOT CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
-    # set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++11")
-    # set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++11")
-endif()
-
 if (UNIX)
     target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_THREAD_LIBS_INIT}
@@ -148,28 +138,21 @@ if (UNIX)
 )
 endif()
 
-if (UNIX)
 target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:C>:   >
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>: >
 )
-elseif(WIN32)
-target_compile_options(${CMAKE_PROJECT_NAME}
-    PRIVATE $<$<COMPILE_LANGUAGE:C>:   >
-    PRIVATE $<$<COMPILE_LANGUAGE:CXX>: >
-)
+
+if(WIN32)
     add_definitions(-D_GLFW_WIN32)
 endif()
 
 target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored --expt-relaxed-constexpr> # --ptxas-options=–allow-expensive-optimizations=true>
-    #PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -G -arch=sm_72 -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored>
 )
 
-# target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _GLFW_USE_CONFIG_H)
-
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61) #60 61 62 72) # 61 = GTX 1080 Ti
+set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 72) # 61 = GTX 1080 Ti
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES}
