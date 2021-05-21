@@ -28,7 +28,6 @@ namespace Inputs
 {
 	// User input
 	static bool keys[1024] = { 0 };
-	static bool MouseFirst = true;
 
 	void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
 	{
@@ -79,9 +78,6 @@ namespace Inputs
 			Camera.ProcessMouseScroll(yOffset, 1.0 / FRAMES_PER_SECOND);	// TODO: Use actual delta time
 		}
 	}
-
-	static double lastX;
-	static double lastY;
 
 	void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 	{

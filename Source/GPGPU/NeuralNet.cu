@@ -32,7 +32,6 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 	int Origin_Neuron_Index;
 	int Target_Neuron_Index;
 	int Previous_Layer_Size;
-	int Next_Layer_Size;
 
 	if (Layer == 0)
 	{
@@ -40,7 +39,6 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 		Target_Neuron_Index = LAYER_SIZE_INPUT + Weight_Neuron_Destination;
 
 		Previous_Layer_Size = LAYER_SIZE_INPUT;
-		Next_Layer_Size = NEURONS_PER_HIDDEN_LAYER;
 	}
 	else
 	{
@@ -51,14 +49,6 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 		Target_Neuron_Index = LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * Layer	    + Weight_Neuron_Destination;
 
 		Previous_Layer_Size = NEURONS_PER_HIDDEN_LAYER;
-		if (Layer == LAYER_AMOUNT_HIDDEN)
-		{
-			Next_Layer_Size = LAYER_SIZE_OUTPUT;
-		}
-		else
-		{
-			Next_Layer_Size = NEURONS_PER_HIDDEN_LAYER;
-		}
 	}
 
 	Weight_Index += Weight_Neuron_Origin * Previous_Layer_Size + Weight_Neuron_Destination;

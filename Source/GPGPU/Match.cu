@@ -76,7 +76,7 @@ __global__ void RoundPrintFirstPlace(CraftState* C)
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
 	if (C->Place[idx] == 0)
-		printf(" First place ID: %6d, Score: %7.2f\n", idx, C->ScoreCumulative[idx] / (TOURNAMENTS_PER_ROUND * 4));
+		printf(" First place ID: %6d, Score: %7.2f\n", idx, C->ScoreCumulative[idx] / (4));
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)

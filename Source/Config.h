@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-//#define GTX_1080TI							  // Sets SM count to 28
+#define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
 #define PI									  3.14159f
@@ -26,15 +26,13 @@
 #define SM_COUNT							  28 
 #define TIME_SPEED_FAST_DEFAULT				  512
 #else
-#define SM_COUNT							  2
+#define SM_COUNT							  4
 #define TIME_SPEED_FAST_DEFAULT				  32
 #endif
 
 // Match Configuration
 #define CRAFT_COUNT							( 128 * 4 * SM_COUNT  )
 #define FIT_COUNT							( CRAFT_COUNT / 2 )		// Must be a factor of CRAFT_COUNT
-// FIT_COUNT must be a factor of CRAFT_COUNT
-#define TOURNAMENTS_PER_ROUND				  1
 #define MATCH_COUNT							( CRAFT_COUNT )
 #define OPPONENT_RANK_RANGE_DEFAULT			  128		// Must be equal or less than FIT_COUNT
 
@@ -162,9 +160,9 @@
 
 #define LAYER_SIZE_INPUT					( SENSORS_EDGE_DISTANCE_COUNT * 2 + SENSORS_VELOCITY_COUNT + SENSORS_ANG_VEL_COUNT\
 												+ SENSORS_EXTERNAL_FORCE_COUNT * 2 + SENSORS_ENGINE_ANGLE_COUNT * 4 * 2\
-												 + SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT\
-												 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
-												 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
+												+ SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT\
+												+ SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
+												+ SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_COUNT)
 
 #define LAYER_AMOUNT_HIDDEN					  3
 #define NEURONS_PER_HIDDEN_LAYER			  16
@@ -172,13 +170,10 @@
 #define HIDDEN_NEURON_AMOUNT				( LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER )
 
 #define LAYER_SIZE_OUTPUT					( 25 + SENSORS_MEMORY_COUNT)
-//#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }
-//#define LAYER_BEGIN_INDEX					{ 0, LAYER_SIZE_INPUT, LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT + 2 * LAYER_SIZE_HIDDEN }
-#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, NEURONS_PER_HIDDEN_LAYER, LAYER_SIZE_OUTPUT }
+#define LAYER_ARRAY							{ LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, NEURONS_PER_HIDDEN_LAYER, NEURONS_PER_HIDDEN_LAYER, LAYER_SIZE_OUTPUT }	// Used for savnig neural network
 
 #define NEURON_COUNT						( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_OUTPUT )							// Sum of layer array
 #define WEIGHT_COUNT						( LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * LAYER_SIZE_OUTPUT )		// Number of weights ~4500
-//#define WEIGHT_BEGIN_INDEX_ARRAY			{ 0, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN, LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN }
 #define OUTPUT_LAYER_NEURON_BEGIN_INDEX		( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER )
 
 #define WEIGHTS_MULTIPLIER					  0.25f
@@ -188,20 +183,6 @@
 #define SAVE_COUNT_DEFAULT					( CRAFT_COUNT / 2)
 
 #define SHRINK_COEFFICIENT_WEIGHTS			  0.9999f
-
-// Set floating point of neural net to half2 for arch that supports it (Volta)
-// Else, use standard float (32-bit)
-// #define VOLTA
-// #ifdef VOLTA
-// #include <cuda_fp16.h>
-// typedef __half fp_NN;
-// #define fp_NN_To_fp32(x)	__half2float(x)
-// #define fp32_To_fp_NN(x)	__float2half_rn(x)
-// #else
-// typedef float fp_NN;
-// #define fp_NN_To_fp32(x)	(x)
-// #define fp32_To_fp_NN(x)	(x)
-// #endif
 
 // TODO: Add a few rounds where the unfit are replaced by random NNs
 namespace Config_

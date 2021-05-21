@@ -636,7 +636,7 @@ void RoundEnd()
 			IndexHighScore = i;
 		}
 
-	HighScoreCumulative /= TOURNAMENTS_PER_ROUND * 2.f * 2.f;  // Find average
+	HighScoreCumulative /= 2.f * 2.f;  // Find average
 
 	if (HighScoreCumulative > HighScoreCumulativeAllTime)
 		HighScoreCumulativeAllTime = HighScoreCumulative;
@@ -968,7 +968,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Round: %d", RoundNumber);
 			ImGui::Text(GenericString);
 
-			sprintf(GenericString, "Match: %d", MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2) + 1);
+			sprintf(GenericString, "Match: %d", MatchNumber % (2 * 2) + 1);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Current High Score:  %1.0f", HighScoreCumulative);
@@ -1011,8 +1011,8 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 			ImGui::Text("Match Progress");
 
-			sprintf(GenericString, "%d/%d", MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2) + 1, TOURNAMENTS_PER_ROUND * 2 * 2);
-			float RoundProgressRatio = float(MatchNumber % (TOURNAMENTS_PER_ROUND * 2 * 2)) / (TOURNAMENTS_PER_ROUND * 2.f * 2.f) + IterationProgressRatio / (TOURNAMENTS_PER_ROUND * 2.f * 2.f);
+			sprintf(GenericString, "%d/%d", MatchNumber % (2 * 2) + 1, 2 * 2);
+			float RoundProgressRatio = float(MatchNumber % (2 * 2)) / (2.f * 2.f) + IterationProgressRatio / (2.f * 2.f);
 			ImGui::ProgressBar(RoundProgressRatio, ImVec2(0.f, 0.f), GenericString);
 			ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 			ImGui::Text("Round Progress");
@@ -1071,9 +1071,6 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		{
 			char GenericString[64];
 			sprintf(GenericString, "Craft Count: %d \tFit Count: %d", CRAFT_COUNT, FIT_COUNT);
-			ImGui::Text(GenericString);
-
-			sprintf(GenericString, "Opponent Count: %d", TOURNAMENTS_PER_ROUND);
 			ImGui::Text(GenericString);
 
 			sprintf(GenericString, "Time Limit: %3.0f Seconds", h_Config->TimeLimitMatch);
