@@ -13,6 +13,7 @@
 #include "GPGPU/State.h"
 #include "GPGPU/Physic.h"
 
+/*
 __device__ void BackPropagate(CraftState* C, int Craft_ID)
 {
 	// Assumes all hidden layers are the same size
@@ -149,6 +150,7 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 		// There is not activation on the output layer
 	}
 }
+*/
 
 __forceinline__ __device__ void RELU_Activate(float& Neuron)
 {

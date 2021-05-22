@@ -18,6 +18,7 @@ endif()
 if (WIN32)
     set(_GLFW_WIN32 1)
     message(STATUS "Using Win32 for window creation")
+    # TODO: See if we can set VS working directory to cmake root directory
 endif()
 
 include_directories(
@@ -39,7 +40,7 @@ if (_GLFW_WIN32)
 endif()
 
 if (WIN32)
-    # Workaround for VS deprecating parts of the standard library
+    # Workarounds for VS deprecating parts of the standard library
     if (MSVC)
         set(_CRT_SECURE_NO_WARNINGS 1)
         set(CURL_STATICLIB 1)
@@ -47,14 +48,14 @@ if (WIN32)
 endif()
 
 set(sources
-    # Glad
-    lib/glad/glad.c
-
     # Program
     Source/main.cu
-    Source/Inputs.cu
+    
     Source/ErrorCheck.cpp
     Source/Config.cpp
+    Source/GL/Inputs.cu
+    Source/GL/GLSetup.cpp
+    Source/GL/Shader.cpp
     Source/GPGPU/NeuralNet.cu
     Source/GPGPU/Epoch.cu
     Source/GPGPU/GPSetup.cu
@@ -64,7 +65,6 @@ set(sources
     Source/GPGPU/Round.cu
     Source/GPGPU/SetVariables.cu
     Source/GPGPU/Vertices.cu
-    Source/GUI/GUI.cu
     Source/Graphics/Axis.cpp
     Source/Graphics/Camera.cpp
     Source/Graphics/Circle.cu
@@ -72,8 +72,10 @@ set(sources
     Source/Graphics/Component.cu
     Source/Graphics/GrSetup.cu
     Source/Graphics/Thrust.cu
-    Source/GL/GLSetup.cpp
-    Source/GL/Shader.cpp
+    Source/GUI/GUI.cu
+    
+    # Glad
+    lib/glad/glad.c
 
     # Dear ImGUI
     lib/imgui/imgui.cpp
@@ -157,7 +159,3 @@ set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 7
 target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES}
     )
-
-if(WIN32)
-    set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-endif()

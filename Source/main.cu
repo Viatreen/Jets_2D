@@ -12,6 +12,15 @@
 #include <sstream>
 #include <stdlib.h>
 
+//#pragma message("hello this is a message")
+//
+//#ifdef _WIN32
+//#include <minwindef.h>	// Removes glad APIENTRY redefine warning
+//#pragma message("WIN32 defined")
+//#else
+//#pragma message("WIN32 not defined")
+//#endif
+
 #define GLFW_INCLUDE_NONE
 
 // OpenGL
@@ -62,7 +71,7 @@ int main()
 	std::cout << "Number of crafts: " << CRAFT_COUNT << std::endl;
 	std::cout << "Number of wieghts: " << WEIGHT_COUNT << std::endl;
 	// Output estimated memory usage for backpropagating advantage function
-	unsigned long long StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
+	size_t StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
 	std::cout << "Size of state: " << StateSize << " MB" << std::endl;
 
 	//unsigned long long StateHistorySize = StateSize * FRAMERATE_PHYSICS * int(TIME_MATCH);

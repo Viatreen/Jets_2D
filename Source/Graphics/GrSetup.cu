@@ -16,7 +16,11 @@ namespace Graphics
 {
 	void Setup()
 	{
-		CraftShader.Create("Load/Shaders/Craft.shader");
+		#if defined(__linux)
+			CraftShader.Create("res/Shaders/Craft.shader");
+		#elif defined(_WIN32)
+			CraftShader.Create("../../../res/Shaders/Craft.shader");
+		#endif
 
 		//Axis[0]				= new axis(AxisVertices::X);
 		//Axis[1]				= new axis(AxisVertices::Y);

@@ -25,6 +25,11 @@ CMakeCache.txt
 *.cmake
 Makefile
 
+# Visual Studio
+*.db
+*.suo
+CMakeSettings.json
+
 # Logs
 *.log
 
