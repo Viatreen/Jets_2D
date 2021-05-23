@@ -5,7 +5,7 @@ CMakeLists.txt in the root directory sets the architecture compilation target
 *If you do not have one of these cards, lookup the architecture of your nVidia card and append to arguments in this line: set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 70 72 75 80 86)
 
 All Systems:
-Make sure CUDA Toolkit is installed
+Make sure CUDA Toolkit is installed. 
 
 For Windows, to setup a project in Visual Studio:
 1) Open Visual Studio. From the welcome page, select "Clone a repository"
@@ -16,6 +16,6 @@ For Windows, to setup a project in Visual Studio:
 6) Build and run the project by clicking the play button on the top of the screen or pressing F5
 
 For Linux
-1) vscode is recommended as the code editor
+1) vscode is recommended as the code editor (Not required)
 2) Ensure CMake 3.17 or higher is installed (cmake --version)
 3) Run ./Linux_Build_And_Run.sh
