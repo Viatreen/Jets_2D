@@ -27,7 +27,7 @@
 #define TIME_SPEED_FAST_DEFAULT				  512
 #else
 #define SM_COUNT							  4
-#define TIME_SPEED_FAST_DEFAULT				  32
+#define TIME_SPEED_FAST_DEFAULT				  256
 #endif
 
 // Match Configuration
