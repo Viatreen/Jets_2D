@@ -1,5 +1,5 @@
 # Jets_2D
-An nVidia graphics card is required to run this application
+An nVidia graphics card is required to run this application. 
 CMakeLists.txt in the root directory sets the architecture compilation target
 *Currently compiling for Pascal (GTX 10-series), Volta (Expensive deep learning cards), and Turing (RTX 20-series) architectures
 *If you do not have one of these cards, lookup the architecture of your nVidia card and append to arguments in this line: set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 70 72 75 80 86)
