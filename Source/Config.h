@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-// l#define GTX_1080TI							  // Sets SM count to 28
+// #define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
 #define PI									  3.14159f
@@ -52,8 +52,6 @@
 #define WING_HEIGHT							  0.14f
 #define FUSELAGE_RADIUS						  0.7f
 #define FUSELAGE_VERT_COUNT					  32
-#define WINDSHIELD_WIDTH					  0.528f
-#define WINDSHEILD_HEIGHT					  0.8f
 #define CANNON_WIDTH						  0.1f
 #define CANNON_HEIGHT						( (float)sqrt(FUSELAGE_RADIUS * FUSELAGE_RADIUS - CANNON_WIDTH * CANNON_WIDTH / 4))
 #define BULLET_RADIUS						  0.1f
