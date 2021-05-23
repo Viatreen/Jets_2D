@@ -736,91 +736,91 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 
 		char GenericCharArray[64];
 		sprintf(GenericCharArray, "Score:                  %7.2f", h_State.ScoreBullet + h_State.ScoreTime + h_State.ScoreDistance + h_State.ScoreFuelEfficiency);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Score Cumulative:       %7.2f", h_State.ScoreCumulative);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		std::string GenericString;
 
 		AddSpaces(GenericString, AngleStart);
 		sprintf(GenericCharArray, "Starting Angle:        %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		std::string GenericString2;
 
 		AddSpaces(GenericString, h_State.PositionX);
 		AddSpaces(GenericString2, h_State.PositionY);
 		sprintf(GenericCharArray, "Position X:     %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.VelocityX);
 		AddSpaces(GenericString2, h_State.VelocityY);
 		sprintf(GenericCharArray, "Velocity X:     %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AccelerationX);
 		AddSpaces(GenericString2, h_State.AccelerationY);
 		sprintf(GenericCharArray, "Acceleration X: %s  Y: %s", GenericString.c_str(), GenericString2.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.Angle);
 		sprintf(GenericCharArray, "Angle:                 %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AngularVelocity);
 		sprintf(GenericCharArray, "Angular Velocity:      %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.AngularAcceleration);
 		sprintf(GenericCharArray, "Angular Acceleration:  %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonAngle);
 		sprintf(GenericCharArray, "Cannon Angle:          %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonCommandAngle);
 		sprintf(GenericCharArray, "Command Cannon Angle:  %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		AddSpaces(GenericString, h_State.CannonStrength);
 		sprintf(GenericCharArray, "Cannon Rot Strength:   %s", GenericString.c_str());
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Engine:           1       2       3       4");
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Angle:          %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngle[0], h_State.EngineAngle[1], h_State.EngineAngle[2], h_State.EngineAngle[3]);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Angle Vel:      %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngularVelocity[0], h_State.EngineAngularVelocity[1], h_State.EngineAngularVelocity[2], h_State.EngineAngularVelocity[3]);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Angle Acc:      %7.2f %7.2f %7.2f %7.2f", h_State.EngineAngularAcceleration[0], h_State.EngineAngularAcceleration[1], h_State.EngineAngularAcceleration[2], h_State.EngineAngularAcceleration[3]);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		sprintf(GenericCharArray, "Thrust Norm:    %7.2f %7.2f %7.2f %7.2f", h_State.EngineThrustNormalized[0], h_State.EngineThrustNormalized[1], h_State.EngineThrustNormalized[2], h_State.EngineThrustNormalized[3]);
-		ImGui::Text(GenericCharArray);
+		ImGui::Text("%s", GenericCharArray);
 
 		/* std::string GenericString3;
-		 std::string GenericString4;
+		std::string GenericString4;
 
-		 AddSpaces(GenericString,  h_State.EngineThrustNormalized[0]);
-		 AddSpaces(GenericString2, h_State.EngineThrustNormalized[1]);
-		 AddSpaces(GenericString3, h_State.EngineThrustNormalized[2]);
-		 AddSpaces(GenericString4, h_State.EngineThrustNormalized[3]);
+		AddSpaces(GenericString,  h_State.EngineThrustNormalized[0]);
+		AddSpaces(GenericString2, h_State.EngineThrustNormalized[1]);
+		AddSpaces(GenericString3, h_State.EngineThrustNormalized[2]);
+		AddSpaces(GenericString4, h_State.EngineThrustNormalized[3]);
 
-		 sprintf(GenericCharArray, "Thrust:        %s    %s    %s   %s", GenericString, GenericString2, GenericString3, GenericString4);
-		 ImGui::Text(GenericCharArray);
+		sprintf(GenericCharArray, "Thrust:        %s    %s    %s   %s", GenericString, GenericString2, GenericString3, GenericString4);
+		ImGui::Text("%s", GenericCharArray);
 
-		 AddSpaces(GenericString,  h_State.EngineAngle[0]);
-		 AddSpaces(GenericString2, h_State.EngineAngle[1]);
-		 AddSpaces(GenericString3, h_State.EngineAngle[2]);
-		 AddSpaces(GenericString4, h_State.EngineAngle[3]);
+		AddSpaces(GenericString,  h_State.EngineAngle[0]);
+		AddSpaces(GenericString2, h_State.EngineAngle[1]);
+		AddSpaces(GenericString3, h_State.EngineAngle[2]);
+		AddSpaces(GenericString4, h_State.EngineAngle[3]);
 
-		 sprintf(GenericCharArray, "Angle:        %s    %s    %s   %s", GenericString, GenericString2, GenericString3, GenericString4);
-		 ImGui::Text(GenericCharArray);*/
+		sprintf(GenericCharArray, "Angle:        %s    %s    %s   %s", GenericString, GenericString2, GenericString3, GenericString4);
+		ImGui::Text("%s", GenericCharArray);*/
 	}
 
 	if (ImGui::CollapsingHeader("Neural Network", ImGuiTreeNodeFlags_DefaultOpen))
@@ -832,7 +832,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 			std::strcat(GenericString, "      ");
 		}
 		std::strcat(GenericString, "Output");
-		ImGui::Text(GenericString);
+		ImGui::Text("%s", GenericString);
 
 		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_HIDDEN_LAYER || i < LAYER_SIZE_OUTPUT; i++)
 		{
@@ -845,7 +845,6 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 				sprintf(GenericString, "%d: ", i + 1);
 
 			char NeuronValue[64];
-			sprintf(NeuronValue, "");
 
 			if (i < LAYER_SIZE_INPUT)
 			{
@@ -884,7 +883,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 				strcat(GenericString, NeuronValue);
 			}
 
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 		}
 	}
 
@@ -986,19 +985,19 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		{
 			char GenericString[64];
 			sprintf(GenericString, "Runtime: %s", ApplicationRuntime().c_str());
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Round: %d", RoundNumber);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Match: %d", MatchNumber % (2 * 2) + 1);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Current High Score:  %1.0f", HighScoreCumulative);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "All-Time High Score: %1.0f", HighScoreCumulativeAllTime);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			int OpponentRankRangeLast = OpponentRankRange;
 			int one = 1;
@@ -1094,37 +1093,37 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		{
 			char GenericString[64];
 			sprintf(GenericString, "Craft Count: %d \tFit Count: %d", CRAFT_COUNT, FIT_COUNT);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Time Limit: %3.0f Seconds", h_Config->TimeLimitMatch);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Physics Time Step: 1/%d Seconds", FRAMERATE_PHYSICS);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Policy  Time Step: 1/%d Seconds", FRAMERATE_NN);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Craft Weight: %4.0f N\tEngine Max Thrust: %4.0f N", CRAFT_MASS * 9.8f, THRUST_MAX);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Bullet Damage: %1.0f", h_Config->BulletDamage);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 
-			sprintf(GenericString, "Total GPU Mem Size: %llu MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
-			ImGui::Text(GenericString);
+			sprintf(GenericString, "Total GPU Mem Size: %lu MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
+			ImGui::Text("%s", GenericString);
 
-			sprintf(GenericString, "Weight Array Size: %llu MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
-			ImGui::Text(GenericString);
+			sprintf(GenericString, "Weight Array Size: %lu MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
+			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Startup Time: %4.2f Seconds", TimerStartup);
-			ImGui::Text(GenericString);
+			ImGui::Text("%s", GenericString);
 		}
 
 		if (ImGui::CollapsingHeader("Mutation Parameters")) // , ImGuiTreeNodeFlags_DefaultOpen))

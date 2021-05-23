@@ -1,6 +1,6 @@
-mkdir build
+mkdir -p build
 cmake -S . -B build/
 cd build/
-mkdir Saves/
+mkdir -p Saves/
 make
 ./Controls.app
