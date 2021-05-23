@@ -13,6 +13,8 @@ if (UNIX)
     add_definitions(-D_GLFW_X11)
     message(STATUS "Using X11 for window creation")
     find_package(X11 REQUIRED)
+    add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
+    message(STATUS "Defining IMGUI_IMPL_OPENGL_LOADER_GLAD to set ImGUI to use glad")
 endif()
 
 if (WIN32)
