@@ -69,7 +69,7 @@ int main()
 	cudaCheck(cudaDeviceSynchronize());
 
 	std::cout << "Number of crafts: " << CRAFT_COUNT << std::endl;
-	std::cout << "Number of wieghts: " << WEIGHT_COUNT << std::endl;
+	std::cout << "Number of weights: " << WEIGHT_COUNT << std::endl;
 	// Output estimated memory usage for backpropagating advantage function
 	size_t StateSize = (sizeof(CraftState) - sizeof(float) * WEIGHT_COUNT - 2 * ((NEURON_COUNT + 1 + 1) * sizeof(float) - sizeof(curandState))) *  2 / 1024 / 1024;
 	std::cout << "Size of state: " << StateSize << " MB" << std::endl;

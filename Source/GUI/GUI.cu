@@ -195,10 +195,19 @@ void SaveCSV()
 	//boost::filesystem::create_directory(Destination);
 
 	std::stringstream FileNameStream;
-	FileNameStream << "Saves\\Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
-		<< TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
-		<< std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
-		<< std::fixed << HighScoreCumulative << ".csv";
+
+	#ifdef _WIN32
+		FileNameStream << "Saves\\";
+	#endif
+
+	#ifdef __linux
+		FileNameStream << "Saves/";
+	#endif
+
+	FileNameStream << "Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
+	<< TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
+	<< std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
+	<< std::fixed << HighScoreCumulative << ".csv";
 
 	std::ofstream File;
 	File.open(FileNameStream.str());
@@ -312,10 +321,18 @@ void SaveTopBinary(int CraftCount)
 
 	std::cout << std::asctime(TimeInfo);
 	std::stringstream FileNameStream;
-	FileNameStream << "D:\\Saves\\Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
-		<< TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
-		<< std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
-		<< std::fixed << HighScoreCumulative << ".craft";
+	#ifdef _WIN32
+		FileNameStream << "Saves\\";
+	#endif
+
+	#ifdef __linux
+		FileNameStream << "Saves/";
+	#endif
+
+	FileNameStream << "Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
+			<< TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
+			<< std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
+			<< std::fixed << HighScoreCumulative << ".craft";
 
 	std::cout << "Filename: " << FileNameStream.str() << std::endl;
 
@@ -516,7 +533,7 @@ void Setup()
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	#if defined(__linux)
-		io.Fonts->AddFontFromFileTTF("res/fonts/Inconsolata-Medium.ttf", 14.0f);
+		io.Fonts->AddFontFromFileTTF("../res/fonts/Inconsolata-Medium.ttf", 14.0f);
 	#elif defined(_WIN32)
 		io.Fonts->AddFontFromFileTTF("../../../res/fonts/Inconsolata-Medium.ttf", 14.0f);
 	#endif

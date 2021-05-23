@@ -17,7 +17,7 @@ namespace Graphics
 	void Setup()
 	{
 		#if defined(__linux)
-			CraftShader.Create("res/Shaders/Craft.shader");
+			CraftShader.Create("../res/Shaders/Craft.shader");
 		#elif defined(_WIN32)
 			CraftShader.Create("../../../res/Shaders/Craft.shader");
 		#endif
