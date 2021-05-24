@@ -41,6 +41,14 @@ struct temp
 	float Weight[FIT_COUNT * WEIGHT_COUNT];
 };
 
+struct eval_Network
+{
+	float Weight[WEIGHT_COUNT_EVAL];
+	float Neuron[NEURON_COUNT_EVAL];
+	float Delta_Weight[WEIGHT_COUNT_EVAL];
+
+};
+
 struct CraftState
 {
 	float Weight[CRAFT_COUNT * WEIGHT_COUNT];

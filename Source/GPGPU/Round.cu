@@ -7,6 +7,11 @@
 // CUDA
 #include <device_launch_parameters.h>
 
+#ifdef _WIN32
+#include <Windows.h>		// Removes glad APIENTRY redefine warning
+#endif
+
+
 // Project Headers
 #include "Config.h"
 #include "GPGPU/Match.h"

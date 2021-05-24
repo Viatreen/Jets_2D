@@ -75,6 +75,7 @@ set(sources
     Source/Graphics/GrSetup.cu
     Source/Graphics/Thrust.cu
     Source/GUI/GUI.cu
+    Source/GUI/Print_Data_Info.cu
     
     # Glad
     lib/glad/glad.c
