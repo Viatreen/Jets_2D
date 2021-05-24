@@ -1,12 +1,12 @@
 # Jets_2D
-This application trains simulated 2-dimensional drones to compete with each other. Points are based on airtime, striking the opponent with a bulllet, and avoiding enemy bullets. Several thousand iterations of drone matches are run in parallel with the best drones kept and mutated slightly.
+This application simulates and trains 2-dimensional drones to compete with each other. Points are based on airtime, striking the opponent with a bulllet, and avoiding enemy bullets. Several thousand iterations of drone matches are run in parallel with the best drones kept and mutated slightly.
 
 # Setup Instruction
-
 An nVidia graphics card is required to run this application. 
+
 nVidia GPU architecture target is set in CMakeLists.txt in the project root directory. 
-*Currently compiling for Pascal (GTX 10-series), Volta (Expensive deep learning cards), and Turing (RTX 20-series) architectures. 
-*If you do not have one of these cards, lookup the architecture of your nVidia card and append to arguments in this line: set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 70 72 75). 
+Currently compiling for Pascal (GTX 10-series), Volta (Expensive deep learning cards), and Turing (RTX 20-series) architectures. 
+If you do not have one of these cards, lookup the architecture of your nVidia card and append to arguments in this line: set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 70 72 75). 
 
 All Systems:
 Make sure CUDA Toolkit is installed. 
