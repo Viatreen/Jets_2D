@@ -51,6 +51,8 @@ struct eval_Network
 
 struct CraftState
 {
+	eval_Network Eval_Network;
+
 	float Weight[CRAFT_COUNT * WEIGHT_COUNT];
 
 	float Neuron[2 * CRAFT_COUNT * NEURON_COUNT];
@@ -88,7 +90,6 @@ struct CraftState
 	float CannonStrength[2 * CRAFT_COUNT];
 
 	// TODO: More points for earlier bullet hits
-	// TODO: Make score bars fixed on the window for each side
 	// TODO: Move MatchState parameters to CraftState
 };
 
@@ -104,7 +105,7 @@ struct MatchState
 	bool RenderOnFirstFrame[MATCH_COUNT];		// First frame render after switching from off to on. Used to assign color floats
 	// Requirement: When this signal is high, it is guaranteed to be turned off within the render frame
 	bool RenderOffFirstFrame[MATCH_COUNT];		// First frame after render turns from on to off
-	bool RenderOn[MATCH_COUNT];					// Render toggle
+	bool RenderOn[MATCH_COUNT];					// Current render status
 
 	bool AllDone;
 };

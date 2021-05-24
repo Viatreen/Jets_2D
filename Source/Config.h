@@ -183,8 +183,8 @@
 // Evaluation Network Characteristics
 // TODO: Combine evaluation and policy networks after experimenting with evaluation
 #define LAYER_SIZE_INPUT_EVAL				  LAYER_SIZE_INPUT
-#define LAYER_AMOUNT_HIDDEN_EVAL			  40
-#define NEURONS_PER_HIDDEN_LAYER_EVAL		  16
+#define LAYER_AMOUNT_HIDDEN_EVAL			  12
+#define NEURONS_PER_HIDDEN_LAYER_EVAL		  32
 #define LAYER_AMOUNT_EVAL					( 2 + LAYER_AMOUNT_HIDDEN_EVAL )		// Input, Hidden, and Output
 #define LAYER_SIZE_OUTPUT_EVAL				  1
 
