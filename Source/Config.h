@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-// #define GTX_1080TI							  // Sets SM count to 28
+#define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
 #define PI									  3.14159f
