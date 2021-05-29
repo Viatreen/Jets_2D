@@ -45,17 +45,17 @@ struct eval_Network
 {
 	float Weight[WEIGHT_COUNT_EVAL];
 	float Neuron[NEURON_COUNT_EVAL];
-	float Delta_Weight[WEIGHT_COUNT_EVAL];
+	float Delta_Weight[WEIGHT_COUNT_EVAL];	// For backpropagation
 
 };
 
 struct CraftState
 {
 	eval_Network Eval_Network;
-
 	float Weight[CRAFT_COUNT * WEIGHT_COUNT];
-
 	float Neuron[2 * CRAFT_COUNT * NEURON_COUNT];
+	curandState RandState[2 * CRAFT_COUNT];
+
 	Vec2 Position;
 	Vec2 Velocity;
 	Vec2 Acceleration;
@@ -69,7 +69,6 @@ struct CraftState
 	short BulletCounter[2 * CRAFT_COUNT];		// Number of active bullets
 	short BulletTimer[2 * CRAFT_COUNT];		// Craft can only shoot a bullet every so often
 
-	curandState RandState[2 * CRAFT_COUNT];
 	float Score[2 * CRAFT_COUNT];
 	float ScoreTime[2 * CRAFT_COUNT];
 	float ScoreBullet[2 * CRAFT_COUNT];
