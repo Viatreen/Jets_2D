@@ -12,3 +12,4 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Neurons, int 
 __device__ void Output_Neurons_To_Action(CraftState* C, int ID_Craft, GraphicsObjectPointer* Buffer);
 __device__ void BackPropagate(CraftState* C, int Craft_ID);
 __device__ void BackPropagate_Eval(CraftState* C, unsigned int Weight_Index);
+__device__ void Run_Neural_Net_Eval(CraftState* C);

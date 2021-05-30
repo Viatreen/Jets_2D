@@ -782,43 +782,44 @@ __device__ void BackPropagate_Eval(CraftState* C, unsigned int Weight_Index)
 	unsigned int Layer;
 	unsigned int Origin_Neuron_Index;
 	unsigned int Target_Neuron_Index;
-
-	unsigned int Origin_Neuron_Index_Within_Layer;
-	unsigned int Target_Neuron_Index_Within_Layer;
-	unsigned int Weight_Index_Within_Layer;
-
-	if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
 	{
-		Layer = 0;
-		Weight_Index_Within_Layer = Weight_Index;
+		unsigned int Origin_Neuron_Index_Within_Layer;
+		unsigned int Target_Neuron_Index_Within_Layer;
+		unsigned int Weight_Index_Within_Layer;
 
-		Origin_Neuron_Index_Within_Layer = Weight_Index / NEURONS_PER_HIDDEN_LAYER_EVAL;
-		Target_Neuron_Index_Within_Layer = Weight_Index % NEURONS_PER_HIDDEN_LAYER_EVAL;
+		if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
+		{
+			Layer = 0;
+			Weight_Index_Within_Layer = Weight_Index;
 
-		Origin_Neuron_Index = Origin_Neuron_Index_Within_Layer;
-		Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Target_Neuron_Index_Within_Layer;
-	}
-	else if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
-	{
-		Layer = 1 + (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) / (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
-		Weight_Index_Within_Layer = (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) % (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
+			Origin_Neuron_Index_Within_Layer = Weight_Index / NEURONS_PER_HIDDEN_LAYER_EVAL;
+			Target_Neuron_Index_Within_Layer = Weight_Index % NEURONS_PER_HIDDEN_LAYER_EVAL;
 
-		Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / NEURONS_PER_HIDDEN_LAYER_EVAL;
-		Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % NEURONS_PER_HIDDEN_LAYER_EVAL;
+			Origin_Neuron_Index = Origin_Neuron_Index_Within_Layer;
+			Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Target_Neuron_Index_Within_Layer;
+		}
+		else if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
+		{
+			Layer = 1 + (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) / (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
+			Weight_Index_Within_Layer = (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) % (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
 
-		Origin_Neuron_Index = LAYER_SIZE_INPUT_EVAL + (Layer - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
-		Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Layer * NEURONS_PER_HIDDEN_LAYER_EVAL + Target_Neuron_Index_Within_Layer;
-	}
-	else
-	{
-		Layer = LAYER_AMOUNT_EVAL - 1;
-		Weight_Index_Within_Layer = Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL - (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL;
+			Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / NEURONS_PER_HIDDEN_LAYER_EVAL;
+			Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % NEURONS_PER_HIDDEN_LAYER_EVAL;
 
-		Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / LAYER_SIZE_OUTPUT_EVAL;
-		Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % LAYER_SIZE_OUTPUT_EVAL;
+			Origin_Neuron_Index = LAYER_SIZE_INPUT_EVAL + (Layer - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
+			Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Layer * NEURONS_PER_HIDDEN_LAYER_EVAL + Target_Neuron_Index_Within_Layer;
+		}
+		else
+		{
+			Layer = LAYER_AMOUNT_EVAL - 1;
+			Weight_Index_Within_Layer = Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL - (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL;
 
-		Origin_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL - NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
-		Target_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL + Target_Neuron_Index_Within_Layer;
+			Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / LAYER_SIZE_OUTPUT_EVAL;
+			Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % LAYER_SIZE_OUTPUT_EVAL;
+
+			Origin_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL - NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
+			Target_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL + Target_Neuron_Index_Within_Layer;
+		}
 	}
 
 	float Origin_Neuron = C->Eval_Network.Neuron[Origin_Neuron_Index];
@@ -855,19 +856,64 @@ __device__ void BackPropagate_Eval(CraftState* C, unsigned int Weight_Index)
 	// First broadcast from the target neuron
 	for (unsigned int i = 0; i < NEURONS_PER_HIDDEN_LAYER_EVAL; i++)
 	{
-		unsigned int First_Broadcast_Neuron_Weight_Index
-			= Weight_Index + NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (Target_Neuron_Index - Origin_Neuron_Index) * NEURONS_PER_HIDDEN_LAYER_EVAL - Target_Neuron_Index;
+		unsigned int First_Broadcast_Neuron_Weight_Index = Weight_Index + NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (Target_Neuron_Index - Origin_Neuron_Index) * NEURONS_PER_HIDDEN_LAYER_EVAL - Target_Neuron_Index + i;
+
 		float First_Broadcast_Neuron_Weight = C->Eval_Network.Weight[First_Broadcast_Neuron_Weight_Index];
 		Delta_Neuron_Previous_Layer[i] = Delta_First_Neuron * First_Broadcast_Neuron_Weight;
 	}
 
 	for (unsigned int Layer_Index = Layer + 2; Layer_Index < LAYER_AMOUNT_EVAL - 2; Layer_Index++)
 	{
-		unsigned int Origin_Neuron_Index_Begin = LAYER_SIZE_INPUT_EVAL + NEURONS_PER_HIDDEN_LAYER_EVAL * (Layer_Index - 1);
-		unsigned int Broadcast_Neuron_Index_Begin = LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL * (Layer_Index - 1);
+		unsigned int Broadcast_Neuron_Index_Begin = LAYER_SIZE_INPUT_EVAL + NEURONS_PER_HIDDEN_LAYER_EVAL * (Layer_Index - 1);
+		unsigned int Broadcast_Weight_Index_Begin = LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL * (Layer_Index - 1);
+
+		for (int Origin_Delta_Neuron_Index = 0; Origin_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER_EVAL; Origin_Delta_Neuron_Index++)
+		{
+			int Broadcast_Delta_Neuron_Index = Broadcast_Neuron_Index_Begin + Origin_Delta_Neuron_Index;
+			float Broadcast_Delta_Neuron = Delta_Neuron_Previous_Layer[Origin_Delta_Neuron_Index];
+
+			if (C->Eval_Network.Neuron[Broadcast_Delta_Neuron_Index] > 1.f || C->Eval_Network.Neuron[Broadcast_Delta_Neuron_Index] < -1.f)
+			{
+				Broadcast_Delta_Neuron *= NETWORK_ACTIVATION_SLOPE;
+			}
+
+			for (int Target_Delta_Neuron_Index = 0; Target_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER_EVAL; Target_Delta_Neuron_Index++)
+			{
+				int Broadcast_Weight_Index = Broadcast_Weight_Index_Begin + Origin_Delta_Neuron_Index * NEURONS_PER_HIDDEN_LAYER_EVAL + Target_Delta_Neuron_Index;
+				float Broadcast_Weight = C->Weight[Broadcast_Weight_Index];
+
+				Delta_Neuron_Next_Layer[Target_Delta_Neuron_Index] += Broadcast_Weight * Broadcast_Delta_Neuron;
+			}
+		}
+
 	}
 
+	float Delta_Output_Neuron = 0.f;
 
+	// Calculate final delta output neuron value
+	for (int i = 0; i < NEURONS_PER_HIDDEN_LAYER_EVAL; i++)
+	{
+		unsigned int Weight_Begin_Index = LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL;
+		unsigned int Last_Bottle_Neuron_Weight_Index = Weight_Begin_Index + i;
+		float Last_Bottle_Neuron_Weight = C->Weight[Last_Bottle_Neuron_Weight_Index];
 
-	C->Eval_Network.Delta_Weight[Weight_Index] = 0.f;
+		unsigned int Last_Bottle_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL + i;
+		float Neuron = C->Eval_Network.Neuron[Last_Bottle_Neuron_Index];
+
+		if (Neuron > 1.f || Neuron < -1.f)
+		{
+			Last_Bottle_Neuron_Weight *= NETWORK_ACTIVATION_SLOPE;
+		}
+
+		float Bottle_Delta_Neuron = Delta_Neuron_Previous_Layer[i] * Last_Bottle_Neuron_Weight;
+
+		Delta_Output_Neuron += Bottle_Delta_Neuron;
+	}
+
+	C->Eval_Network.Delta_Weight[Weight_Index] = Delta_Output_Neuron;
+}
+
+__device__ void Run_Neural_Net_Eval(CraftState* C)
+{
+
 }
