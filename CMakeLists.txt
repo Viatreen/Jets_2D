@@ -59,6 +59,7 @@ set(sources
     Source/GL/GLSetup.cpp
     Source/GL/Shader.cpp
     Source/GPGPU/NeuralNet.cu
+    Source/GPGPU/NeuralNet_Eval.cu
     Source/GPGPU/Epoch.cu
     Source/GPGPU/GPSetup.cu
     Source/GPGPU/MapVertexBuffer.cu
