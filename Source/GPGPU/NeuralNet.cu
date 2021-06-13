@@ -638,7 +638,7 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 
 	// Result to solve
 	float Delta_Output_Neuron = 0.f;
-	float Delta_Weight = 1.f;	// TODO: Figure out the notation
+	// float Delta_Weight = 1.f;	// TODO: Figure out the notation
 
 
 	// TODO: Assign this based on Thread ID
@@ -725,7 +725,6 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 		// TODO: Combine this loop and the next loop
 		for (int Origin_Delta_Neuron_Index = 0; Origin_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER; Origin_Delta_Neuron_Index++)
 		{
-			int Broadcast_Delta_Neuron_Index = Broadcast_Neuron_Index_Begin + Origin_Delta_Neuron_Index;
 			float Broadcast_Delta_Neuron = Delta_Neuron_Previous_Layer[Origin_Delta_Neuron_Index];
 
 			for (int Target_Delta_Neuron_Index = 0; Target_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER; Target_Delta_Neuron_Index++)
