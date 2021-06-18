@@ -11,3 +11,11 @@ namespace Config_
 
 	int LayerSizeArray[LAYER_AMOUNT] = LAYER_ARRAY;
 }
+
+namespace Config_
+{
+	namespace GUI
+	{
+		float Font_Size = 12.f;
+	}
+}
