@@ -13,6 +13,8 @@ if (UNIX)
     add_definitions(-D_GLFW_X11)
     message(STATUS "Using X11 for window creation")
     find_package(X11 REQUIRED)
+    add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
+    message(STATUS "Defining IMGUI_IMPL_OPENGL_LOADER_GLAD to set ImGUI to use glad")
 endif()
 
 if (WIN32)
@@ -57,6 +59,7 @@ set(sources
     Source/GL/GLSetup.cpp
     Source/GL/Shader.cpp
     Source/GPGPU/NeuralNet.cu
+    Source/GPGPU/NeuralNet_Eval.cu
     Source/GPGPU/Epoch.cu
     Source/GPGPU/GPSetup.cu
     Source/GPGPU/MapVertexBuffer.cu
@@ -73,6 +76,7 @@ set(sources
     Source/Graphics/GrSetup.cu
     Source/Graphics/Thrust.cu
     Source/GUI/GUI.cu
+    Source/GUI/Print_Data_Info.cu
     
     # Glad
     lib/glad/glad.c

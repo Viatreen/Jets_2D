@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-// #define GTX_1080TI							  // Sets SM count to 28
+//#define GTX_1080TI							  // Sets SM count to 28
 
 // Constants
 #define PI									  3.14159f
@@ -27,7 +27,7 @@
 #define TIME_SPEED_FAST_DEFAULT				  512
 #else
 #define SM_COUNT							  4
-#define TIME_SPEED_FAST_DEFAULT				  32
+#define TIME_SPEED_FAST_DEFAULT				  256
 #endif
 
 // Match Configuration
@@ -155,7 +155,8 @@
 #define SENSORS_MEMORY_COUNT				  0	// From 1/32 seconds to 32 seconds
 #define SENSORS_BIAS_NEURON_COUNT			  1
 
-
+///////////////////////////////////////////
+// Policy Network Characteristics
 #define LAYER_SIZE_INPUT					( SENSORS_EDGE_DISTANCE_COUNT * 2 + SENSORS_VELOCITY_COUNT + SENSORS_ANG_VEL_COUNT\
 												+ SENSORS_EXTERNAL_FORCE_COUNT * 2 + SENSORS_ENGINE_ANGLE_COUNT * 4 * 2\
 												+ SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT\
@@ -171,16 +172,36 @@
 #define LAYER_ARRAY							{ LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, NEURONS_PER_HIDDEN_LAYER, NEURONS_PER_HIDDEN_LAYER, LAYER_SIZE_OUTPUT }	// Used for savnig neural network
 
 #define NEURON_COUNT						( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_OUTPUT )							// Sum of layer array
-#define WEIGHT_COUNT						( LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * LAYER_SIZE_OUTPUT )		// Number of weights ~4500
+#define WEIGHT_COUNT						( LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * LAYER_SIZE_OUTPUT )
 #define OUTPUT_LAYER_NEURON_BEGIN_INDEX		( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER )
 
 #define WEIGHTS_MULTIPLIER					  0.25f
 #define NETWORK_ACTIVATION_SLOPE			  0.01f
 #define NETWORK_INVERSE_ACTIVATION_SLOPE	( 1.f / NETWORK_ACTIVATION_SLOPE )
 
-#define SAVE_COUNT_DEFAULT					( CRAFT_COUNT / 2)
+///////////////////////////////////////////
+// Evaluation Network Characteristics
+// TODO: Combine evaluation and policy networks after experimenting with evaluation
+#define LAYER_SIZE_INPUT_EVAL				  LAYER_SIZE_INPUT
+#define LAYER_AMOUNT_HIDDEN_EVAL			  12
+#define NEURONS_PER_HIDDEN_LAYER_EVAL		  32
+#define LAYER_AMOUNT_EVAL					( 2 + LAYER_AMOUNT_HIDDEN_EVAL )		// Input, Hidden, and Output
+#define LAYER_SIZE_OUTPUT_EVAL				  1
 
-#define SHRINK_COEFFICIENT_WEIGHTS			  0.9999f
+#define NEURON_COUNT_EVAL					( LAYER_SIZE_INPUT_EVAL + LAYER_AMOUNT_HIDDEN_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + LAYER_SIZE_OUTPUT_EVAL )
+#define WEIGHT_COUNT_EVAL					( LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + ( LAYER_AMOUNT_HIDDEN_EVAL - 1 ) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + NEURONS_PER_HIDDEN_LAYER_EVAL * LAYER_SIZE_OUTPUT_EVAL )
+#define OUTPUT_LAYER_WEIGHT_BEGIN_IDX_EVAL	( LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + ( LAYER_AMOUNT_HIDDEN_EVAL - 1 ) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL )
+#define OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL	( LAYER_SIZE_INPUT_EVAL + LAYER_AMOUNT_HIDDEN_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL )
+
+#define WEIGHTS_MULTIPLIER_EVAL				  0.25f
+#define NETWORK_ACTIVATION_SLOPE_EVAL		  0.01f
+#define NETWORK_INV_ACTIVATION_SLOPE_EVAL	( 1.f / NETWORK_ACTIVATION_SLOPE_EVAL )
+
+#define SHRINK_COEFFICIENT_WEIGHTS			  0.9999f	
+/* ^^ After neural network is randomly generated, all weights are iteratively shrunk until a reasonable output
+for all output neurons is achieved (Given an input of all ones to the network and the network having no activation function) */
+
+#define SAVE_COUNT_DEFAULT					( CRAFT_COUNT / 2)
 
 // TODO: Add a few rounds where the unfit are replaced by random NNs
 namespace Config_
