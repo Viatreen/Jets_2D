@@ -28,6 +28,9 @@ Index of this file:
 
 */
 
+// TODO: Remove
+#include <iostream>
+
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -6237,12 +6240,12 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
             idx_hovered = v_idx;
         }
 
-        const float t_step = 1.0f / (float)res_w;
+        const double t_step = 1.0f / (double)res_w;
         const float inv_scale = (scale_min == scale_max) ? 0.0f : (1.0f / (scale_max - scale_min));
 
         float v0 = values_getter(data, (0 + values_offset) % values_count);
-        float t0 = 0.0f;
-        ImVec2 tp0 = ImVec2( t0, 1.0f - ImSaturate((v0 - scale_min) * inv_scale) );                       // Point in the normalized space of our target rectangle
+        double t0 = 0.0f;
+        ImVec2 tp0 = ImVec2( (float)t0, 1.0f - ImSaturate((v0 - scale_min) * inv_scale) );                       // Point in the normalized space of our target rectangle
         float histogram_zero_line_t = (scale_min * scale_max < 0.0f) ? (-scale_min * inv_scale) : (scale_min < 0.0f ? 0.0f : 1.0f);   // Where does the zero line stands
 
         const ImU32 col_base = GetColorU32((plot_type == ImGuiPlotType_Lines) ? ImGuiCol_PlotLines : ImGuiCol_PlotHistogram);
@@ -6250,8 +6253,12 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
 
         for (int n = 0; n < res_w; n++)
         {
-            const float t1 = t0 + t_step;
+            const double t1 = t0 + t_step;
             const int v1_idx = (int)(t0 * item_count + 0.5f);
+            // TODO: Remove. This is for testing. Program is failing at round 10123
+            if ( !(v1_idx >= 0 && v1_idx < values_count))
+                std::cout << "v1_idx: " << v1_idx << ", values_count: " << values_count << ", item_count: " << item_count << ", t1: " << t1 << ", t_step: " << t_step << std::endl;
+            // End remove
             IM_ASSERT(v1_idx >= 0 && v1_idx < values_count);
             const float v1 = values_getter(data, (v1_idx + values_offset + 1) % values_count);
             const ImVec2 tp1 = ImVec2( t1, 1.0f - ImSaturate((v1 - scale_min) * inv_scale) );

@@ -1309,7 +1309,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 		//ImGuiWindowFlags_HorizontalScrollbar
 		ImGui::Begin("High Scores Per Round", &ShowProgress, WindowFlags | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
 		float* HighScoreCumulativeVecReverseData = static_cast<float*>(HighScoreCumulativeVecReverse.data());
-		ImGui::PlotLines("", HighScoreCumulativeVecReverseData, HighScoreCumulativeVecReverse.size(), 0, "", 0.f,
+		ImGui::PlotLines("", HighScoreCumulativeVecReverseData, HighScoreCumulativeVecReverse.size() + 1, 0, "", 0.f,
 			(float)HighScoreCumulativeAllTime, ImVec2(ProgressDataWidth, ProgressHeight - 55.f), 4);
 
 		ImGui::End();
