@@ -16,13 +16,8 @@
 #include <Windows.h>		// Removes glad APIENTRY redefine warning
 #endif
 
-//#ifdef _WIN32
-//#include <minwindef.h>	// Removes glad APIENTRY redefine warning
-//#endif
-
-#define GLFW_INCLUDE_NONE
-
 // OpenGL
+#define GLFW_INCLUDE_NONE
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
@@ -43,7 +38,7 @@
 
 // Project Headers
 #include "ErrorCheck.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 #include "GL/GLSetup.h"
 #include "GPGPU/Round.h"
 #include "GPGPU/GPSetup.h"

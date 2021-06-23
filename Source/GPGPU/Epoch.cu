@@ -14,7 +14,7 @@
 #include "GPGPU/Vertices.h"
 #include "GPGPU/Physic.h"
 #include "GPGPU/State.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer *Buffer, config *Config, int Opponent_ID_Weights)
 {

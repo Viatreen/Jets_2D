@@ -7,7 +7,7 @@
 #include "Config.h"
 #include "ErrorCheck.h"
 #include "GPGPU/GPSetup.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 // Turns on rendering of all matches
 void RenderAllMatches();

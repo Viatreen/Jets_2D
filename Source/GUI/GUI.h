@@ -35,7 +35,7 @@
 #include "GPGPU/GPSetup.h"
 #include "GPGPU/SetVariables.h"
 #include "GPGPU/State.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 // Used in SaveCSV() and Load()
 struct CraftWeights

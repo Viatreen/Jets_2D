@@ -33,9 +33,16 @@ struct Weight_Characteristic_Global
 	unsigned int Next_Layer_Size[WEIGHT_COUNT_EVAL];
 };
 
+struct neuron_Indices
+{
+	unsigned int Origin_Neuron_Index;
+	unsigned int Target_Neruon_Index;
+};
+
 __device__ void BackPropagate_Eval(CraftState* C);
 __device__ void Run_Neural_Net_Eval();
 __device__ void Populate_Weight_Data(CraftState* C, Weight_Characteristic_Global* WG, unsigned int Weight_Index);
 __device__ void Copy_Weight_Characteristics_From_Global(Weight_Characteristic_Global* WG, Weight_Characteristic& W);
 __device__ void Run_Neural_Net_Layer_Eval(CraftState* C, Weight_Characteristic* W, bool Do_Activation);
 __device__ void Activate_Layer_Eval(CraftState* C, unsigned int Neuron_Index);
+__device__ neuron_Indices Get_Neuron_Indices(unsigned int Weight_Index);

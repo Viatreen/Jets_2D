@@ -13,8 +13,6 @@
 #include "GPGPU/State.h"
 #include "GPGPU/Physic.h"
 
-
-
 __forceinline__ __device__ void RELU_Activate(float& Neuron)
 {
 	if (Neuron > 1.f)
@@ -27,18 +25,14 @@ __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, i
 {
 	///////////////////////////////////////////////////////////////////////////
 	//// Environment Input to Input Neuron Conversion
-
 	Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
 
 	///////////////////////////////////////////////////////////////////////////
 	//// Neural Net Processing
-
-	// TODO: Change activation back to true
 	Run_Neural_Net(C, true, ID_Craft, ID_Weight);
 
 	////////////////////////////////////////////////////////////////////////////
 	//// Output Conversion
-
 	Output_Neurons_To_Action(C, ID_Craft, Buffer);
 }
 
@@ -454,10 +448,6 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 		if (P0 + P1 + P2 == 0.f)
 			P0 += 0.01f;
 
-		// TODO: This looks like it could be infinity. Double check
-		//float dx = 0.5f * sqrt(3.f) * (P2 - P1) / (P0 + P1 + P2);
-		//float dy = (P0 - 0.5f*(P1 + P2)) / (P0 + P1 + P2);
-
 		float dx = -(P0 - 0.5f * (P1 + P2)) / (P0 + P1 + P2);
 		float dy = 0.5f * __fsqrt_ru(3.f) * (P2 - P1) / (P0 + P1 + P2);
 
@@ -580,7 +570,7 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 	for (int i = 0; i < 4; i++)
 		C->Engine[i].ThrustNormalized[ID_Craft] = C->Neuron[((21 + i) + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
-#ifdef _DEBUGs
+#ifdef DEBUG
 	for (int i = 0; i < NEURON_COUNT; i++)
 		if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
 		{
@@ -767,6 +757,4 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 	return;
 
 	// There is not activation on the output layer
-	
 }
-/**/

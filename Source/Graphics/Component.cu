@@ -13,7 +13,7 @@
 // Project Headers
 #include "Config.h"
 #include "ErrorCheck.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 namespace Craft
 {

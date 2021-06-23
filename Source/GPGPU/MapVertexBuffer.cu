@@ -10,7 +10,7 @@
 #include "Graphics/Thrust.h"
 #include "GPGPU/State.h"
 #include "GPGPU/GPSetup.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 namespace GPGPU
 {

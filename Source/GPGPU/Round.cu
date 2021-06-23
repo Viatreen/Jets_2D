@@ -21,7 +21,7 @@
 #include "Graphics/GrSetup.h"
 #include "Graphics/Component.h"
 #include "GUI/GUI.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 std::chrono::steady_clock::time_point Timer;
 

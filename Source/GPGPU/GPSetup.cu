@@ -7,7 +7,7 @@
 
 // Project Headers
 #include "GPGPU/State.h"
-#include "GPGPU/GPU_Error_Check.h"
+#include "GPGPU/GPErrorCheck.h"
 
 CraftState* Crafts;
 
