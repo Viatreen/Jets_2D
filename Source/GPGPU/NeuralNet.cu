@@ -38,7 +38,7 @@ __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, i
 
 __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int ID_Craft)
 {
-#ifdef _DEBUGs
+#ifdef DEBUG
 	if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
 		printf("NN Before- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
 	if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
@@ -622,6 +622,7 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 }
 
 //*
+// TODO: Update to get the value of delta error at each neuron. Include activated neurons
 __device__ void BackPropagate(CraftState* C, int Craft_ID)
 {
 	// Assumes all hidden layers are the same size
@@ -629,7 +630,6 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 	// Result to solve
 	float Delta_Output_Neuron = 0.f;
 	// float Delta_Weight = 1.f;	// TODO: Figure out the notation
-
 
 	// TODO: Assign this based on Thread ID
 	int Weight_Neuron_Origin = 3;

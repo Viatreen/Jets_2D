@@ -13,8 +13,7 @@ namespace Config_
 }
 
 namespace Config_
-{
-	namespace GUI
+{	namespace GUI
 	{
 		float Font_Size = 12.f;
 	}

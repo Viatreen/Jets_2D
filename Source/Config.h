@@ -43,13 +43,13 @@
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y                           0.2f    // CG is this far below graphical center
 #define CRAFT_MASS                            500.f                
-#define CRAFT_MASS_INVERSE                  ( 1 / CRAFT_MASS)
+#define CRAFT_MASS_INVERSE                  ( 1 / CRAFT_MASS )
 #define CRAFT_ROTATIONAL_INERTIA              655.f
-#define CRAFT_ROTATIONAL_INERTIA_INVERSE    ( 1.f / CRAFT_ROTATIONAL_INERTIA)
+#define CRAFT_ROTATIONAL_INERTIA_INVERSE    ( 1.f / CRAFT_ROTATIONAL_INERTIA )
 #define ENGINE_ROTATIONAL_INERTIA             0.72f                                // kg m^2
-#define ENGINE_ROTATIONAL_INERTIA_INVERSE   ( 1.f / ENGINE_ROTATIONAL_INERTIA)
+#define ENGINE_ROTATIONAL_INERTIA_INVERSE   ( 1.f / ENGINE_ROTATIONAL_INERTIA )
 #define CANNON_ROTATIONAL_INERTIA             1.f
-#define CANNON_ROTATIONAL_INERTIA_INVERSE   ( 1.f / CANNON_ROTATIONAL_INERTIA)
+#define CANNON_ROTATIONAL_INERTIA_INVERSE   ( 1.f / CANNON_ROTATIONAL_INERTIA )
 
 // Craft Geometry in Meters
 #define WINGSPAN                              4.f
@@ -188,7 +188,7 @@
 // TODO: Combine evaluation and policy networks after experimenting with evaluation
 #define LAYER_SIZE_INPUT_EVAL                 LAYER_SIZE_INPUT
 #define LAYER_AMOUNT_HIDDEN_EVAL              12
-#define NEURONS_PER_HIDDEN_LAYER_EVAL         32
+#define NEURONS_PER_HIDDEN_LAYER_EVAL         169
 #define LAYER_AMOUNT_EVAL                   ( 2 + LAYER_AMOUNT_HIDDEN_EVAL )        // Input, Hidden, and Output
 #define LAYER_SIZE_OUTPUT_EVAL                1
 

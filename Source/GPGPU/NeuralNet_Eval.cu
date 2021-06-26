@@ -1,15 +1,17 @@
-
-
-
 // File Header
 #include "NeuralNet_Eval.h"
 
 // Project Headers
 #include "NeuralNet.h"
 
+__device__ void BackPropagate_Populate_Neurons(CraftState* C, const unsigned int &Weight_Index)
+{
+    //C->Eval_Network.Delta_Neuron[];
+}
+
 __device__ void BackPropagate_Eval(CraftState* C, Weight_Characteristic *W)
 {
-    // Make sure W->W->Weight_Index is not greater than or equal to weight amount
+    // Make sure Weight_Index is not greater than or equal to weight amount
 
     float Origin_Neuron = C->Eval_Network.Neuron[W->Origin_Neuron_Index];
     float Weight = C->Eval_Network.Weight[W->Weight_Index];
@@ -117,7 +119,7 @@ Storing in global memory would be cleaner
 Will Weight_Characteristic struct even fit on the registers of each thread
 */
 
-__device__ void Populate_Weight_Data(CraftState* C, Weight_Characteristic_Global* WG, unsigned int Weight_Index)
+__device__ void Populate_Weight_Data(CraftState* C, Weight_Characteristic_Global* WG, const unsigned int &Weight_Index)
 {
     Weight_Characteristic W;
 
@@ -226,19 +228,59 @@ __device__ void Copy_Weight_Characteristics_From_Global(Weight_Characteristic_Gl
     W->Next_Layer_Size                  = WG->Next_Layer_Size[W->Weight_Index];
 }
 
-__device__ void Run_Neural_Net_Layer_Eval(CraftState* C, Weight_Characteristic *W, bool Do_Activation)
+__device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Weight_Index, const bool &Do_Activation)
 {
-    float Neuron = C->Eval_Network.Neuron[W->Origin_Neuron_Index];
-    float Weight = C->Eval_Network.Weight[W->Weight_Index];
+    neuron_Indices Neuron_Value = Get_Neuron_Indices(Weight_Index);
 
+    float Weight = C->Eval_Network.Weight[Weight_Index];
+    float Neuron = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index];
+    
     float Signal = Neuron * Weight;
 
+    atomicAdd(&C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index], Signal);
+
     // TODO: Finish this
-    // atomicAdd(&C->Eval_Network.Neuron[])
+    // synchronize grid
 }
 
 // Must make sure Neuron_Index does not exceed neuron amount and is the proper subset
-__device__ void Activate_Layer_Eval(CraftState* C, unsigned int Neuron_Index)
+__device__ void Activate_Layer_Eval(CraftState* C, const unsigned int &Neuron_Index)
 {
     RELU_Activate(C->Eval_Network.Neuron[Neuron_Index]);
+}
+
+// Get origin neuron index and target neuron index of each weight. Make sure the Weight_Index value is bounds checked before passed in 
+__device__ neuron_Indices Get_Neuron_Indices(const unsigned int &Weight_Index)
+{
+    neuron_Indices Result;
+
+    if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
+    {
+        Result.Layer_Index = 0;
+        Result.Origin_Neuron_Index = Weight_Index / NEURONS_PER_HIDDEN_LAYER_EVAL;
+        Result.Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Weight_Index % NEURONS_PER_HIDDEN_LAYER_EVAL;
+    }
+    else if (Weight_Index < LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL + (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL)
+    {
+        unsigned int Weight_Index_Within_Layer = (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) % (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
+        unsigned int Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / NEURONS_PER_HIDDEN_LAYER_EVAL;
+        unsigned int Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % NEURONS_PER_HIDDEN_LAYER_EVAL;
+
+        Result.Layer_Index = 1 + (Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL) / (NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL);
+        Result.Origin_Neuron_Index = LAYER_SIZE_INPUT_EVAL + (Result.Layer_Index - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
+        Result.Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + Result.Layer_Index * NEURONS_PER_HIDDEN_LAYER_EVAL + Target_Neuron_Index_Within_Layer;
+    }
+    else
+    {
+        Result.Layer_Index = LAYER_AMOUNT_EVAL - 1;
+        unsigned int Weight_Index_Within_Layer = Weight_Index - LAYER_SIZE_INPUT_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL - (LAYER_AMOUNT_HIDDEN_EVAL - 1) * NEURONS_PER_HIDDEN_LAYER_EVAL * NEURONS_PER_HIDDEN_LAYER_EVAL;
+
+        unsigned int Origin_Neuron_Index_Within_Layer = Weight_Index_Within_Layer / LAYER_SIZE_OUTPUT_EVAL;
+        unsigned int Target_Neuron_Index_Within_Layer = Weight_Index_Within_Layer % LAYER_SIZE_OUTPUT_EVAL;
+
+        Result.Origin_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL - NEURONS_PER_HIDDEN_LAYER_EVAL + Origin_Neuron_Index_Within_Layer;
+        Result.Target_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL + Target_Neuron_Index_Within_Layer;
+    }
+
+    return Result;
 }
