@@ -331,6 +331,7 @@ namespace glm
 			return perspectiveRH_ZO(fovy, aspect, zNear, zFar);
 		else GLM_IF_CONSTEXPR(GLM_CONFIG_CLIP_CONTROL == GLM_CLIP_CONTROL_RH_NO)
 			return perspectiveRH_NO(fovy, aspect, zNear, zFar);
+		return perspectiveRH_NO(fovy, aspect, zNear, zFar);
 	}
 
 	template<typename T>

@@ -5,6 +5,7 @@
 #include "curand_kernel.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "cooperative_groups.h"
 
 // Project Headers
 #include "Config.h"
@@ -20,9 +21,17 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
+	// if (idx == 0)
+	// {
+	// 	printf("Match pointer: %p, Craft: %p, Buffer: %p, Config: %p, Opp_ID: %d\n", Match, C, Buffer, Config, Opponent_ID_Weights);
+	// }
+
 	// Process a few physics time steps
 	for (int TimeStepIteration = 0; TimeStepIteration < Config->IterationsPerCall && !Match->Done[idx]; TimeStepIteration++)
 	{
+		// cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+		// grid.sync();
+
 		if (Match->ElapsedSteps[idx] % (FRAMERATE_NN_PHYSICS) == 0)
 		{
 			// Trainee neural network

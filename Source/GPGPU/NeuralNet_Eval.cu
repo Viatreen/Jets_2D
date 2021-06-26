@@ -1,5 +1,6 @@
 // File Header
 #include "NeuralNet_Eval.h"
+#include <cooperative_groups.h>
 
 // Project Headers
 #include "NeuralNet.h"
@@ -103,10 +104,31 @@ __device__ void BackPropagate_Eval(CraftState* C, Weight_Characteristic *W)
     C->Eval_Network.Delta_Weight[W->Weight_Index] = Delta_Output_Neuron;
 }
 
-__device__ void Run_Neural_Net_Eval()
-{
+// __device__ void Run_Neural_Net_Eval()
+// {
+//     unsigned int Thread_Count = blockDim.x * gridDim.x;
+//     unsigned int Weight_Index;
 
-}
+//     for (unsigned int Layer = 0; Layer < LAYER_AMOUNT; Layer++)
+//     {
+//         // if (Layer == 0)
+//         // {
+//         //     unsigned int Iterations = (LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER) / Thread_Count;
+//         //     if((LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER) % Thread_Count != 0 || Iterations == 0)
+//         //     {
+//         //         Iterations++;
+//         //     }
+
+//         //     for (unsigned int i = 0; i < Iterations; i++)
+//         //     {
+//         //         Weight_Index = 
+//         //     }
+//         // }
+
+//         cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+//         grid.sync();
+//     }
+// }
 
 /* TODO: Test if it's faster to have a pre-allocated array of the characteristic
 of each weight and store it on global memory, or if it's faster to calculate each
@@ -212,6 +234,13 @@ __device__ void Populate_Weight_Data(CraftState* C, Weight_Characteristic_Global
     WG->Weight_Index_Layer_Begin[W.Weight_Index]         = W.Weight_Index_Layer_Begin;
     WG->Weight_Index_Within_Layer[W.Weight_Index]        = W.Weight_Index_Within_Layer;
     WG->Next_Layer_Size[W.Weight_Index]                  = W.Next_Layer_Size;
+}
+
+__device__ void Populate_Delta_Neurons(CraftState* C, const unsigned int &Weight_Index)
+{
+    neuron_Indices Neuron_Values = Get_Neuron_Indices(Weight_Index);
+
+
 }
 
 __device__ void Copy_Weight_Characteristics_From_Global(Weight_Characteristic_Global* WG, Weight_Characteristic *W)

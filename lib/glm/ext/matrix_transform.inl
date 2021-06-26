@@ -148,5 +148,6 @@ namespace glm
 			return lookAtLH(eye, center, up);
 		else
 			return lookAtRH(eye, center, up);
+		return lookAtRH(eye, center, up);
 	}
 }//namespace glm

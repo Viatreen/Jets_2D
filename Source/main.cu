@@ -75,7 +75,7 @@ int main()
 		// Original Side of the Circle
 		Round();
 
-		std::cout << "Round " << RoundNumber;
+		//std::cout << "Round " << RoundNumber;
 		RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());
 

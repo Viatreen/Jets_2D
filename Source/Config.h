@@ -13,12 +13,12 @@
 #define LIFE_RADIUS                           15.f
 
 // Graphics
-#define FRAMES_PER_SECOND                     64
-#define FRAMERATE_NN                          32
-#define FRAMERATE_PHYSICS                     64
+#define FRAMES_PER_SECOND                     60
+#define FRAMERATE_NN                          15
+#define FRAMERATE_PHYSICS                     60
 #define FRAMERATE_NN_PHYSICS                ( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP                           ( 1.f / float(FRAMERATE_PHYSICS) )    // Divide by a power of 2 for bit manipulation+
-#define TIME_MATCH                            32.f  // Seconds
+#define TIME_MATCH                            30.f  // Seconds
 
 // CUDA
 #define BLOCK_SIZE                            256

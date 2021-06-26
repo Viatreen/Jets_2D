@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.17)
 
+if (UNIX)
+    set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+endif()
+
 project(Controls.app LANGUAGES CXX C CUDA)
 message("Project name: " ${CMAKE_PROJECT_NAME})
 

@@ -6,11 +6,11 @@
 
 // CUDA
 #include <device_launch_parameters.h>
+#include <cooperative_groups.h>
 
 #ifdef _WIN32
 #include <Windows.h>		// Removes glad APIENTRY redefine warning
 #endif
-
 
 // Project Headers
 #include "Config.h"
@@ -22,6 +22,7 @@
 #include "Graphics/Component.h"
 #include "GUI/GUI.h"
 #include "GPGPU/GPErrorCheck.h"
+#include "GPGPU/Cooperative_Call.h"
 
 std::chrono::steady_clock::time_point Timer;
 
@@ -75,7 +76,14 @@ void Round()
 						// std::cout << "d_Config: " << d_Config << std::endl;
 						// std::cout << "Opponent_ID_Weights: " << Opponent_ID_Weights << std::endl;
 
-						RunEpoch << <CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE >> > (Match, Crafts, d_Buffer, d_Config, Opponent_ID_Weights);
+						cudaDeviceProp DeviceProp;
+						cudaGetDeviceProperties(&DeviceProp, 0);
+
+						//void *Args[] { &Match, &Crafts, &d_Buffer, &d_Config, &Opponent_ID_Weights };
+						//cudaLaunchCooperativeKernel((void*)RunEpoch, 50, 50, Args);
+						
+						//Cooperative_Launch(RunEpoch, DeviceProp.multiProcessorCount, CRAFT_COUNT, Match, Crafts, d_Buffer, d_Config, Opponent_ID_Weights);
+						RunEpoch<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Match, Crafts, d_Buffer, d_Config, Opponent_ID_Weights);
 						cudaCheck(cudaDeviceSynchronize());
 						GPGPU::CUDA_Unmap();
 
@@ -90,7 +98,7 @@ void Round()
 				}
 			}
 
-			ScoreCumulativeCalc << <CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE >> > (Crafts);
+			ScoreCumulativeCalc<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 
 			MatchEnd();
 			h_AllDone = false;
