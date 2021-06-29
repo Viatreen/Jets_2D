@@ -15,7 +15,7 @@
 
 __device__ void WeightsMutateAndTransfer(CraftState* C, config* Config, int SourceIndex, int TargetIndex)
 {
-	for (int i = 0; i < WEIGHT_COUNT; i++)
+	for (int i = 0; i < WEIGHT_AMOUNT; i++)
 	{
 		float Chance = curand_uniform(&C->RandState[SourceIndex]);
 
@@ -75,8 +75,8 @@ __global__ void RoundPrintFirstPlace(CraftState* C)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
-	// if (C->Place[idx] == 0)
-	// 	printf(" First place ID: %6d, Score: %7.2f\n", idx, C->ScoreCumulative[idx] / (4));
+	if (C->Place[idx] == 0)
+		printf(" First place ID: %6d, Score: %7.2f\n", idx, C->ScoreCumulative[idx] / (4));
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -102,7 +102,7 @@ __global__ void WeightsAndIDTempSave(CraftState* C, temp* Temp)	// TODO: Fix thi
 	{
 		int PlaceID = C->Place[idx];
 
-		for (int i = 0; i < WEIGHT_COUNT; i++)
+		for (int i = 0; i < WEIGHT_AMOUNT; i++)
 			Temp->Weight[FIT_COUNT * i + PlaceID] = C->Weight[CRAFT_COUNT * i + idx];
 
 		C->TempID[PlaceID] = C->ID[idx];
@@ -114,7 +114,7 @@ __global__ void WeightsAndIDTransfer(CraftState* C, temp* Temp)
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
-	for (int i = 0; i < WEIGHT_COUNT; i++)
+	for (int i = 0; i < WEIGHT_AMOUNT; i++)
 		C->Weight[CRAFT_COUNT * i + idx] = Temp->Weight[FIT_COUNT * i + idx];
 
 	C->ID[idx] = C->TempID[idx];
@@ -180,7 +180,7 @@ __device__ void Shrink_Weights(CraftState* C)
 			{
 				Shrink_Count++;
 			}
-			for (int i = 0; i < WEIGHT_COUNT; i++)
+			for (int i = 0; i < WEIGHT_AMOUNT; i++)
 			{
 				C->Weight[CRAFT_COUNT * i + idx] *= SHRINK_COEFFICIENT_WEIGHTS;
 			}
@@ -195,18 +195,18 @@ __device__ void Shrink_Weights(CraftState* C)
 				{
 					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
 					printf("%46.6f ", Value);
-					if (i < NEURONS_PER_HIDDEN_LAYER)
+					if (i < LAYER_SIZE_HIDDEN)
 					{
 						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 						{
-							float Value = C->Neuron[2 * CRAFT_COUNT * ( j * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_INPUT + i ) + idx];
+							float Value = C->Neuron[2 * CRAFT_COUNT * ( j * LAYER_SIZE_HIDDEN + LAYER_SIZE_INPUT + i ) + idx];
 							printf("%46.6f ", Value);
 						}
 					}
 					if (i < LAYER_SIZE_OUTPUT)
 					{
 						float Value = C->Neuron[2 * CRAFT_COUNT * ( OUTPUT_LAYER_NEURON_BEGIN_INDEX + i ) + idx];
-						if (i >= NEURONS_PER_HIDDEN_LAYER)
+						if (i >= LAYER_SIZE_HIDDEN)
 							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
 								printf(" ");
 						printf("%46.6f", Value);
@@ -220,18 +220,18 @@ __device__ void Shrink_Weights(CraftState* C)
 				{
 					float Value = C->Neuron[2 * CRAFT_COUNT * i + idx];
 					printf("%46.6f ", Value);
-					if (i < NEURONS_PER_HIDDEN_LAYER)
+					if (i < LAYER_SIZE_HIDDEN)
 					{
 						for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 						{
-							float Value = C->Neuron[2 * CRAFT_COUNT * (j * NEURONS_PER_HIDDEN_LAYER + LAYER_SIZE_INPUT + i) + idx];
+							float Value = C->Neuron[2 * CRAFT_COUNT * (j * LAYER_SIZE_HIDDEN + LAYER_SIZE_INPUT + i) + idx];
 							printf("%46.6f ", Value);
 						}
 					}
 					if (i < LAYER_SIZE_OUTPUT)
 					{
 						float Value = C->Neuron[2 * CRAFT_COUNT * (OUTPUT_LAYER_NEURON_BEGIN_INDEX + i) + idx];
-						if (i >= NEURONS_PER_HIDDEN_LAYER)
+						if (i >= LAYER_SIZE_HIDDEN)
 							for (int k = 0; k < 47 * LAYER_AMOUNT_HIDDEN; k++)
 								printf(" ");
 						printf("%46.6f", Value);
@@ -255,7 +255,7 @@ __global__ void Init(CraftState* C)
 
 	curand_init(124, idx, 0, &(C->RandState[idx]));
 
-	for (int i = 0; i < WEIGHT_COUNT; i++)
+	for (int i = 0; i < WEIGHT_AMOUNT; i++)
 		C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
 
 	Shrink_Weights(C);
@@ -289,12 +289,12 @@ __global__ void Init(CraftState* C)
 
 	C->ID[idx] = idx;
 
-#pragma unroll
+// #pragma unroll
 	// Set Bias Neurons
-	for (int i = 0; i < SENSORS_BIAS_NEURON_COUNT; i++)
+	for (int i = 0; i < SENSORS_BIAS_NEURON_AMOUNT; i++)
 	{
-		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx] = 1.f;					// Trainee
-		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_COUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx + CRAFT_COUNT] = 1.f;	// Opponent
+		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_AMOUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx] = 1.f;					// Trainee
+		C->Neuron[(LAYER_SIZE_INPUT - SENSORS_BIAS_NEURON_AMOUNT) * 2 * CRAFT_COUNT + 2 * CRAFT_COUNT * i + idx + CRAFT_COUNT] = 1.f;	// Opponent
 	}
 } // End init function
 

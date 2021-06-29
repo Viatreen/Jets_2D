@@ -44,6 +44,7 @@
 #include "GPGPU/GPSetup.h"
 #include "GPGPU/MapVertexBuffer.h"
 #include "GPGPU/Match.h"
+#include "GPGPU/NeuralNet_Eval.h"
 #include "GPGPU/State.h"
 #include "GUI/GUI.h"
 #include "GUI/Print_Data_Info.h"
@@ -58,10 +59,13 @@ int main()
 	Mem::Setup();
 	Setup();
 	Graphics::Setup();
-	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+	// TODO: Fix this function
+	// Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 	cudaCheck(cudaDeviceSynchronize());
 
-	Print_Data_Info();
+	// Print_Data_Info();
+	Test_Neural_Net_Eval(Crafts);
+	return 0;
 
 	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
@@ -103,6 +107,8 @@ int main()
 		cudaCheck(cudaDeviceSynchronize());
 
 		RoundEnd2();
+
+		return 0;
 	}
 
 	// Cleanup

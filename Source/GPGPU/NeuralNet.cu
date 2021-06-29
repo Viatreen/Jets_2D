@@ -80,7 +80,7 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 			printf("NN Before- Craft(%d), Eng(%d), Thrust Norm NaN, %f\n", ID_Craft, i, C->Engine[i].ThrustNormalized[ID_Craft]);
 	}
 
-	for (int i = 0; i < NEURON_COUNT; i++)
+	for (int i = 0; i < NEURON_AMOUNT; i++)
 		if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
 		{
 			printf("1 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
@@ -351,7 +351,7 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 	//	C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + i) + ID_Craft] += C->Neuron[CRAFT_COUNT * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + i) + ID_Craft] / float(1 << i);
 	//}
 
-	/*for (int i = 0; i < NEURON_COUNT; i++)
+	/*for (int i = 0; i < NEURON_AMOUNT; i++)
 		if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
 		{
 			printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
@@ -362,22 +362,22 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
 __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons, int ID_Weights)
 {
 	// Init network to zero (Except for input neurons)
-	for (unsigned int i = LAYER_SIZE_INPUT; i < NEURON_COUNT; i++)
+	for (unsigned int i = LAYER_SIZE_INPUT; i < NEURON_AMOUNT; i++)
 		C->Neuron[2 * CRAFT_COUNT * i + ID_Neurons] = 0.f;
 
 	// Calculate values of first hidden layer
 	for (unsigned int Input = 0; Input < LAYER_SIZE_INPUT; Input++)
 	{
-		for (unsigned int Output = LAYER_SIZE_INPUT; Output < LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER; Output++)
+		for (unsigned int Output = LAYER_SIZE_INPUT; Output < LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN; Output++)
 		{
-			unsigned int Weight_Index = Input * NEURONS_PER_HIDDEN_LAYER + Output; // TODO: Investigate. This is never 0
+			unsigned int Weight_Index = Input * LAYER_SIZE_HIDDEN + Output; // TODO: Investigate. This is never 0
 
 			C->Neuron[2 * CRAFT_COUNT * Output + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
 		}
 	}
 
 	// Activate first hidden layer
-	for (unsigned int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
+	for (unsigned int i = 0; i < LAYER_SIZE_HIDDEN; i++)
 	{
 		unsigned int Index = i + LAYER_SIZE_INPUT;
 
@@ -388,44 +388,45 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 	// Calculate values for neurons of hidden layers
 	for (unsigned int Layer = 1; Layer < LAYER_AMOUNT_HIDDEN; Layer++)
 	{
-		for (unsigned int Input = 0; Input < NEURONS_PER_HIDDEN_LAYER; Input++)
+		for (unsigned int Input = 0; Input < LAYER_SIZE_HIDDEN; Input++)
 		{
-			for (unsigned int Output = 0; Output < NEURONS_PER_HIDDEN_LAYER; Output++)
+			for (unsigned int Output = 0; Output < LAYER_SIZE_HIDDEN; Output++)
 			{
-				unsigned int Output_Index = LAYER_SIZE_INPUT + Layer * NEURONS_PER_HIDDEN_LAYER + Output;
-				unsigned int Input_Index  = LAYER_SIZE_INPUT + (Layer - 1) * NEURONS_PER_HIDDEN_LAYER + Input;
+				unsigned int Output_Index = LAYER_SIZE_INPUT + Layer * LAYER_SIZE_HIDDEN + Output;
+				unsigned int Input_Index  = LAYER_SIZE_INPUT + (Layer - 1) * LAYER_SIZE_HIDDEN + Input;
 
 				unsigned int Weight_Index
-					= LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER
-					+ NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * (Layer - 1)
-					+ Input * NEURONS_PER_HIDDEN_LAYER
+					= WEIGHT_AMOUNT_INPUT_LAYER
+					+ WEIGHT_AMOUNT_HIDDEN_LAYER * (Layer - 1)
+					+ Input * LAYER_SIZE_HIDDEN
 					+ Output;
 
+				// There's an error in this line
 				C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
 			}
 		}
 
-		for (unsigned int Output = 0; Output < NEURONS_PER_HIDDEN_LAYER; Output++)
+		for (unsigned int Output = 0; Output < LAYER_SIZE_HIDDEN; Output++)
 		{
-			unsigned int Index = LAYER_SIZE_INPUT + Layer * NEURONS_PER_HIDDEN_LAYER + Output;
+			unsigned int Index = LAYER_SIZE_INPUT + Layer * LAYER_SIZE_HIDDEN + Output;
 
 			if (Do_Activation)
-				for (unsigned int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
+				for (unsigned int i = 0; i < LAYER_SIZE_HIDDEN; i++)
 					RELU_Activate(C->Neuron[2 * CRAFT_COUNT * Index + ID_Neurons]);
 		}
 	}
 
 	// Calculate output neurons
-	for (unsigned int Input = 0; Input < NEURONS_PER_HIDDEN_LAYER; Input++)
+	for (unsigned int Input = 0; Input < LAYER_SIZE_HIDDEN; Input++)
 	{
 		for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
 		{
-			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * NEURONS_PER_HIDDEN_LAYER + Output;
-			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * NEURONS_PER_HIDDEN_LAYER + Input;
+			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + Output;
+			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * LAYER_SIZE_HIDDEN + Input;
 
 			unsigned int Weight_Index
-				= LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER
-				+ NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1)
+				= LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN
+				+ WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1)
 				+ Input * LAYER_SIZE_OUTPUT
 				+ Output;
 
@@ -571,7 +572,7 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 		C->Engine[i].ThrustNormalized[ID_Craft] = C->Neuron[((21 + i) + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
 #ifdef DEBUG
-	for (int i = 0; i < NEURON_COUNT; i++)
+	for (int i = 0; i < NEURON_AMOUNT; i++)
 		if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
 		{
 			printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
@@ -651,13 +652,13 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 	}
 	else
 	{
-		Weight_Index += LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER;
-		Weight_Index += NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * (Layer - 1);
+		Weight_Index += LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN;
+		Weight_Index += WEIGHT_AMOUNT_HIDDEN_LAYER * (Layer - 1);
 
-		Origin_Neuron_Index = LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * (Layer - 1) + Weight_Neuron_Origin;
-		Target_Neuron_Index = LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * Layer	    + Weight_Neuron_Destination;
+		Origin_Neuron_Index = LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * (Layer - 1) + Weight_Neuron_Origin;
+		Target_Neuron_Index = LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * Layer	    + Weight_Neuron_Destination;
 
-		Previous_Layer_Size = NEURONS_PER_HIDDEN_LAYER;
+		Previous_Layer_Size = LAYER_SIZE_HIDDEN;
 	}
 
 	Weight_Index += Weight_Neuron_Origin * Previous_Layer_Size + Weight_Neuron_Destination;
@@ -683,23 +684,23 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 	if (Target_Neuron > 1.f || Target_Neuron < -1.f)
 		Delta_First_Neuron *= NETWORK_ACTIVATION_SLOPE;
 
-	float Delta_Neuron_Previous_Layer[NEURONS_PER_HIDDEN_LAYER];
-	float Delta_Neuron_Next_Layer[NEURONS_PER_HIDDEN_LAYER];
+	float Delta_Neuron_Previous_Layer[LAYER_SIZE_HIDDEN];
+	float Delta_Neuron_Next_Layer[LAYER_SIZE_HIDDEN];
 
 	// Populate Delta_Neuron_Previous_Layer
 	// First loop is just the delta of one neuron broadcasting to the next layer
 	// TODO: Combine these 2 loops
-	for (int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
+	for (int i = 0; i < LAYER_SIZE_HIDDEN; i++)
 	{
 		// TODO: Fix this indexing
-		int First_Broadcast_Neuron_Weight_Index = Weight_Index + NEURONS_PER_HIDDEN_LAYER * Weight_Neuron_Origin + i;
+		int First_Broadcast_Neuron_Weight_Index = Weight_Index + LAYER_SIZE_HIDDEN * Weight_Neuron_Origin + i;
 		float First_Broadcast_Neuron_Weight = C->Weight[CRAFT_COUNT * First_Broadcast_Neuron_Weight_Index + Craft_ID];
 		Delta_Neuron_Previous_Layer[i] = First_Broadcast_Neuron_Weight * Delta_First_Neuron;
 	}
 
-	for (int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
+	for (int i = 0; i < LAYER_SIZE_HIDDEN; i++)
 	{
-		int Target_Delta_Neuron_Index = LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * (Layer - 1) + i;
+		int Target_Delta_Neuron_Index = LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * (Layer - 1) + i;
 		float Target_Delta_Neuron = C->Neuron[2 * CRAFT_COUNT * Target_Delta_Neuron_Index + Craft_ID];
 		if (Target_Delta_Neuron > 1.f || Target_Delta_Neuron < -1.f)
 		{
@@ -709,24 +710,24 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 
 	for (int Layer_Index = Layer + 2; Layer_Index < LAYER_AMOUNT - 2; Layer_Index++)
 	{
-		int Broadcast_Neuron_Index_Begin = LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * (Layer_Index - 1);
-		int Broadcast_Weight_Index_Begin = LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER * (Layer_Index - 1);
+		int Broadcast_Neuron_Index_Begin = LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * (Layer_Index - 1);
+		int Broadcast_Weight_Index_Begin = LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + WEIGHT_AMOUNT_HIDDEN_LAYER * (Layer_Index - 1);
 
 		// TODO: Combine this loop and the next loop
-		for (int Origin_Delta_Neuron_Index = 0; Origin_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER; Origin_Delta_Neuron_Index++)
+		for (int Origin_Delta_Neuron_Index = 0; Origin_Delta_Neuron_Index < LAYER_SIZE_HIDDEN; Origin_Delta_Neuron_Index++)
 		{
 			float Broadcast_Delta_Neuron = Delta_Neuron_Previous_Layer[Origin_Delta_Neuron_Index];
 
-			for (int Target_Delta_Neuron_Index = 0; Target_Delta_Neuron_Index < NEURONS_PER_HIDDEN_LAYER; Target_Delta_Neuron_Index++)
+			for (int Target_Delta_Neuron_Index = 0; Target_Delta_Neuron_Index < LAYER_SIZE_HIDDEN; Target_Delta_Neuron_Index++)
 			{
-				int Broadcast_Weight_Index = Broadcast_Weight_Index_Begin + Origin_Delta_Neuron_Index * NEURONS_PER_HIDDEN_LAYER + Target_Delta_Neuron_Index;
+				int Broadcast_Weight_Index = Broadcast_Weight_Index_Begin + Origin_Delta_Neuron_Index * LAYER_SIZE_HIDDEN + Target_Delta_Neuron_Index;
 				float Broadcast_Weight = C->Weight[CRAFT_COUNT * Broadcast_Weight_Index + Craft_ID];
 
 				Delta_Neuron_Next_Layer[Target_Delta_Neuron_Index] += Broadcast_Weight * Broadcast_Delta_Neuron;
 			}
 		}
 
-		for (int j = 0; j < NEURONS_PER_HIDDEN_LAYER; j++)
+		for (int j = 0; j < LAYER_SIZE_HIDDEN; j++)
 		{
 			float Target_Neuron_For_Delta = C->Neuron[2 * CRAFT_COUNT * (Broadcast_Neuron_Index_Begin + j) + Craft_ID];
 			if (Target_Neuron_For_Delta > 1.f || Target_Neuron_For_Delta < -1.f)
@@ -742,9 +743,9 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 		}
 	}
 
-	for (int i = 0; i < NEURONS_PER_HIDDEN_LAYER; i++)
+	for (int i = 0; i < LAYER_SIZE_HIDDEN; i++)
 	{
-		int Weight_Begin_Index = LAYER_SIZE_INPUT * NEURONS_PER_HIDDEN_LAYER + (LAYER_AMOUNT_HIDDEN - 1) * NEURONS_PER_HIDDEN_LAYER * NEURONS_PER_HIDDEN_LAYER;
+		int Weight_Begin_Index = LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN + (LAYER_AMOUNT_HIDDEN - 1) * WEIGHT_AMOUNT_HIDDEN_LAYER;
 		// TODO: Fix this indexing
 		int Last_Bottle_Neuron_Weight_Index = Weight_Begin_Index + Target_Output_Neuron + (LAYER_SIZE_OUTPUT - 1) * i;
 		float Last_Bottle_Neuron_Weight = C->Weight[CRAFT_COUNT * Last_Bottle_Neuron_Weight_Index + Craft_ID];

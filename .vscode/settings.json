@@ -48,7 +48,10 @@
         "functional": "cpp",
         "iterator": "cpp",
         "map": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "bit": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "cmake.configureOnOpen": true

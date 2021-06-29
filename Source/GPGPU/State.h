@@ -38,22 +38,22 @@ struct bullet
 
 struct temp
 {
-	float Weight[FIT_COUNT * WEIGHT_COUNT];
+	float Weight[FIT_COUNT * WEIGHT_AMOUNT];
 };
 
 struct eval_Network
 {
-	float Weight[WEIGHT_COUNT_EVAL];
-	float Neuron[NEURON_COUNT_EVAL];
-	float Delta_Weight[WEIGHT_COUNT_EVAL];	// For backpropagation
-	float Delta_Neuron[NEURON_COUNT_EVAL];
+	float Weight[WEIGHT_AMOUNT_EVAL];
+	float Neuron[NEURON_AMOUNT_EVAL];
+	float Delta_Weight[WEIGHT_AMOUNT_EVAL];	// For backpropagation
+	float Delta_Neuron[NEURON_AMOUNT_EVAL];
 };
 
 struct CraftState
 {
 	eval_Network Eval_Network;
-	float Weight[CRAFT_COUNT * WEIGHT_COUNT];
-	float Neuron[2 * CRAFT_COUNT * NEURON_COUNT];
+	float Weight[CRAFT_COUNT * WEIGHT_AMOUNT];
+	float Neuron[2 * CRAFT_COUNT * NEURON_AMOUNT];
 	curandState RandState[2 * CRAFT_COUNT];
 
 	Vec2 Position;
@@ -145,7 +145,7 @@ struct state
 
 	bool Active;
 
-	float Neuron[NEURON_COUNT];
+	float Neuron[NEURON_AMOUNT];
 };
 
 struct GraphicsObjectPointer

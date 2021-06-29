@@ -125,7 +125,7 @@ __global__ void SaveWeights(CraftWeights* Weights, CraftState* Crafts, int Index
 {
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-	if (idx < WEIGHT_COUNT)
+	if (idx < WEIGHT_AMOUNT)
 		Weights->w[idx] = Crafts->Weight[CRAFT_COUNT * idx + IndexFrom];
 }
 
@@ -134,7 +134,7 @@ __global__ void LoadWeights(CraftWeights* Weights, CraftState* Crafts, int Index
 {
 	int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
-	if (idx < WEIGHT_COUNT)
+	if (idx < WEIGHT_AMOUNT)
 		Crafts->Weight[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
 }
 
@@ -168,7 +168,7 @@ __global__ void CopyState(CraftState* C, state* State, int Index)	// Must only c
 	State->CannonCommandAngle = C->CannonCommandAngle[Index] * 180.f / PI;
 	State->CannonStrength = C->CannonStrength[Index];
 
-	for (int i = 0; i < NEURON_COUNT; i++)
+	for (int i = 0; i < NEURON_AMOUNT; i++)
 		State->Neuron[i] = C->Neuron[i * CRAFT_COUNT * 2 + Index];
 
 	for (int i = 0; i < 4; i++)
@@ -225,8 +225,8 @@ void SaveCSV()
 
 		// Neural Network
 		SaveStream << "Number of layers," << LAYER_AMOUNT << "\n";
-		SaveStream << "Total Number of Neurons," << NEURON_COUNT << "\n";
-		SaveStream << "Number of Weights," << WEIGHT_COUNT << "\n";
+		SaveStream << "Total Number of Neurons," << NEURON_AMOUNT << "\n";
+		SaveStream << "Number of Weights," << WEIGHT_AMOUNT << "\n";
 		SaveStream << "Layer Size Array,";
 		for (int i = 0; i < LAYER_AMOUNT - 1; i++)
 			SaveStream << Config_::LayerSizeArray[i] << ",";
@@ -279,7 +279,7 @@ void SaveCSV()
 			cudaCheck(cudaMalloc(&d_CraftWeights, sizeof(CraftWeights)));
 			cudaCheck(cudaDeviceSynchronize());
 
-			SaveWeights<<<WEIGHT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
+			SaveWeights<<<WEIGHT_AMOUNT / BLOCK_SIZE, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
 			cudaCheck(cudaDeviceSynchronize());
 
 			CraftWeights* h_CraftWeights = new CraftWeights;
@@ -288,12 +288,12 @@ void SaveCSV()
 			CraftString << h_ScoreCumulative[i] << ",";
 			CraftString << h_CraftPlace[i] << ",";
 
-			for (int j = 0; j < WEIGHT_COUNT - 1; j++)
+			for (int j = 0; j < WEIGHT_AMOUNT - 1; j++)
 			{
 				CraftString << h_CraftWeights->w[j] << ",";
 			}
 
-			CraftString << h_CraftWeights->w[WEIGHT_COUNT - 1] << "\n";
+			CraftString << h_CraftWeights->w[WEIGHT_AMOUNT - 1] << "\n";
 
 			delete h_CraftWeights;
 			cudaCheck(cudaFree(d_CraftWeights));
@@ -314,7 +314,7 @@ void SaveTopBinary(int CraftCount)
 	tm* TimeInfo;
 	time(&RawTime);
 	TimeInfo = localtime(&RawTime);
-	std::cout << "Saving " << SaveCount << " Best Craft's Binary Information. " << WEIGHT_COUNT << " Weights" << std::endl;
+	std::cout << "Saving " << SaveCount << " Best Craft's Binary Information. " << WEIGHT_AMOUNT << " Weights" << std::endl;
 
 	//boost::filesystem::path Destination = "Saves";
 	//boost::filesystem::create_directory(Destination);
@@ -350,7 +350,7 @@ void SaveTopBinary(int CraftCount)
 	{
 		int* pCraftCount = &CraftCount;
 
-		int WeightCount = WEIGHT_COUNT;
+		int WeightCount = WEIGHT_AMOUNT;
 		int* pWeightCount = &WeightCount;
 
 		File.write((char*)pCraftCount, sizeof(int));
@@ -362,7 +362,7 @@ void SaveTopBinary(int CraftCount)
 			cudaCheck(cudaMalloc(&d_CraftWeights, sizeof(CraftWeights)));
 			cudaCheck(cudaDeviceSynchronize());
 
-			SaveWeights<<<WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
+			SaveWeights<<<WEIGHT_AMOUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(d_CraftWeights, Crafts, i);
 			cudaCheck(cudaDeviceSynchronize());
 
 			CraftWeights* h_CraftWeights = new CraftWeights;
@@ -373,7 +373,7 @@ void SaveTopBinary(int CraftCount)
 			cudaCheck(cudaFree(d_CraftWeights));
 			cudaCheck(cudaDeviceSynchronize());
 
-			File.write((char*)h_CraftWeights, WEIGHT_COUNT * sizeof(float));
+			File.write((char*)h_CraftWeights, WEIGHT_AMOUNT * sizeof(float));
 		}
 
 		std::cout << "All Craft Information Saved" << std::endl;
@@ -424,10 +424,10 @@ void LoadTopBinary1()
 			if (LoadCraftCount > FIT_COUNT)
 				LoadCraftCount = FIT_COUNT;
 
-			if (WeightCount != WEIGHT_COUNT)
+			if (WeightCount != WEIGHT_AMOUNT)
 			{
 				std::cout << "Error loading file: Incompatible number of weights in file" << std::endl;
-				std::cout << "Target: " << WEIGHT_COUNT << ", Source: " << WeightCount << std::endl;
+				std::cout << "Target: " << WEIGHT_AMOUNT << ", Source: " << WeightCount << std::endl;
 			}
 			else
 			{
@@ -487,7 +487,7 @@ void LoadTopBinary2()
 
 		for (int i = 0; i < LoadCraftCount; i++)
 		{
-			LoadWeights<<<WEIGHT_COUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(&d_CraftWeights[i], Crafts, FIT_COUNT - 1 - i);
+			LoadWeights<<<WEIGHT_AMOUNT / BLOCK_SIZE + 1, BLOCK_SIZE>>>(&d_CraftWeights[i], Crafts, FIT_COUNT - 1 - i);
 			cudaCheck(cudaDeviceSynchronize());
 		}
 
@@ -605,7 +605,7 @@ void Setup()
 	NeuronStringSpacePrefixer(NeuronInputString, "Versed Craft Angle", TextLength);
 	for (int i = 0; i < SENSORS_MEMORY_COUNT; i++)
 		NeuronStringAdder(NeuronInputString, "Memory ", i + 1, 2, TextLength);
-	for (int i = 0; i < SENSORS_BIAS_NEURON_COUNT; i++)
+	for (int i = 0; i < SENSORS_BIAS_NEURON_AMOUNT; i++)
 		NeuronStringAdder(NeuronInputString, "Bias ", i + 1, 1, TextLength);
 
 	for (int i = 0; i < 4; i++)
@@ -834,7 +834,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 		std::strcat(GenericString, "Output");
 		ImGui::Text("%s", GenericString);
 
-		for (int i = 0; i < LAYER_SIZE_INPUT || i < NEURONS_PER_HIDDEN_LAYER || i < LAYER_SIZE_OUTPUT; i++)
+		for (int i = 0; i < LAYER_SIZE_INPUT || i < LAYER_SIZE_HIDDEN || i < LAYER_SIZE_OUTPUT; i++)
 		{
 			// TODO: Move numbering to GUI setup function
 			if (i < 9)
@@ -862,9 +862,9 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 
 			for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
 			{
-				if (i < NEURONS_PER_HIDDEN_LAYER)
+				if (i < LAYER_SIZE_HIDDEN)
 				{
-					sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + NEURONS_PER_HIDDEN_LAYER * j + i]);
+					sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * j + i]);
 					strcat(GenericString, NeuronValue);
 				}
 				else
@@ -1110,16 +1110,16 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 			sprintf(GenericString, "Bullet Damage: %1.0f", h_Config->BulletDamage);
 			ImGui::Text("%s", GenericString);
 
-			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_COUNT, LAYER_SIZE_INPUT, NEURONS_PER_HIDDEN_LAYER, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);
+			sprintf(GenericString, "Neuron Count: %d \tInput: %d \tHidden: %d x %d\tOutput: %d", NEURON_AMOUNT, LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_AMOUNT_HIDDEN, LAYER_SIZE_OUTPUT);
 			ImGui::Text("%s", GenericString);
 
-			sprintf(GenericString, "Weight Count: %d", WEIGHT_COUNT);
+			sprintf(GenericString, "Weight Count: %d", WEIGHT_AMOUNT);
 			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Total GPU Mem Size: %lu MB", (sizeof(CraftState) + sizeof(MatchState) + sizeof(temp) + sizeof(GraphicsObjectPointer)) / 1024 / 1024);
 			ImGui::Text("%s", GenericString);
 
-			sprintf(GenericString, "Weight Array Size: %lu MB", sizeof(float) * WEIGHT_COUNT * CRAFT_COUNT / 1024 / 1024);
+			sprintf(GenericString, "Weight Array Size: %lu MB", sizeof(float) * WEIGHT_AMOUNT * CRAFT_COUNT / 1024 / 1024);
 			ImGui::Text("%s", GenericString);
 
 			sprintf(GenericString, "Startup Time: %4.2f Seconds", TimerStartup);

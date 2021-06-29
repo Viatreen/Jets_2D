@@ -40,7 +40,7 @@
 // Used in SaveCSV() and Load()
 struct CraftWeights
 {
-	float w[WEIGHT_COUNT];
+	float w[WEIGHT_AMOUNT];
 };
 
 extern CraftWeights* h_CraftWeights;
