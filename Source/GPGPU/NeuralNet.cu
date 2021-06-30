@@ -13,7 +13,7 @@
 #include "GPGPU/State.h"
 #include "GPGPU/Physic.h"
 
-__forceinline__ __device__ void RELU_Activate(float& Neuron)
+__device__ void RELU_Activate(float& Neuron)
 {
 	if (Neuron > 1.f)
 		Neuron = NETWORK_ACTIVATION_SLOPE * Neuron + 1.f - NETWORK_ACTIVATION_SLOPE;	// y = mx + b
@@ -402,7 +402,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 					+ Output;
 
 				// There's an error in this line
-				C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+				//C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
 			}
 		}
 
