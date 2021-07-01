@@ -21,7 +21,7 @@
 #define TIME_MATCH                            30.f  // Seconds
 
 // CUDA
-#define BLOCK_SIZE                            256
+#define BLOCK_SIZE                            128 //256
 
 #if defined (GTX_1080TI)
 #define SM_COUNT                              28
@@ -35,10 +35,10 @@
 #endif
 
 // Match Configuration
-#define CRAFT_COUNT                         ( 128 * 8 * SM_COUNT  )
+#define CRAFT_COUNT                         ( 128 * SM_COUNT ) //128 * 8 * SM_COUNT  )
 #define FIT_COUNT                           ( CRAFT_COUNT / 2 )        // Must be a factor of CRAFT_COUNT
 #define MATCH_COUNT                         ( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT           128        // Must be equal or less than FIT_COUNT
+#define OPPONENT_RANK_RANGE_DEFAULT           128 //128        // Must be equal or less than FIT_COUNT
 
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y                           0.2f    // CG is this far below graphical center
@@ -192,7 +192,7 @@
 // TODO: Combine evaluation and policy networks after experimenting with evaluation
 #define LAYER_SIZE_INPUT_EVAL                 10 // LAYER_SIZE_INPUT
 #define LAYER_SIZE_HIDDEN_EVAL                10 // 169
-#define LAYER_AMOUNT_HIDDEN_EVAL              4
+#define LAYER_AMOUNT_HIDDEN_EVAL              6
 #define LAYER_AMOUNT_EVAL                   ( 2 + LAYER_AMOUNT_HIDDEN_EVAL )        // Input, Hidden, and Output
 #define LAYER_SIZE_OUTPUT_EVAL                1
 

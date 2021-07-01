@@ -1,3 +1,7 @@
+
+#define _DEBUG
+#define DEBUG
+
 // Standard Library
 #include <iostream>
 #include <iomanip>
@@ -60,12 +64,15 @@ int main()
 	Setup();
 	Graphics::Setup();
 	// TODO: Fix this function
-	// Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+	std::cout << "Init Begin" << std::endl;
+	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+	std::cout << "Init End 1" << std::endl;
 	cudaCheck(cudaDeviceSynchronize());
+	std::cout << "Init End 2" << std::endl;
 
 	// Print_Data_Info();
-	Test_Neural_Net_Eval(Crafts);
-	return 0;
+	// Test_Neural_Net_Eval(Crafts);
+	// return 0;
 
 	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
@@ -107,8 +114,6 @@ int main()
 		cudaCheck(cudaDeviceSynchronize());
 
 		RoundEnd2();
-
-		return 0;
 	}
 
 	// Cleanup

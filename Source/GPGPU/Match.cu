@@ -163,9 +163,9 @@ __device__ void Shrink_Weights(CraftState* C)
 		C->Neuron[2 * CRAFT_COUNT * i + idx] = 1.f;
 	}
 
-	bool Too_Large = true;
+	//bool Too_Large = true;
 	int Shrink_Count = 0;
-	while (Too_Large)
+	// while (Too_Large)
 	{
 		Run_Neural_Net(C, false, idx, idx);
 
@@ -244,7 +244,7 @@ __device__ void Shrink_Weights(CraftState* C)
 				for (int i = 0; i < 25; i++)
 					printf("Weight(%d): %10.6f\n", i, C->Weight[2 * CRAFT_COUNT * i + idx]);
 			}*/
-			Too_Large = false;
+			//Too_Large = false;
 		}
 	}
 }
