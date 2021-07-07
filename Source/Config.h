@@ -6,6 +6,22 @@
 #define GTX_1080TI                            // Sets SM count to 28
 //#define GTX_1660TI                            // Sets SM count to 12
 
+#if defined (GTX_1080TI)
+#define SM_COUNT                              28
+#define TIME_SPEED_FAST_DEFAULT               512
+#define NN_Float                              float
+#elif defined (GTX_1660TI)
+#define SM_COUNT                              12
+#define TIME_SPEED_FAST_DEFAULT               512
+#define NN_Float                              __half
+#else
+#define SM_COUNT                              4
+#define TIME_SPEED_FAST_DEFAULT               256
+#define NN_Float                              float
+#endif
+
+// TODO: Implement NN_Float
+
 // Constants
 #define PI                                    3.14159f
 #define GRAVITY                               9.8f            // Meter / sec^2
@@ -22,17 +38,6 @@
 
 // CUDA
 #define BLOCK_SIZE                            128 //256
-
-#if defined (GTX_1080TI)
-#define SM_COUNT                              28
-#define TIME_SPEED_FAST_DEFAULT               512
-#elif defined (GTX_1660TI)
-#define SM_COUNT                              12
-#define TIME_SPEED_FAST_DEFAULT               512
-#else
-#define SM_COUNT                              4
-#define TIME_SPEED_FAST_DEFAULT               256
-#endif
 
 // Match Configuration
 #define CRAFT_COUNT                         ( 128 * SM_COUNT ) //128 * 8 * SM_COUNT  )

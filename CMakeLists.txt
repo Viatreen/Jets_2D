@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 
 if (UNIX)
     set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
@@ -8,6 +8,8 @@ project(Controls.app LANGUAGES CXX C CUDA)
 message("Project name: " ${CMAKE_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
+# set(CMAKE_VERBOSE_MAKEFILE ON)    # For debugging
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -162,7 +164,7 @@ target_compile_options(${CMAKE_PROJECT_NAME}
 )
 
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 61 62 70 72 75) # 61 = GTX 1080 Ti
+set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61 62 70 72 75) # 61 = GTX 1080 Ti
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES}
