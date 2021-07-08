@@ -157,32 +157,32 @@ __global__ void ResetScoreCumulative(CraftState* Crafts)
 __device__ void print_Weights(CraftState* C, int ID_Neurons, int ID_Weights)
 {
 	// Calculate output neurons
-	for (unsigned int Input = 0; Input < LAYER_SIZE_HIDDEN; Input++)
-	{
-		for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
-		{
-			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + Output;
-			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * LAYER_SIZE_HIDDEN + Input;
+	// for (unsigned int Input = 0; Input < LAYER_SIZE_HIDDEN; Input++)
+	// {
+	// 	for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
+	// 	{
+	// 		unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + Output;
+	// 		unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * LAYER_SIZE_HIDDEN + Input;
 
-			unsigned int Weight_Index
-				= LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN
-				+ WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1)
-				+ Input * LAYER_SIZE_OUTPUT
-				+ Output;
+	// 		unsigned int Weight_Index
+	// 			= LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN
+	// 			+ WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1)
+	// 			+ Input * LAYER_SIZE_OUTPUT
+	// 			+ Output;
 
-			// if (Weight_Index > WEIGHT_AMOUNT)
-			{
-				printf("Number of Weights: %d, Index: %d, Input: %d, Output: %d, Index into Array: %d, Total Number of Weights: %d, Begin Index: %d\n", WEIGHT_AMOUNT,
-					Weight_Index, Input, Output, CRAFT_COUNT * Weight_Index + ID_Weights, CRAFT_COUNT * WEIGHT_AMOUNT, 
-					WEIGHT_AMOUNT_INPUT_LAYER + WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1));
-			}
+	// 		// if (Weight_Index > WEIGHT_AMOUNT)
+	// 		{
+	// 			printf("Number of Weights: %d, Index: %d, Input: %d, Output: %d, Index into Array: %d, Total Number of Weights: %d, Begin Index: %d\n", WEIGHT_AMOUNT,
+	// 				Weight_Index, Input, Output, CRAFT_COUNT * Weight_Index + ID_Weights, CRAFT_COUNT * WEIGHT_AMOUNT, 
+	// 				WEIGHT_AMOUNT_INPUT_LAYER + WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1));
+	// 		}
 
-			//C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
-			// C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons];
-			// C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
-			// C->Neuron[0] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
-		}
-	}
+	// 		C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+	// 		C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons];
+	// 		C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+	// 		C->Neuron[0] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+	// 	}
+	// }
 }
 
 __device__ void Shrink_Weights(CraftState* C)
