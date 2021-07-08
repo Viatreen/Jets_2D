@@ -65,7 +65,7 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		if (Match->Done[idx])
 		{ 
 			ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
-			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreFuelEfficiency[idx]		          + C->ScoreDistance[idx]  / 1000.f			     + C->ScoreBullet[idx] 				 - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;
+			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreFuelEfficiency[idx]		          + C->ScoreDistance[idx]  / 1000.f			     + C->ScoreBullet[idx] 				 - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;	// TODO: Consider floating point precision for accumuulating score
 			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreFuelEfficiency[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f + C->ScoreBullet[idx + CRAFT_COUNT] - C->ScoreBullet[idx]  / 10.f;				 // Score of opponent does not matter except
 		}
 	} // End main step iteration for loop 

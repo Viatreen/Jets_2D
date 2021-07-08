@@ -405,26 +405,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 					+ Input * LAYER_SIZE_HIDDEN
 					+ Output;
 
-				// There's an error in this line
-				// if (2 * CRAFT_COUNT * Output_Index + ID_Neurons > sizeof(C->Neuron) / sizeof(float) || 2 * CRAFT_COUNT * Input_Index + ID_Neurons > sizeof(C->Neuron) / sizeof(float) || CRAFT_COUNT * Weight_Index + ID_Weights > sizeof(C->Weight) / sizeof(float))
-				// {
-				// 	printf("Out of Bounds. OI: %u, Input_Index %u, IDN: %d, WID: %d, Sizeof: %ld\n", Output_Index, Input_Index, ID_Neurons, Weight_Index, sizeof(C->Neuron));
-				// }
-
-				// if (C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] != C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons]
-				// || C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights] != C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights]
-				// || C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] != C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons]
-				// || C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights] != C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights])
-				// {
-				// 	printf("OI: %u, Input_Index %u, IDN: %d, WID: %d, Sizeof: %ld, In_N: %f, W: %f, Out_N: %f, Layer_Input: %d\n", Output_Index, Input_Index, ID_Neurons, Weight_Index, sizeof(C->Neuron), C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons], C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights], C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons], LAYER_SIZE_INPUT);
-				// }
-
-				// printf("Neuron: %6.2f, %6.2f\n", C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons], C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights]);
 				C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
-				// if (ID_Weights == 0)
-				// {
-				// 	printf("Neuron: %f\n", C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons]);
-				// }
 			}
 		}
 
@@ -446,6 +427,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + Output;
 			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * LAYER_SIZE_HIDDEN + Input;
 
+			// TODO: Solve: This one doesn't work for some reason
 			unsigned int Weight_Index
 				= LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN
 				+ WEIGHT_AMOUNT_HIDDEN_LAYER * (LAYER_AMOUNT_HIDDEN - 1)

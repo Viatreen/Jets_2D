@@ -1,6 +1,5 @@
-
-#define _DEBUG
-#define DEBUG
+// #define _DEBUG
+// #define DEBUG
 
 // Standard Library
 #include <iostream>
@@ -57,69 +56,64 @@
 int main()
 {
 	std::cout << "Begin" << std::endl;
+	Print_Data_Info();
+
 	// Setup
 	Timer = std::chrono::steady_clock::now();
 	GL::Setup();
 	Mem::Setup();
 	Setup();
 	Graphics::Setup();
-	// TODO: Fix this function
-	std::cout << "Init Begin" << std::endl;
 	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-	std::cout << "Init End 1" << std::endl;
 	cudaCheck(cudaDeviceSynchronize());
-	std::cout << "Init End 2" << std::endl;
 
-	// Print_Data_Info();
 	// Test_Neural_Net_Eval(Crafts);
-	// return 0;
 
-	// TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
+	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
-	// // Game Loop
-	// while (!glfwWindowShouldClose(window))
-	// {
-	// 	int h_TournamentEpochNumber = 0;
-	// 	cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
-	// 	cudaCheck(cudaDeviceSynchronize());
+	// Game Loop
+	while (!glfwWindowShouldClose(window))
+	{
+		int h_TournamentEpochNumber = 0;
+		cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	// Original Side of the Circle
-	// 	Round();
+		// Original Side of the Circle
+		Round();
 
-	// 	//std::cout << "Round " << RoundNumber;
-	// 	RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+		cudaCheck(cudaDeviceSynchronize());
 		
-	// 	RoundEnd();
+		RoundEnd();
 
-	// 	h_Config->RoundNumber = RoundNumber;
-	// 	SyncConfigArray();
+		h_Config->RoundNumber = RoundNumber;
+		SyncConfigArray();
 		
-	// 	WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-	// 	cudaCheck(cudaDeviceSynchronize());
+		ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+		cudaCheck(cudaDeviceSynchronize());
 
-	// 	RoundEnd2();
-	// }
+		RoundEnd2();
+	}
 
-	// // Cleanup
-	// Mem::Shutdown();
-	// Shutdown();
-	// Graphics::Shutdown();
+	// Cleanup
+	Mem::Shutdown();
+	Shutdown();
+	Graphics::Shutdown();
 
 	std::cout << "End" << std::endl;
 

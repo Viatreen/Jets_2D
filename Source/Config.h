@@ -40,7 +40,7 @@
 #define BLOCK_SIZE                            128 //256
 
 // Match Configuration
-#define CRAFT_COUNT                         ( 128 * SM_COUNT ) //128 * 8 * SM_COUNT  )
+#define CRAFT_COUNT                         ( 128 * 8 * SM_COUNT  )
 #define FIT_COUNT                           ( CRAFT_COUNT / 2 )        // Must be a factor of CRAFT_COUNT
 #define MATCH_COUNT                         ( CRAFT_COUNT )
 #define OPPONENT_RANK_RANGE_DEFAULT           128 //128        // Must be equal or less than FIT_COUNT
@@ -161,7 +161,7 @@
 #define SENSORS_ANGLE_COUNT                   2
 
 #define SENSORS_MEMORY_START                ( SENSORS_ANGLE_START + SENSORS_ANGLE_COUNT)
-#define SENSORS_MEMORY_COUNT                  0    // From 1/32 seconds to 32 seconds
+#define SENSORS_MEMORY_COUNT                  0    // From 1/30 seconds to 30 seconds
 #define SENSORS_BIAS_NEURON_AMOUNT            1
 
 ///////////////////////////////////////////
@@ -175,18 +175,18 @@
 #define LAYER_AMOUNT_HIDDEN                   3
 #define LAYER_SIZE_HIDDEN                     16
 #define LAYER_AMOUNT                        ( 2 + LAYER_AMOUNT_HIDDEN )        // Input, Hidden, and Output
-#define HIDDEN_NEURON_AMOUNT                ( LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN )
 
 #define LAYER_SIZE_OUTPUT                   ( 25 + SENSORS_MEMORY_COUNT )
-#define LAYER_ARRAY                         { LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }    // Used for savnig neural network
+#define LAYER_ARRAY                         { LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }    // Used for saving neural network
 
-#define WEIGHT_AMOUNT_INPUT_LAYER           ( LAYER_SIZE_INPUT * LAYER_AMOUNT_HIDDEN )
+#define WEIGHT_AMOUNT_INPUT_LAYER           ( LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN )
 #define WEIGHT_AMOUNT_HIDDEN_LAYER          ( LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN )
 #define WEIGHT_AMOUNT_OUTPUT_LAYER          ( LAYER_SIZE_HIDDEN * LAYER_SIZE_OUTPUT )
 
 #define NEURON_AMOUNT                       ( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + LAYER_SIZE_OUTPUT )                            // Sum of layer array
 #define OUTPUT_LAYER_NEURON_BEGIN_INDEX     ( LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN )
 #define WEIGHT_AMOUNT                       ( WEIGHT_AMOUNT_INPUT_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * WEIGHT_AMOUNT_HIDDEN_LAYER + WEIGHT_AMOUNT_OUTPUT_LAYER )
+#define OUTPUT_LAYER_WEIGHT_BEGIN_IDX       ( WEIGHT_AMOUNT_INPUT_LAYER + ( LAYER_AMOUNT_HIDDEN - 1 ) * WEIGHT_AMOUNT_HIDDEN_LAYER )
 
 #define WEIGHTS_MULTIPLIER                    0.25f
 #define NETWORK_ACTIVATION_SLOPE              0.01f

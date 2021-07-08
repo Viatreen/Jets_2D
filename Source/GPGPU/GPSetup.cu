@@ -1,6 +1,9 @@
 // File Headers
 #include "GPSetup.h"
 
+// Standard Library
+#include <iostream>
+
 // CUDA
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -29,6 +32,8 @@ namespace Mem
 
 		cudaCheck(cudaMalloc(&Crafts, sizeof(CraftState)));
 		cudaCheck(cudaDeviceSynchronize());
+
+		std::cout << "Neuron Address: " << &Crafts->Neuron << "-0x" << std::hex << (unsigned long)(&Crafts->Neuron) + sizeof(float) * 2 * CRAFT_COUNT * NEURON_AMOUNT << ", Weight Address: "  << &Crafts->Weight << "-0x" << std::hex << (unsigned long)(&Crafts->Weight) + sizeof(float) * CRAFT_COUNT * WEIGHT_AMOUNT << std::endl;
 
 		cudaCheck(cudaMalloc(&Temp, sizeof(temp)));
 		cudaCheck(cudaDeviceSynchronize());

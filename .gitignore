@@ -33,6 +33,9 @@ CMakeSettings.json
 # Logs
 *.log
 
+# Dear ImGUI
+imgui.ini
+
 # Directories
 .vs/
 bin/
