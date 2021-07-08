@@ -6,20 +6,6 @@
 #define GTX_1080TI                            // Sets SM count to 28
 //#define GTX_1660TI                            // Sets SM count to 12
 
-#if defined (GTX_1080TI)
-#define SM_COUNT                              28
-#define TIME_SPEED_FAST_DEFAULT               512
-#define NN_Float                              float
-#elif defined (GTX_1660TI)
-#define SM_COUNT                              12
-#define TIME_SPEED_FAST_DEFAULT               512
-#define NN_Float                              __half
-#else
-#define SM_COUNT                              4
-#define TIME_SPEED_FAST_DEFAULT               256
-#define NN_Float                              float
-#endif
-
 // TODO: Implement NN_Float
 
 // Constants
@@ -35,6 +21,22 @@
 #define FRAMERATE_NN_PHYSICS                ( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP                           ( 1.f / float(FRAMERATE_PHYSICS) )    // Divide by a power of 2 for bit manipulation+
 #define TIME_MATCH                            30.f  // Seconds
+
+#define TOTAL_FRAMES                        ( FRAMERATE_PHYSICS * (int)(TIME_MATCH) )
+
+#if defined (GTX_1080TI)
+#define SM_COUNT                              28
+#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
+#define NN_Float                              float
+#elif defined (GTX_1660TI)
+#define SM_COUNT                              12
+#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
+#define NN_Float                              __half
+#else
+#define SM_COUNT                              4
+#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 8 )
+#define NN_Float                              float
+#endif
 
 // CUDA
 #define BLOCK_SIZE                            128 //256
@@ -62,7 +64,7 @@
 #define FUSELAGE_RADIUS                       0.7f
 #define FUSELAGE_VERT_COUNT                   32
 #define CANNON_WIDTH                          0.1f
-#define CANNON_HEIGHT                       ( (float)sqrt(FUSELAGE_RADIUS * FUSELAGE_RADIUS - CANNON_WIDTH * CANNON_WIDTH / 4))
+#define CANNON_HEIGHT                       ( (float)sqrt(FUSELAGE_RADIUS * FUSELAGE_RADIUS - CANNON_WIDTH * CANNON_WIDTH / 4) )
 #define BULLET_RADIUS                         0.1f
 #define BULLET_VELOCITY_INITIAL             ( LIFE_RADIUS )    // m/s
 #define BULLET_INTERVAL_MIN                   0.8f                    // Seconds        // TODO: Experiment with this
@@ -166,10 +168,10 @@
 
 ///////////////////////////////////////////
 // Policy Network Characteristics
-#define LAYER_SIZE_INPUT                    ( SENSORS_EDGE_DISTANCE_COUNT * 2 + SENSORS_VELOCITY_COUNT + SENSORS_ANG_VEL_COUNT\
-                                                + SENSORS_EXTERNAL_FORCE_COUNT * 2 + SENSORS_ENGINE_ANGLE_COUNT * 4 * 2\
-                                                + SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT\
-                                                + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT\
+#define LAYER_SIZE_INPUT                    ( SENSORS_EDGE_DISTANCE_COUNT * 2 + SENSORS_VELOCITY_COUNT + SENSORS_ANG_VEL_COUNT \
+                                                + SENSORS_EXTERNAL_FORCE_COUNT * 2 + SENSORS_ENGINE_ANGLE_COUNT * 4 * 2 \
+                                                + SENSORS_OPPONENT_ANGLE_COUNT * 2 + SENSORS_OPPONENT_DISTANCE_COUNT \
+                                                + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT \
                                                 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_AMOUNT )
 
 #define LAYER_AMOUNT_HIDDEN                   3
