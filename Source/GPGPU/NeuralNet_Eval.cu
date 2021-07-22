@@ -136,7 +136,6 @@ __global__ void Create_Neural_Net_Eval(CraftState* C)
             C->Eval_Network.Weight[Weight_Index] = 1.f;
         }
     }
-
 }
 
 __global__ void RELU_Activate_Layer(CraftState* C, unsigned int Layer)
@@ -246,23 +245,8 @@ __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
                 }
             }
         }
-        // Last Layer (Has 1 output neuron)
-        else if (Layer == LAYER_AMOUNT_EVAL - 1)
-        {
-            unsigned int Iterations = (WEIGHT_AMOUNT_OUTPUT_LAYER_EVAL + Grid_Size - 1) / Grid_Size;
-
-            for (unsigned int i = 0; i < Iterations; i++)
-            {
-                unsigned int Weight_Index = OUTPUT_LAYER_WEIGHT_BEGIN_IDX_EVAL + Grid_Size * i + idx;
-
-                if (Weight_Index < WEIGHT_AMOUNT_EVAL)
-                {
-                    Run_Neural_Net_Layer_Eval(C, Weight_Index, true, Layer);
-                }
-            }
-        }
         // Hidden Layers
-        else
+        else if (Layer < LAYER_AMOUNT_EVAL - 1)
         {
             unsigned int Iterations = (WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL + Grid_Size - 1) / Grid_Size;
 
@@ -276,8 +260,23 @@ __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
                 }
             }
         }
+        // Last Layer (Has 1 output neuron)
+        else
+        {
+            unsigned int Iterations = (WEIGHT_AMOUNT_OUTPUT_LAYER_EVAL + Grid_Size - 1) / Grid_Size;
 
-        // TODO: Actually implement when cooperative launch is setup
+            for (unsigned int i = 0; i < Iterations; i++)
+            {
+                unsigned int Weight_Index = OUTPUT_LAYER_WEIGHT_BEGIN_IDX_EVAL + Grid_Size * i + idx;
+
+                if (Weight_Index < WEIGHT_AMOUNT_EVAL)
+                {
+                    Run_Neural_Net_Layer_Eval(C, Weight_Index, true, Layer);
+                }
+            }
+        }
+
+        // TODO: Implement when cooperative launch is setup
         // grid.sync();
         // TODO: Activate Layers
         // grid.sync();
@@ -290,22 +289,13 @@ __device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Wei
 
     float Weight = C->Eval_Network.Weight[Weight_Index];
     float Neuron = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index];
-
-    // if (Weight_Index ==  1206)
-    // {
-    //     printf("Input Size: %d, Idx: %d, Origin %d, Target %d\n", LAYER_SIZE_INPUT_EVAL, Weight_Index, Neuron_Value.Origin_Neuron_Index, Neuron_Value.Target_Neuron_Index);
-    // }
-    // if (Weight_Index ==  1207)
-    // {
-    //     printf("Input Size: %d, Idx: %d, Origin %d, Target %d\n", LAYER_SIZE_INPUT_EVAL, Weight_Index, Neuron_Value.Origin_Neuron_Index, Neuron_Value.Target_Neuron_Index);
-    // }
     
     float Signal = Neuron * Weight;
 
     atomicAdd(&C->Eval_Network.Neuron[Neuron_Value.Target_Neuron_Index], Signal);
 
-    // TODO: Finish this
-    // synchronize grid
+    // TODO: synchronize grid
+    // grid.sync();
 }
 
 // Must make sure Neuron_Index does not exceed neuron amount and is the proper subset
@@ -351,129 +341,7 @@ __device__ neuron_Indices Get_Neuron_Indices(CraftState *C, const unsigned int &
     return Result;
 }
 
-/* TODO: Test if it's faster to have a pre-allocated array of the characteristic
-of each weight and store it on global memory, or if it's faster to calculate each
-weight characteristic each time the network is forward or back propagated.
-The reasoning is that it takes 270 cycles to retrieve the data from global memory
-versus perhaps a few dozen cycles to populate on stack and only a few cycles to retrieve it
-
-Storing in global memory would be cleaner
-
-Will Weight_Characteristic struct even fit on the registers of each thread
-*/
-
-__device__ void Populate_Weight_Data(CraftState* C, Weight_Characteristic_Global* WG, const unsigned int &Weight_Index)
-{
-    // Weight_Characteristic W;
-
-    // W.Weight_Index = Weight_Index;
-
-    // if (W.Weight_Index >= WEIGHT_AMOUNT_EVAL)
-    //     return;
-
-    // if (W.Weight_Index < WEIGHT_AMOUNT_INPUT_LAYER_EVAL)
-    // {
-    //     W.Layer = 0;
-    //     W.Weight_Index_Within_Layer = Weight_Index;
-
-    //     W.Origin_Neuron_Index_Within_Layer = Weight_Index / LAYER_SIZE_HIDDEN_EVAL;
-    //     W.Target_Neuron_Index_Within_Layer = Weight_Index % LAYER_SIZE_HIDDEN_EVAL;
-
-    //     W.Origin_Neuron_Index = W.Origin_Neuron_Index_Within_Layer;
-    //     W.Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + W.Target_Neuron_Index_Within_Layer;
-    // }
-    // else if (W.Weight_Index < WEIGHT_AMOUNT_INPUT_LAYER_EVAL + (LAYER_AMOUNT_HIDDEN_EVAL - 1) * WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL)
-    // {
-    //     W.Layer = 1 + (Weight_Index - WEIGHT_AMOUNT_INPUT_LAYER_EVAL) / (WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL);
-    //     W.Weight_Index_Within_Layer = (Weight_Index - WEIGHT_AMOUNT_INPUT_LAYER_EVAL) % (WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL);
-
-    //     W.Origin_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer / LAYER_SIZE_HIDDEN_EVAL;
-    //     W.Target_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer % LAYER_SIZE_HIDDEN_EVAL;
-
-    //     W.Origin_Neuron_Index = LAYER_SIZE_INPUT_EVAL + (W.Layer - 1) * LAYER_SIZE_HIDDEN_EVAL + W.Origin_Neuron_Index_Within_Layer;
-    //     W.Target_Neuron_Index = LAYER_SIZE_INPUT_EVAL + W.Layer * LAYER_SIZE_HIDDEN_EVAL + W.Target_Neuron_Index_Within_Layer;
-    // }
-    // else
-    // {
-    //     W.Layer = LAYER_AMOUNT_EVAL - 1;
-    //     W.Weight_Index_Within_Layer = W.Weight_Index - WEIGHT_AMOUNT_INPUT_LAYER_EVAL - (LAYER_AMOUNT_HIDDEN_EVAL - 1) * WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL;
-
-    //     W.Origin_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer / LAYER_SIZE_OUTPUT_EVAL;
-    //     W.Target_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer % LAYER_SIZE_OUTPUT_EVAL;
-
-    //     W.Origin_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL - LAYER_SIZE_HIDDEN_EVAL + W.Origin_Neuron_Index_Within_Layer;
-    //     W.Target_Neuron_Index = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL + W.Target_Neuron_Index_Within_Layer;
-    // }
-
-    // if (W.Layer != LAYER_AMOUNT_EVAL - 1)
-    // {
-    //     if (W.Layer != 0)    // Hidden Layer
-    //     {
-    //         if (W.Weight_Index_Within_Layer >= WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL)
-    //         {
-    //             return;
-    //         }
-
-    //         W.Neuron_Index_Layer_Begin = LAYER_SIZE_INPUT_EVAL + (W.Layer - 1) * LAYER_SIZE_HIDDEN_EVAL;
-    //         W.Weight_Index_Layer_Begin = WEIGHT_AMOUNT_INPUT_LAYER_EVAL + (W.Layer - 1) * WEIGHT_AMOUNT_HIDDEN_LAYER_EVAL;
-    //     }
-    //     else    // Input Layer
-    //     {
-    //         if (W.Weight_Index_Within_Layer >= WEIGHT_AMOUNT_INPUT_LAYER_EVAL)
-    //         {
-    //             return;
-    //         }
-
-    //         W.Neuron_Index_Layer_Begin = 0;
-    //         W.Weight_Index_Layer_Begin = 0;
-    //     }
-
-    //     W.Next_Layer_Size = LAYER_SIZE_HIDDEN_EVAL;
-    // }
-    // else        // Output Layer
-    // {
-    //     if (W.Weight_Index_Within_Layer >= LAYER_SIZE_OUTPUT_EVAL * LAYER_SIZE_HIDDEN_EVAL)
-    //     {
-    //         return;
-    //     }
-
-    //     W.Neuron_Index_Layer_Begin = OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL;
-    //     W.Weight_Index_Layer_Begin = OUTPUT_LAYER_WEIGHT_BEGIN_IDX_EVAL;
-    //     W.Next_Layer_Size = LAYER_SIZE_OUTPUT_EVAL;
-    // }
-
-    // W.Origin_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer / W.Next_Layer_Size;
-    // W.Target_Neuron_Index_Within_Layer = W.Weight_Index_Within_Layer % W.Next_Layer_Size;
-
-    // WG->Layer[W.Weight_Index]                            = W.Layer;
-    // WG->Origin_Neuron_Index[W.Weight_Index]              = W.Origin_Neuron_Index;
-    // WG->Target_Neuron_Index[W.Weight_Index]              = W.Target_Neuron_Index;
-    // WG->Neuron_Index_Layer_Begin[W.Weight_Index]         = W.Neuron_Index_Layer_Begin;
-    // WG->Origin_Neuron_Index_Within_Layer[W.Weight_Index] = W.Origin_Neuron_Index_Within_Layer;
-    // WG->Target_Neuron_Index_Within_Layer[W.Weight_Index] = W.Target_Neuron_Index_Within_Layer;
-    // WG->Weight_Index[W.Weight_Index]                     = W.Weight_Index;
-    // WG->Weight_Index_Layer_Begin[W.Weight_Index]         = W.Weight_Index_Layer_Begin;
-    // WG->Weight_Index_Within_Layer[W.Weight_Index]        = W.Weight_Index_Within_Layer;
-    // WG->Next_Layer_Size[W.Weight_Index]                  = W.Next_Layer_Size;
-}
-
 __device__ void Populate_Delta_Neurons(CraftState* C, const unsigned int &Weight_Index)
 {
     // neuron_Indices Neuron_Values = Get_Neuron_Indices(Weight_Index);
-
-
-}
-
-__device__ void Copy_Weight_Characteristics_From_Global(Weight_Characteristic_Global* WG, Weight_Characteristic *W)
-{
-    W->Layer                            = WG->Layer[W->Weight_Index];
-    W->Origin_Neuron_Index              = WG->Origin_Neuron_Index[W->Weight_Index];
-    W->Target_Neuron_Index              = WG->Target_Neuron_Index[W->Weight_Index];
-    W->Neuron_Index_Layer_Begin         = WG->Neuron_Index_Layer_Begin[W->Weight_Index];
-    W->Origin_Neuron_Index_Within_Layer = WG->Origin_Neuron_Index_Within_Layer[W->Weight_Index];
-    W->Target_Neuron_Index_Within_Layer = WG->Target_Neuron_Index_Within_Layer[W->Weight_Index];
-    W->Weight_Index                     = WG->Weight_Index[W->Weight_Index];
-    W->Weight_Index_Layer_Begin         = WG->Weight_Index_Layer_Begin[W->Weight_Index];
-    W->Weight_Index_Within_Layer        = WG->Weight_Index_Within_Layer[W->Weight_Index];
-    W->Next_Layer_Size                  = WG->Next_Layer_Size[W->Weight_Index];
 }
