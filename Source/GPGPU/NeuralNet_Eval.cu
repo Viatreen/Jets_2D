@@ -138,6 +138,16 @@ __global__ void Create_Neural_Net_Eval(CraftState* C)
     }
 }
 
+__global__ void Reset_Neural_Net_Eval(CraftState* C)
+{
+    unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (idx < NEURON_AMOUNT_EVAL - LAYER_SIZE_INPUT_EVAL)
+    {
+        C->Eval_Network.Neuron[idx + NEURON_AMOUNT_EVAL] = 0.f;
+    }
+}
+
 __global__ void RELU_Activate_Layer(CraftState* C, unsigned int Layer)
 {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -167,11 +177,8 @@ __global__ void RELU_Activate_Layer(CraftState* C, unsigned int Layer)
     }
 }
 
-__host__ void Test_Neural_Net_Eval(CraftState* C)
+__host__ void Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_FIgured_Out(CraftState* C)
 {
-    Create_Neural_Net_Eval<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(C);
-    cudaDeviceSynchronize();
-
     for (unsigned int i = 0; i < LAYER_AMOUNT_EVAL; i++)
     {
         Run_Neural_Net_Eval<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(C, i);
@@ -179,6 +186,14 @@ __host__ void Test_Neural_Net_Eval(CraftState* C)
         RELU_Activate_Layer<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(C, i);
         cudaDeviceSynchronize();
     }
+}
+
+__host__ void Test_Neural_Net_Eval(CraftState* C)
+{
+    Create_Neural_Net_Eval<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(C);
+    cudaDeviceSynchronize();
+
+    Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_FIgured_Out(C);
 
     for (int i = 0; i < LAYER_AMOUNT_EVAL; i++)
     {
@@ -229,7 +244,7 @@ __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
     // TODO Grid sync placeholder
     // cooperative_groups::grid_group grid = cooperative_groups::this_grid()
 
-    // for (unsigned int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++)
+    // for (unsigned int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++) // TODO: Add back after grid sync is established
     {
         if (Layer == 0)
         {
@@ -275,12 +290,11 @@ __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
                 }
             }
         }
-
-        // TODO: Implement when cooperative launch is setup
-        // grid.sync();
-        // TODO: Activate Layers
-        // grid.sync();
     }
+    // TODO: Implement when cooperative launch is setup
+    // grid.sync();
+    // TODO: Activate Layers
+    // grid.sync();
 }
 
 __device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Weight_Index, const bool &Do_Activation, unsigned int Layer)

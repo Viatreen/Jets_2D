@@ -28,10 +28,10 @@ std::chrono::steady_clock::time_point Timer;
 
 void Round()
 {
-	int Opponent_ID_Weights = rand() % OpponentRankRange;
+	int Opponent_ID_Weights = 1; //rand() % OpponentRankRange;	// TODO: Restore after mutation pause test
 	float AngleStart;
 
-	for (int Angle = 0; Angle < 2; Angle++)
+	for (int Angle = 0; Angle < 1; Angle++) // TODO: Change back to 2 ater mutation test
 	{
 		if (Angle == 0)
 			AngleStart = (float(rand()) / RAND_MAX * 2.f - 1.f) * 5.f + 30.f;
@@ -39,7 +39,7 @@ void Round()
 			AngleStart = -(float(rand()) / RAND_MAX * 2.f - 1.f) * 5.f - 30.f;
 
 		// One once when opponent is on left side and once when opponent is on right side
-		for (int PositionNumber = 0; PositionNumber < 2; PositionNumber++)
+		for (int PositionNumber = 0; PositionNumber < 1; PositionNumber++)	// TODO: Change back to 2 ater mutation test
 		{
 			GPGPU::CUDA_Map();
 			ResetMatch<<<MATCH_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Match, Crafts, d_Buffer, PositionNumber, AngleStart);

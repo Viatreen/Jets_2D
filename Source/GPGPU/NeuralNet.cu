@@ -424,7 +424,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 	{
 		for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
 		{
-			unsigned int Output_Index = LAYER_SIZE_INPUT + LAYER_AMOUNT_HIDDEN * LAYER_SIZE_HIDDEN + Output;
+			unsigned int Output_Index = OUTPUT_LAYER_NEURON_BEGIN_INDEX + Output;
 			unsigned int Input_Index  = LAYER_SIZE_INPUT + (LAYER_AMOUNT_HIDDEN - 1) * LAYER_SIZE_HIDDEN + Input;
 
 			// TODO: Solve: This one doesn't work for some reason
@@ -437,10 +437,28 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 			C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
 		}
 	}
+
+	// Neurons must be between 0 and 1
+	for (unsigned int Output = 0; Output < LAYER_SIZE_OUTPUT; Output++)
+	{
+		unsigned int Output_Index = OUTPUT_LAYER_NEURON_BEGIN_INDEX + Output;
+
+		if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] > 1.f)
+		{
+			C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] = 1.f;
+		}
+		else if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] < 0.f)
+		{
+			C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] = 0.f;
+		}
+	}
 }
 
 __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsObjectPointer* Buffer)
 {
+	static float dx_cannon_prev = 0.f;
+	static float dy_cannon_prev = 1.f;
+
 	// Engine Angle Command
 #pragma unroll
 	for (int i = 0; i < 4; i++)	// 4 Engines
@@ -451,7 +469,7 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 		float Brake = C->Neuron[(3 + 4 * i + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
 		if (P0 + P1 + P2 == 0.f)
-			P0 += 0.01f;
+			P0 = 0.01f;
 
 		float dx = -(P0 - 0.5f * (P1 + P2)) / (P0 + P1 + P2);
 		float dy = 0.5f * __fsqrt_ru(3.f) * (P2 - P1) / (P0 + P1 + P2);
@@ -463,11 +481,11 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 
 		float AngleDifference = CommandAngle - C->Engine[i].Angle[ID_Craft];
 
-		// TODO: Think about this
-		if (AngleDifference > PI)
+		// TODO: Think about this. Is this necessary?
+		while (AngleDifference > PI)
 			AngleDifference -= 2.f * PI;
-		else if (AngleDifference < -PI)
-			AngleDifference += -2.f * PI;
+		while (AngleDifference < -PI)
+			AngleDifference += 2.f * PI;
 
 		if (abs(AngleDifference) < 2.f * PI / 180.f)
 		{
@@ -509,13 +527,28 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 		float Brake = C->Neuron[(19 + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
 		if (P0 + P1 + P2 == 0.f)
-			P0 += 0.01f;
+			P0 = 0.01f;
 
 		//float dx = 0.5f * sqrt(3.f) * (P2 - P1) / (P0 + P1 + P2);
 		//float dy = (P0 - 0.5f*(P1 + P2)) / (P0 + P1 + P2);
 
 		float dx = (P0 - 0.5f * (P1 + P2)) / (P0 + P1 + P2);
 		float dy = 0.5f * __fsqrt_ru(3.f) * (P1 - P2) / (P0 + P1 + P2);
+
+		// Strength of cannon moving is proportional to the distance of the center of mass from center
+		float Command_Strength = __fsqrt_ru(dx * dx + dy * dy);
+
+		// If center of gravity of angle command masses is too small, ignore command
+		if (Command_Strength < 0.15f)
+		{
+			dx = dx_cannon_prev;
+			dy = dy_cannon_prev;
+		}
+		else
+		{
+			dx_cannon_prev = dx;
+			dx_cannon_prev = dy;
+		}
 
 		// Find target angle
 		float CommandAngle = atan2(dy, dx);
@@ -546,13 +579,19 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
 
 			float AngleVel = C->Cannon.AngularVelocity[ID_Craft];
 
-			float Strength = (1.f - Brake);
-			C->CannonStrength[ID_Craft] = Strength;
+			float Strength_Final = (Command_Strength - Brake);
 
-			if ((2.f / CANNON_ANGULAR_ACCEL) * AngleSign * AngleVel > sqrt(pow(AngleVel, 2.f) + fabs(2.f * CANNON_ANGULAR_ACCEL * AngleDifference)))
-				C->Cannon.AngularAcceleration[ID_Craft] = -AngleSign * CANNON_ANGULAR_ACCEL * Strength;
+			if (Strength_Final < 0.f)
+			{
+				Strength_Final = 0.f;
+			}
+
+			C->CannonStrength[ID_Craft] = Strength_Final;
+
+			if ((2.f / CANNON_ANGULAR_ACCEL) * AngleSign * AngleVel > __fsqrt_ru(pow(AngleVel, 2.f) + fabs(2.f * CANNON_ANGULAR_ACCEL * AngleDifference)))
+				C->Cannon.AngularAcceleration[ID_Craft] = -AngleSign * CANNON_ANGULAR_ACCEL * Strength_Final;
 			else
-				C->Cannon.AngularAcceleration[ID_Craft] = AngleSign * CANNON_ANGULAR_ACCEL * Strength;
+				C->Cannon.AngularAcceleration[ID_Craft] = AngleSign * CANNON_ANGULAR_ACCEL * Strength_Final;
 
 			if (C->Cannon.AngularAcceleration[ID_Craft] > CANNON_MAX_ANGULAR_ACCEL)
 				C->Cannon.AngularAcceleration[ID_Craft] = CANNON_MAX_ANGULAR_ACCEL;

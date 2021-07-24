@@ -67,9 +67,11 @@ int main()
 	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 	cudaCheck(cudaDeviceSynchronize());
 
-	// Test_Neural_Net_Eval(Crafts);
+	Test_Neural_Net_Eval(Crafts);
 
 	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
+
+	bool Do_Mutations = false; //  true;
 
 	// Game Loop
 	while (!glfwWindowShouldClose(window))
@@ -91,18 +93,26 @@ int main()
 
 		h_Config->RoundNumber = RoundNumber;
 		SyncConfigArray();
+
+		if (RoundNumber == 10)
+		{
+			glfwSetWindowShouldClose(window, 1);
+		}
 		
-		WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-		cudaCheck(cudaDeviceSynchronize());
+		if (Do_Mutations)
+		{
+			WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+			cudaCheck(cudaDeviceSynchronize());
 
-		WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-		cudaCheck(cudaDeviceSynchronize());
+			WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+			cudaCheck(cudaDeviceSynchronize());
 
-		WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-		cudaCheck(cudaDeviceSynchronize());
+			WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+			cudaCheck(cudaDeviceSynchronize());
 
-		IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-		cudaCheck(cudaDeviceSynchronize());
+			IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+			cudaCheck(cudaDeviceSynchronize());
+		}
 
 		ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 		cudaCheck(cudaDeviceSynchronize());

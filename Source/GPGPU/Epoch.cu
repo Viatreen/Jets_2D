@@ -55,6 +55,10 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		BulletMechanics(Buffer, C, idx, idx + CRAFT_COUNT, Config);
 		BulletMechanics(Buffer, C, idx + CRAFT_COUNT, idx, Config);
 
+		C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreFuelEfficiency[idx]		          + C->ScoreDistance[idx]  / 1000.f			     + C->ScoreBullet[idx] 				 - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;	// TODO: Consider floating point precision for accumuulating score
+			if (idx == 0 && Match->ElapsedSteps[0] % 10 == 0)
+				printf("Jet 0 ScoreTime: %2.6f, \tScoreFuelEfficiency: %2.6f, \tScoreBullet: %2.6f, \tScoreBulletOppnt: %2.6f\n", C->ScoreTime[idx], C->ScoreFuelEfficiency[idx], C->ScoreBullet[idx], C->ScoreBullet[idx + CRAFT_COUNT] / 10.f);
+
 		Match->ElapsedSteps[idx]++;
 
 		if (Match->ElapsedSteps[idx] > Config->TimeStepLimit)
@@ -66,6 +70,8 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 		{ 
 			ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
 			C->Score[idx] 				= C->ScoreTime[idx] 			  + C->ScoreFuelEfficiency[idx]		          + C->ScoreDistance[idx]  / 1000.f			     + C->ScoreBullet[idx] 				 - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;	// TODO: Consider floating point precision for accumuulating score
+			if (idx == 0 && Match->ElapsedSteps[0] % 10 == 0)
+				printf("Jet 0 Score: %f\n", C->Score[idx]);
 			C->Score[idx + CRAFT_COUNT]	= C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreFuelEfficiency[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f + C->ScoreBullet[idx + CRAFT_COUNT] - C->ScoreBullet[idx]  / 10.f;				 // Score of opponent does not matter except
 		}
 	} // End main step iteration for loop 
