@@ -9,8 +9,8 @@ void for_each_argument_address(F f, Args&&... args)
 template<typename KernelFunction, typename... KernelParameters>
 inline void Cooperative_Launch(
     const KernelFunction&       kernel_function,
-    unsigned int      			multiProcessorCount,
-	unsigned int				Thread_Count,
+    unsigned int                multiProcessorCount,
+    unsigned int                Thread_Count,
     KernelParameters...         parameters)
 {
     void* arguments_ptrs[sizeof...(KernelParameters)];

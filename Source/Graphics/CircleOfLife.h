@@ -1,14 +1,14 @@
 #pragma once
 
-struct circleOfLife		// Singleton
+struct circleOfLife     // Singleton
 {
-	float Vertices[64 * 5];
+    float Vertices[64 * 5];
 
-	unsigned int VA, VB;
+    unsigned int VA, VB;
 
-	circleOfLife();
-	~circleOfLife();
-	void Draw();
+    circleOfLife();
+    ~circleOfLife();
+    void Draw();
 };
 
 extern circleOfLife* CircleOfLife;

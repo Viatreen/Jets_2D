@@ -11,20 +11,20 @@
 
 struct Shader
 {
-	short int ID;
-	//std::string FilePath;
+    short int ID;
+    //std::string FilePath;
 
-	Shader() {}
+    Shader() {}
 
-	void Create(const std::string FilePath);
+    void Create(const std::string FilePath);
 
-	Shader(const std::string& FilePath) { Create(FilePath); }
-	~Shader() { GLCheck(glDeleteProgram(ID)); }
+    Shader(const std::string& FilePath) { Create(FilePath); }
+    ~Shader() { GLCheck(glDeleteProgram(ID)); }
 
-	// Use the current shader
-	void Bind() const { GLCheck(glUseProgram(this->ID)); }
-	void Unbind() const { GLCheck(glUseProgram(0)); }
+    // Use the current shader
+    void Bind() const { GLCheck(glUseProgram(this->ID)); }
+    void Unbind() const { GLCheck(glUseProgram(0)); }
 
-	// Set uniform
-	void SetUniform(const std::string& name) {	}
+    // Set uniform
+    void SetUniform(const std::string& name) {  }
 };

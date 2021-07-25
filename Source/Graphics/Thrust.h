@@ -8,21 +8,21 @@
 
 namespace Craft
 {
-	struct Thrust
-	{
-		// OpenGL
-		unsigned int VA, VB, EB;
+    struct Thrust
+    {
+        // OpenGL
+        unsigned int VA, VB, EB;
 
-		// CUDA
-		cudaGraphicsResource_t VertexBufferCuResource;
+        // CUDA
+        cudaGraphicsResource_t VertexBufferCuResource;
 
-		Thrust();
-		void CUDA_Map(float*& d_VertexBuffer);
-		void CUDA_Unmap();
-		~Thrust();
-		void Draw();
-	};
+        Thrust();
+        void CUDA_Map(float*& d_VertexBuffer);
+        void CUDA_Unmap();
+        ~Thrust();
+        void Draw();
+    };
 
-	extern Thrust* ThrustLong[4];
-	extern Thrust* ThrustShort[4];
+    extern Thrust* ThrustLong[4];
+    extern Thrust* ThrustShort[4];
 }

@@ -7,21 +7,21 @@
 
 struct Weight_Characteristic
 {
-	unsigned int Layer;
-	unsigned int Origin_Neuron_Index;
-	unsigned int Target_Neuron_Index;
-	unsigned int Neuron_Index_Layer_Begin;
-	unsigned int Origin_Neuron_Index_Within_Layer;
-	unsigned int Target_Neuron_Index_Within_Layer;
-	unsigned int Weight_Index;
-	unsigned int Weight_Index_Layer_Begin;
-	unsigned int Weight_Index_Within_Layer;
-	unsigned int Next_Layer_Size;
+    unsigned int Layer;
+    unsigned int Origin_Neuron_Index;
+    unsigned int Target_Neuron_Index;
+    unsigned int Neuron_Index_Layer_Begin;
+    unsigned int Origin_Neuron_Index_Within_Layer;
+    unsigned int Target_Neuron_Index_Within_Layer;
+    unsigned int Weight_Index;
+    unsigned int Weight_Index_Layer_Begin;
+    unsigned int Weight_Index_Within_Layer;
+    unsigned int Next_Layer_Size;
 };
 struct neuron_Indices
 {
-	unsigned int Origin_Neuron_Index;
-	unsigned int Target_Neuron_Index;
+    unsigned int Origin_Neuron_Index;
+    unsigned int Target_Neuron_Index;
 };
 
 __device__ void BackPropagate_Populate_Neurons(CraftState* C, const unsigned int &Weight_Index);

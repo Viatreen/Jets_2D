@@ -16,7 +16,7 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
-#include <Windows.h>		// Removes glad APIENTRY redefine warning
+#include <Windows.h>        // Removes glad APIENTRY redefine warning
 #endif
 
 // OpenGL
@@ -55,77 +55,81 @@
 
 int main()
 {
-	std::cout << "Begin" << std::endl;
-	Print_Data_Info();
+    std::cout << "Begin" << std::endl;
+    Print_Data_Info();
 
-	// Setup
-	Timer = std::chrono::steady_clock::now();
-	GL::Setup();
-	Mem::Setup();
-	Setup();
-	Graphics::Setup();
-	Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-	cudaCheck(cudaDeviceSynchronize());
+    // Setup
+    Timer = std::chrono::steady_clock::now();
+    GL::Setup();
+    Mem::Setup();
+    Setup();
+    Graphics::Setup();
+    Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+    cudaCheck(cudaDeviceSynchronize());
 
-	Test_Neural_Net_Eval(Crafts);
+    Test_Neural_Net_Eval(Crafts);
 
-	TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
+    TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
-	bool Do_Mutations = false; //  true;
+    bool Do_Mutations = true;
 
-	// Game Loop
-	while (!glfwWindowShouldClose(window))
-	{
-		int h_TournamentEpochNumber = 0;
-		cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
-		cudaCheck(cudaDeviceSynchronize());
+    // Game Loop
+    while (!glfwWindowShouldClose(window))
+    {
+        int h_TournamentEpochNumber = 0;
+        cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
+        cudaCheck(cudaDeviceSynchronize());
 
-		// Original Side of the Circle
-		Round();
+        // Original Side of the Circle
+        Round();
 
-		RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-		cudaCheck(cudaDeviceSynchronize());
+        RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+        cudaCheck(cudaDeviceSynchronize());
 
-		RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-		cudaCheck(cudaDeviceSynchronize());
-		
-		RoundEnd();
+        RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, RoundNumber);
+        cudaCheck(cudaDeviceSynchronize());
+        
+        RoundEnd();
 
-		h_Config->RoundNumber = RoundNumber;
-		SyncConfigArray();
+        h_Config->RoundNumber = RoundNumber;
+        SyncConfigArray();
 
-		if (RoundNumber == 10)
-		{
-			glfwSetWindowShouldClose(window, 1);
-		}
-		
-		if (Do_Mutations)
-		{
-			WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-			cudaCheck(cudaDeviceSynchronize());
+        if (RoundNumber == 10)
+        {
+            Do_Mutations = false;
+        }
+        if (RoundNumber == 14)
+        {
+            glfwSetWindowShouldClose(window, 1);
+        }
+        
+        if (Do_Mutations)
+        {
+            WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+            cudaCheck(cudaDeviceSynchronize());
 
-			WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
-			cudaCheck(cudaDeviceSynchronize());
+            WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+            cudaCheck(cudaDeviceSynchronize());
 
-			WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-			cudaCheck(cudaDeviceSynchronize());
+            WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+            cudaCheck(cudaDeviceSynchronize());
 
-			IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-			cudaCheck(cudaDeviceSynchronize());
-		}
+            IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+            cudaCheck(cudaDeviceSynchronize());
+        }
 
-		ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-		cudaCheck(cudaDeviceSynchronize());
+        ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+        cudaCheck(cudaDeviceSynchronize());
 
-		RoundEnd2();
-	}
+        RoundEnd2();
+    }
 
-	// Cleanup
-	Mem::Shutdown();
-	Shutdown();
-	Graphics::Shutdown();
+    // Cleanup
+    Mem::Shutdown();
+    Shutdown();
+    Graphics::Shutdown();
 
-	std::cout << "End" << std::endl;
+    std::cout << "End" << std::endl;
 
-	return 0;
+    return 0;
 }

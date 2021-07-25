@@ -7,14 +7,14 @@
 #include "glad/glad.h"
 
 ///////////////////////////////////////////
-//	This file checks errors for OpenGL
-//	API functions
+//  This file checks errors for OpenGL
+//  API functions
 ///////////////////////////////////////////
 
 // GLFW Error Handling
 void glfwErrorCallback(int i, const char* err_str);
 
-#ifdef _DEBUG		// Visual Studio define for debug mode
+#ifdef _DEBUG       // Visual Studio define for debug mode
 #define ERROR_CHECK_GL
 #endif
 
@@ -24,12 +24,12 @@ void glfwErrorCallback(int i, const char* err_str);
 
 #ifdef ERROR_CHECK_GL
 #ifndef ASSERT_GL
-#define ASSERT_GL(x) if (!(x))    ;//	__debugbreak;
+#define ASSERT_GL(x) if (!(x))    ;//   __debugbreak;
 #endif
 
-#define GLCheck(x)	GLClearError();\
-					x;\
-					ASSERT_GL(GLLogCall(__FILE__, __LINE__, #x));
+#define GLCheck(x)  GLClearError();\
+                    x;\
+                    ASSERT_GL(GLLogCall(__FILE__, __LINE__, #x));
 
 
 void GLClearError();

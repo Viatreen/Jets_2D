@@ -17,23 +17,23 @@
 
 namespace Craft
 {
-	struct Circle
-	{
-		// OpenGL
-		unsigned int VA, VB, EB;
+    struct Circle
+    {
+        // OpenGL
+        unsigned int VA, VB, EB;
 
-		// CUDA
-		cudaGraphicsResource_t VertexBufferCuResource;
+        // CUDA
+        cudaGraphicsResource_t VertexBufferCuResource;
 
-		// Create interleaved arrays of vertices in order to cause CUDA manipulation of vertex buffer data to be coalesced
-		// Size needs to include number of circle edge vertices plus center vertex
-		Circle(int VertexCount);
-		void CUDA_Map(float*& d_VertexBuffer);
-		void CUDA_Unmap();
-		~Circle();
-		void Draw(int VertexCount);
-	};	// End Component struct
+        // Create interleaved arrays of vertices in order to cause CUDA manipulation of vertex buffer data to be coalesced
+        // Size needs to include number of circle edge vertices plus center vertex
+        Circle(int VertexCount);
+        void CUDA_Map(float*& d_VertexBuffer);
+        void CUDA_Unmap();
+        ~Circle();
+        void Draw(int VertexCount);
+    };  // End Component struct
 
-	extern Circle *Fuselage;
-	extern Circle *Bullet[BULLET_COUNT_MAX];
-}	// End Craft namespace
+    extern Circle *Fuselage;
+    extern Circle *Bullet[BULLET_COUNT_MAX];
+}   // End Craft namespace

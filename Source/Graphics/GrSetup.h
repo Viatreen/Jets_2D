@@ -7,6 +7,6 @@ extern Shader CraftShader;
  
 namespace Graphics
 {
-	void Setup();
-	void Shutdown();
+    void Setup();
+    void Shutdown();
 }

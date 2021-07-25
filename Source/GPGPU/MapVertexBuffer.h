@@ -2,6 +2,6 @@
 
 namespace GPGPU
 {
-	void CUDA_Map();
-	void CUDA_Unmap();
+    void CUDA_Map();
+    void CUDA_Unmap();
 }

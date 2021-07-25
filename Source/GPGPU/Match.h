@@ -13,7 +13,7 @@
 __device__ void WeightsMutateAndTransfer(CraftState* C, config* Config, int SourceIndex, int TargetIndex);
 __global__ void RoundAssignPlace(CraftState* Crafts);
 __global__ void RoundTieFix(CraftState* Crafts);
-__global__ void RoundPrintFirstPlace(CraftState* C);
+__global__ void RoundPrintFirstPlace(CraftState* C, int RoundNumber);
 __global__ void IDAssign(CraftState* C, config* Config);
 __global__ void WeightsAndIDTempSave(CraftState* C, temp* Temp);
 __global__ void WeightsAndIDTransfer(CraftState* C, temp* Temp); // TODO: Combine transfer and mutate kernels
