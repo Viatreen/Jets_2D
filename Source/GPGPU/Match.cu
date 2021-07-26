@@ -5,8 +5,8 @@
 #include <cmath>
 
 // CUDA
-#include "cuda_runtime.h"
-#include "curand_kernel.h"
+#include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 // Project Headers
 #include "GPGPU/Vertices.h"

@@ -24,13 +24,17 @@ struct neuron_Indices
     unsigned int Target_Neuron_Index;
 };
 
-__device__ void BackPropagate_Populate_Neurons(CraftState* C, const unsigned int &Weight_Index);
 __device__ void BackPropagate_Eval(CraftState* C);
 __global__ void RELU_Activate_Layer(CraftState* C, unsigned int Layer);
+__host__ float Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_FIgured_Out(CraftState* C);
 __host__ void Test_Neural_Net_Eval(CraftState* C);
 __global__ void Create_Neural_Net_Eval(CraftState* C);
+__host__ void BackPropagate_Eval_Host(CraftState* C, float Desired_Value);
+__global__ void BackPropagate_Eval_2(CraftState* C, int Layer);
+__global__ void BackPropagate_Populate_Neurons(CraftState* C, const unsigned int &Weight_Index, int Layer);
 __global__ void Print_Layer_Eval(CraftState* C, unsigned int Layer);
 __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer);
-__device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Weight_Index, const bool &Do_Activation, unsigned int Layer);
+__device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Weight_Index, const bool &Do_Activation, unsigned int Layer, neuron_Indices Neuron_Value);
 __device__ void Activate_Layer_Eval(CraftState* C, const unsigned int &Neuron_Index);
 __device__ neuron_Indices Get_Neuron_Indices(CraftState *C, const unsigned int &Weight_Index, unsigned int Layer);
+__device__ int Get_Weight_Amount_In_Layer(int Layer);

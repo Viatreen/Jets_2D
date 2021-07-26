@@ -9,7 +9,7 @@
 #include <iostream>
 
 // CUDA
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 #ifdef __DRIVER_TYPES_H__
 

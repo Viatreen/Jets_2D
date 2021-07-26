@@ -88,20 +88,11 @@ int main()
 
         RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, RoundNumber);
         cudaCheck(cudaDeviceSynchronize());
-        
+
         RoundEnd();
 
         h_Config->RoundNumber = RoundNumber;
         SyncConfigArray();
-
-        if (RoundNumber == 10)
-        {
-            Do_Mutations = false;
-        }
-        if (RoundNumber == 14)
-        {
-            glfwSetWindowShouldClose(window, 1);
-        }
         
         if (Do_Mutations)
         {

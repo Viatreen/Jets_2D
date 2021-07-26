@@ -1,7 +1,7 @@
 #pragma once
 
 // CUDA
-#include "device_launch_parameters.h"
+#include <device_launch_parameters.h>
 
 // Standard Library
 #include <stdlib.h>

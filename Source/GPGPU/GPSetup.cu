@@ -5,8 +5,8 @@
 #include <iostream>
 
 // CUDA
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 // Project Headers
 #include "GPGPU/State.h"

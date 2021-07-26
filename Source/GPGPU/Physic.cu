@@ -2,7 +2,7 @@
 #include "Physic.h"
 
 // CUDA
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 // Project Headers
 #include "GPGPU/State.h"

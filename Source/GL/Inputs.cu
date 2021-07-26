@@ -81,8 +81,6 @@ namespace Inputs
 
     void MouseCallback(GLFWwindow* window, double xPos, double yPos)
     {
-
-
         // No commands to ImGui
     }
 

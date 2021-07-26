@@ -2,10 +2,10 @@
 #include "Epoch.h"
 
 // CUDA
-#include "curand_kernel.h"
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include "cooperative_groups.h"
+#include <curand_kernel.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <cooperative_groups.h>
 
 // Project Headers
 #include "Config.h"
@@ -57,17 +57,12 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
 
         C->Score[idx]               = C->ScoreTime[idx]               + C->ScoreFuelEfficiency[idx]               + C->ScoreDistance[idx]  / 1000.f              + C->ScoreBullet[idx]               - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumuulating score
 
-        if (idx == 0 && Match->ElapsedTicks[idx] % 10 == 0)
-            printf("Jet 0 ScoreTime: %2.6f, \tScoreFuelEfficiency: %2.6f, \tPosition.x: %2.6f, \tPosition.y: %2.6f\n", C->ScoreTime[idx], C->ScoreFuelEfficiency[idx], C->Position.X[idx], C->Position.Y[idx]);
-
         if (!C->Active[idx] || Match->ElapsedTicks[idx] == (Config->TimeStepLimit - 1))
         {
             Match->Done[idx] = true;
 
             ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
             C->Score[idx]               = C->ScoreTime[idx]               + C->ScoreFuelEfficiency[idx]               + C->ScoreDistance[idx]  / 1000.f              + C->ScoreBullet[idx]               - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumuulating score
-            if (idx == 0)
-                printf("Ticks: %d, Jet 0 Score: %f\n", Match->ElapsedTicks[idx], C->Score[idx]);
             C->Score[idx + CRAFT_COUNT] = C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreFuelEfficiency[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f + C->ScoreBullet[idx + CRAFT_COUNT] - C->ScoreBullet[idx]  / 10.f;              // Score of opponent does not matter except
         }
 

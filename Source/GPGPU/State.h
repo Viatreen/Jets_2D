@@ -1,7 +1,7 @@
 #pragma once
 
 // CUDA
-#include "curand_kernel.h"
+#include <curand_kernel.h>
 
 // Project Headers
 #include "Config.h"

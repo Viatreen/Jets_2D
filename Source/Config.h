@@ -47,6 +47,8 @@
 #define MATCH_COUNT                         ( CRAFT_COUNT )
 #define OPPONENT_RANK_RANGE_DEFAULT           128 //128        // Must be equal or less than FIT_COUNT
 
+#define MAX(X, Y)                           ( X > Y ? X : Y )
+
 // Dimensions and Mass (Meters, Kg)
 #define CG_OFFSET_Y                           0.2f    // CG is this far below graphical center
 #define CRAFT_MASS                            500.f                
@@ -215,6 +217,9 @@
 #define WEIGHTS_MULTIPLIER_EVAL               0.25f
 #define NETWORK_ACTIVATION_SLOPE_EVAL         0.01f
 #define NETWORK_INV_ACTIVATION_SLOPE_EVAL   ( 1.f / NETWORK_ACTIVATION_SLOPE_EVAL )
+
+#define LARGEST_LAYER_EVAL                  ( MAX(LAYER_SIZE_INPUT_EVAL, MAX(LAYER_SIZE_HIDDEN_EVAL, LAYER_SIZE_OUTPUT_EVAL)) )
+#define WEIGHT_AMOUNT_MAX_LAYER_EVAL        ( LARGEST_LAYER_EVAL * LARGEST_LAYER_EVAL )
 
 #define SHRINK_COEFFICIENT_WEIGHTS            0.9999f
 /* ^^ After neural network is randomly generated, all weights are iteratively shrunk until a reasonable output

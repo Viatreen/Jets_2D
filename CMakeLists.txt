@@ -68,6 +68,7 @@ set(sources
     Source/GPGPU/NeuralNet_Eval.cu
     Source/GPGPU/Epoch.cu
     Source/GPGPU/GPSetup.cu
+    Source/GPGPU/Helper.cu
     Source/GPGPU/MapVertexBuffer.cu
     Source/GPGPU/Match.cu
     Source/GPGPU/Physic.cu

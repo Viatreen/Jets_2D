@@ -10,7 +10,7 @@
 #include "stdio.h"
 
 // CUDA
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 // Project Headers
 #include "Config.h"
