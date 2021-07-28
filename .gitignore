@@ -44,3 +44,4 @@ bin/
 out/
 CMakeFiles/
 build/
+.vscode/
