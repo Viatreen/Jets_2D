@@ -25,10 +25,12 @@ CMakeCache.txt
 *.cmake
 Makefile
 
+# vscode
+*.json
+
 # Visual Studio
 *.db
 *.suo
-CMakeSettings.json
 
 # Logs
 *.log
