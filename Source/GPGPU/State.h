@@ -45,7 +45,7 @@ struct eval_Network
 {
     float Weight[WEIGHT_AMOUNT_EVAL];
     float Neuron[NEURON_AMOUNT_EVAL];
-    float Delta_Weight[WEIGHT_AMOUNT_EVAL]; // For backpropagation
+    float Delta_Result_Over_Delta_Weight[WEIGHT_AMOUNT_EVAL]; // For backpropagation
     float Delta_Neuron[NEURON_AMOUNT_EVAL];
 };
 

@@ -29,9 +29,9 @@ void Print_Data_Info()
 
 	std::cout << "Evaluation Network:" << std::endl;
 	std::cout << "Number of layers: " << LAYER_AMOUNT_EVAL << std::endl;
-	std::cout << "Number of input neurons: " << LAYER_SIZE_INPUT_EVAL << std::endl;
-	std::cout << "Number of neurons per hidden layer: " << LAYER_SIZE_HIDDEN_EVAL << std::endl;
-	std::cout << "Number of output neurons: " << LAYER_SIZE_OUTPUT_EVAL << std::endl;
+	std::cout << "Number of input neurons: " << NEURON_AMOUNT_INPUT_EVAL << std::endl;
+	std::cout << "Number of neurons per hidden layer: " << NEURON_AMOUNT_HIDDEN_EVAL << std::endl;
+	std::cout << "Number of output neurons: " << NEURON_AMOUNT_OUTPUT_EVAL << std::endl;
 	std::cout << "Number of neurons: " << NEURON_AMOUNT_EVAL << std::endl;
 	std::cout << "Number of weights: " << WEIGHT_AMOUNT_EVAL << std::endl << std::endl;
 

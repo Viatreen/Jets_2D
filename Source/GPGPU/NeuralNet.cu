@@ -673,7 +673,7 @@ __device__ void BackPropagate(CraftState* C, int Craft_ID)
 
     // Result to solve
     float Delta_Output_Neuron = 0.f;
-    // float Delta_Weight = 1.f;    // TODO: Figure out the notation
+    // float Delta_Result_Over_Delta_Weight = 1.f;    // TODO: Figure out the notation
 
     // TODO: Assign this based on Thread ID
     int Weight_Neuron_Origin = 3;
