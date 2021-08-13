@@ -33,7 +33,7 @@ include_directories(
     lib/
     lib/dear_imgui
     lib/GLFW/include
-    Source/
+    /
     )
 
 include_directories(${OpenglIncludeSubdir})
@@ -57,33 +57,33 @@ endif()
 
 set(sources
     # Program
-    Source/main.cu
+    Jets_2D/main.cu
     
-    Source/ErrorCheck.cpp
-    Source/Config.cpp
-    Source/GL/Inputs.cu
-    Source/GL/GLSetup.cpp
-    Source/GL/Shader.cpp
-    Source/GPGPU/NeuralNet.cu
-    Source/GPGPU/NeuralNet_Eval.cu
-    Source/GPGPU/Epoch.cu
-    Source/GPGPU/GPSetup.cu
-    Source/GPGPU/Helper.cu
-    Source/GPGPU/MapVertexBuffer.cu
-    Source/GPGPU/Match.cu
-    Source/GPGPU/Physic.cu
-    Source/GPGPU/Round.cu
-    Source/GPGPU/SetVariables.cu
-    Source/GPGPU/Vertices.cu
-    Source/Graphics/Axis.cpp
-    Source/Graphics/Camera.cpp
-    Source/Graphics/Circle.cu
-    Source/Graphics/CircleOfLife.cu
-    Source/Graphics/Component.cu
-    Source/Graphics/GrSetup.cu
-    Source/Graphics/Thrust.cu
-    Source/GUI/GUI.cu
-    Source/GUI/Print_Data_Info.cu
+    Jets_2D/ErrorCheck.cpp
+    Jets_2D/Config.cpp
+    Jets_2D/GL/Inputs.cu
+    Jets_2D/GL/GLSetup.cpp
+    Jets_2D/GL/Shader.cpp
+    Jets_2D/GPGPU/NeuralNet.cu
+    Jets_2D/GPGPU/NeuralNet_Eval.cu
+    Jets_2D/GPGPU/Epoch.cu
+    Jets_2D/GPGPU/GPSetup.cu
+    Jets_2D/GPGPU/Helper.cu
+    Jets_2D/GPGPU/MapVertexBuffer.cu
+    Jets_2D/GPGPU/Match.cu
+    Jets_2D/GPGPU/Physic.cu
+    Jets_2D/GPGPU/Round.cu
+    Jets_2D/GPGPU/SetVariables.cu
+    Jets_2D/GPGPU/Vertices.cu
+    Jets_2D/Graphics/Axis.cpp
+    Jets_2D/Graphics/Camera.cpp
+    Jets_2D/Graphics/Circle.cu
+    Jets_2D/Graphics/CircleOfLife.cu
+    Jets_2D/Graphics/Component.cu
+    Jets_2D/Graphics/GrSetup.cu
+    Jets_2D/Graphics/Thrust.cu
+    Jets_2D/GUI/GUI.cu
+    Jets_2D/GUI/Print_Data_Info.cu
     
     # Glad
     lib/glad/glad.c

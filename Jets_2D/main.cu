@@ -1,0 +1,125 @@
+// Standard Library
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <cmath>
+#include <chrono>
+#include <stdint.h>
+#include <stdlib.h>
+#include <istream>
+#include <fstream>
+#include <ostream>
+#include <sstream>
+#include <stdlib.h>
+
+#ifdef _WIN32
+#include <Windows.h>        // Removes glad APIENTRY redefine warning
+#endif
+
+// OpenGL
+#define GLFW_INCLUDE_NONE
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+// CUDA
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <curand_kernel.h>
+#include <cuda_gl_interop.h>
+ 
+// ImGUI
+#include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
+// Project Headers
+#include "Jets_2D/ErrorCheck.h"
+#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/GL/GLSetup.h"
+#include "Jets_2D/GPGPU/Round.h"
+#include "Jets_2D/GPGPU/GPSetup.h"
+#include "Jets_2D/GPGPU/MapVertexBuffer.h"
+#include "Jets_2D/GPGPU/Match.h"
+#include "Jets_2D/GPGPU/NeuralNet_Eval.h"
+#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GUI/GUI.h"
+#include "Jets_2D/GUI/Print_Data_Info.h"
+#include "Jets_2D/Graphics/GrSetup.h"
+
+int main()
+{
+    std::cout << "Begin" << std::endl;
+    Print_Data_Info();
+
+    // Setup
+    Timer = std::chrono::steady_clock::now();
+    GL::Setup();
+    Mem::Setup();
+    Setup();
+    Graphics::Setup();
+    Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+    cudaCheck(cudaDeviceSynchronize());
+
+    Test_Neural_Net_Eval(Crafts);
+
+    TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
+
+    bool Do_Mutations = true;
+
+    // Game Loop
+    glfwSetWindowShouldClose(window, 1);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        int h_TournamentEpochNumber = 0;
+        cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
+        cudaCheck(cudaDeviceSynchronize());
+
+        // Original Side of the Circle
+        Round();
+
+        RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+        cudaCheck(cudaDeviceSynchronize());
+
+        RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, RoundNumber);
+        cudaCheck(cudaDeviceSynchronize());
+
+        RoundEnd();
+
+        h_Config->RoundNumber = RoundNumber;
+        SyncConfigArray();
+        
+        if (Do_Mutations)
+        {
+            WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+            cudaCheck(cudaDeviceSynchronize());
+
+            WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+            cudaCheck(cudaDeviceSynchronize());
+
+            WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+            cudaCheck(cudaDeviceSynchronize());
+
+            IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+            cudaCheck(cudaDeviceSynchronize());
+        }
+
+        ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+        cudaCheck(cudaDeviceSynchronize());
+
+        RoundEnd2();
+    }
+
+    // Cleanup
+    Mem::Shutdown();
+    Shutdown();
+    Graphics::Shutdown();
+
+    std::cout << "End" << std::endl;
+
+    return 0;
+}
