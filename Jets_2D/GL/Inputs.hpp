@@ -7,8 +7,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-extern double RenderTime;
-
 namespace Inputs
 {
     void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);

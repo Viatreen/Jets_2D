@@ -532,11 +532,7 @@ void Setup()
     const char* glsl_version = "#version 450";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    #if defined(__linux)
-        io.Fonts->AddFontFromFileTTF("./res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
-    #elif defined(_WIN32)
-        io.Fonts->AddFontFromFileTTF("../../../res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
-    #endif
+    io.Fonts->AddFontFromFileTTF("./res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
 
     ImGui::StyleColorsDark();
 

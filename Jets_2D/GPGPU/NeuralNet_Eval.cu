@@ -33,11 +33,11 @@ __global__ void Initialize_Neural_Net_Eval(CraftState* C)
         if (Weight_Index < WEIGHT_AMOUNT_EVAL)
         {
             C->Eval_Network.Weight[Weight_Index] = 0.09f;
-            if (Weight_Index == 500)
-            {
-                C->Eval_Network.Weight[Weight_Index] += 0.31;
-                printf("Weight: %f\n", C->Eval_Network.Weight[Weight_Index]);
-            }
+            // if (Weight_Index == 500)
+            // {
+            //     C->Eval_Network.Weight[Weight_Index] += 0.31;
+            //     printf("Weight: %f\n", C->Eval_Network.Weight[Weight_Index]);
+            // }
         }
     }
 }
@@ -201,6 +201,7 @@ __host__ float Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Ou
     return Result;
 }
 
+// TODO: Move to test file
 __host__ void Test_Neural_Net_Eval(CraftState* C)
 {
     Initialize_Neural_Net_Eval<<<Div_Up(WEIGHT_AMOUNT_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C);

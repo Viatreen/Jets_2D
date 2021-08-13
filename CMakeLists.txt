@@ -26,7 +26,20 @@ endif()
 if (WIN32)
     set(_GLFW_WIN32 1)
     message(STATUS "Using Win32 for window creation")
-    # TODO: See if we can set VS working directory to cmake root directory
+    add_definitions(-D_GLFW_WIN32)
+    list(APPEND glfw_PKG_LIBS "-lgdi32")
+
+    if (GLFW_USE_HYBRID_HPG)
+        set(_GLFW_USE_HYBRID_HPG 1)
+    endif()
+
+    add_definitions(-D_GLFW_WIN32)
+
+    # Workarounds for VS deprecating parts of the standard library
+    if (MSVC)
+        set(_CRT_SECURE_NO_WARNINGS 1)
+        set(CURL_STATICLIB 1)
+    endif()
 endif()
 
 include_directories(
@@ -37,23 +50,6 @@ include_directories(
     )
 
 include_directories(${OpenglIncludeSubdir})
-
-if (_GLFW_WIN32)
-    add_definitions(-D_GLFW_WIN32)
-    list(APPEND glfw_PKG_LIBS "-lgdi32")
-
-    if (GLFW_USE_HYBRID_HPG)
-        set(_GLFW_USE_HYBRID_HPG 1)
-    endif()
-endif()
-
-if (WIN32)
-    # Workarounds for VS deprecating parts of the standard library
-    if (MSVC)
-        set(_CRT_SECURE_NO_WARNINGS 1)
-        set(CURL_STATICLIB 1)
-    endif()
-endif()
 
 set(sources
     # Program
@@ -110,6 +106,13 @@ set(sources
 
 add_executable(${CMAKE_PROJECT_NAME} ${sources})
 
+# if (WIN32)
+#     # Not Working. Compiling with MSVC between vscode and Visual Studio is currently incompatible due to shader and font loading paths
+#     set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+#                                                            VS_DEBUGGER_COMMAND           "${CMAKE_SOURCE_DIR}")
+#     message("Setting working directory to ${CMAKE_SOURCE_DIR}")
+# endif()
+
 if (_GLFW_X11)
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     lib/GLFW/src/x11_platform.h
@@ -151,14 +154,14 @@ if (UNIX)
 )
 endif()
 
+target_link_libraries(${CMAKE_PROJECT_NAME}
+    ${OPENGL_LIBRARIES} 
+    )
+
 target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:C>:   >
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>: >
 )
-
-if(WIN32)
-    add_definitions(-D_GLFW_WIN32)
-endif()
 
 target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored --expt-relaxed-constexpr> # -g -G --ptxas-options=–allow-expensive-optimizations=true>
@@ -167,6 +170,6 @@ target_compile_options(${CMAKE_PROJECT_NAME}
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61 62 70 72 75) # 61 = GTX 1080 Ti
 
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    ${OPENGL_LIBRARIES}
-    )
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(add PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
+endif()

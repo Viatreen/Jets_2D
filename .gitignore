@@ -24,9 +24,10 @@ CMakeCache.txt
 *.marks
 *.cmake
 Makefile
+CMakeSettings.json
 
 # vscode
-*.json
+
 
 # Visual Studio
 *.db
@@ -44,4 +45,3 @@ bin/
 out/
 CMakeFiles/
 build/
-.vscode/
