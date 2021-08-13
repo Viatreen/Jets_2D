@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GPGPU/NeuralNet.h"
+#include "Jets_2D/GPGPU/NeuralNet.hpp"
 
 // Standard Library
 #include <math.h>
@@ -9,9 +9,9 @@
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/Physic.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/Physic.hpp"
 
 __device__ void RELU_Activate(float& Neuron)
 {

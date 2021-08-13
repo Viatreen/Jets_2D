@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/ErrorCheck.h"
+#include "Jets_2D/ErrorCheck.hpp"
 
 // Standard Library
 #include <iostream>

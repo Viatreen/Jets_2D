@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GPGPU/Round.h"
+#include "Jets_2D/GPGPU/Round.hpp"
 
 // Standard Library
 #include <chrono>
@@ -13,22 +13,22 @@
 #endif
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GPGPU/Match.h"
-#include "Jets_2D/GPGPU/Epoch.h"
-#include "Jets_2D/GPGPU/MapVertexBuffer.h"
-#include "Jets_2D/Graphics/Draw.h"
-#include "Jets_2D/Graphics/GrSetup.h"
-#include "Jets_2D/Graphics/Component.h"
-#include "Jets_2D/GUI/GUI.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
-#include "Jets_2D/GPGPU/Cooperative_Call.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+#include "Jets_2D/GPGPU/Epoch.hpp"
+#include "Jets_2D/GPGPU/MapVertexBuffer.hpp"
+#include "Jets_2D/Graphics/Draw.hpp"
+#include "Jets_2D/Graphics/GrSetup.hpp"
+#include "Jets_2D/Graphics/Component.hpp"
+#include "Jets_2D/GUI/GUI.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
+#include "Jets_2D/GPGPU/Cooperative_Call.hpp"
 
 std::chrono::steady_clock::time_point Timer;
 
 void Round()
 {
-    int Opponent_ID_Weights = rand() % OpponentRankRange;
+    int Opponent_ID_Weights = rand() % GUI::OpponentRankRange;
     float AngleStart;
 
     for (int Angle = 0; Angle < 2; Angle++) // TODO: Change back to 2 ater mutation test
@@ -54,12 +54,12 @@ void Round()
 
                     glfwPollEvents();
 
-                    if (!Pause)
+                    if (!GUI::Pause)
                     {
                         cudaCheck(cudaDeviceSynchronize());
 
                         GLCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-                        GLCheck(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
+                        GLCheck(glClearColor(GUI::clear_color.x, GUI::clear_color.y, GUI::clear_color.z, GUI::clear_color.w));
                         glfwGetFramebufferSize(window, &GL::ScreenWidth, &GL::ScreenHeight);
                         Inputs::DoMovement();
 
@@ -93,14 +93,14 @@ void Round()
                         Graphics::Draw();
                     }
 
-                    Run(Opponent_ID_Weights, PositionNumber, AngleStart);
+                    GUI::Run(Opponent_ID_Weights, PositionNumber, AngleStart);
                     glfwSwapBuffers(window);
                 }
             }
 
             ScoreCumulativeCalc<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
 
-            MatchEnd();
+            GUI::MatchEnd();
             h_AllDone = false;
         }
     }

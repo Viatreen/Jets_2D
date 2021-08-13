@@ -30,12 +30,15 @@
 //#include "boost/filesystem.hpp"
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GL/GLSetup.h"
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/SetVariables.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GL/GLSetup.hpp"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/SetVariables.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
+
+namespace GUI
+{
 
 // Used in SaveCSV() and Load()
 struct CraftWeights
@@ -43,70 +46,16 @@ struct CraftWeights
 	float w[WEIGHT_AMOUNT];
 };
 
-extern CraftWeights* h_CraftWeights;
-extern CraftWeights* d_CraftWeights;
-
-extern  bool ShowProgress;
-extern  bool ShowSideBar;
-extern  bool ShowStateBar;
-extern  bool ShowSideBarMutation;
-extern  bool RenderAll;
-extern  bool RenderFit;
-extern  bool RenderOne;
-extern  bool RenderNone;
-extern  bool SimulateFastFlag;
-extern  bool SimulationSpeedToggle;
-extern  bool SaveFlag;
-extern  bool SaveFlagEndRound;
-extern  int SaveCount;
-extern  bool LoadBinaryFlag;
-extern  bool LoadBinaryFlagEndMatch;
-extern  bool LoadBinaryFlagEndRound;
-
 extern ImVec4 clear_color;
-
 extern float TimerStartup;
-extern std::chrono::steady_clock::time_point TimerSinceStart;
-
-extern int StepNumber;
-extern int MatchNumber;
 extern int RoundNumber;
-extern float HighScore;
-extern int IndexHighScore;
-extern float HighScoreCumulative;
-extern float HighScoreCumulativeAllTime;
-extern std::vector<float> HighScoreVec;
-extern std::vector<float> HighScoreVecReverse;
-
-extern std::vector<float> HighScoreCumulativeVec;
-extern std::vector<float> HighScoreCumulativeVecReverse;
-
 extern int OpponentRankRange;
 
 // Define Progress plot parameters
 extern const int MenuHeight;
-extern const int ProgressHeightDefault;
-extern const int SideBarWidthDefault;
-extern const int StateBarWidthDefault;
 
 extern int ProgressHeight;
 extern int SideBarWidth;
-extern int StateBarWidth;
-
-extern float ProgressDataWidth;
-extern int ProgressPlotOffset;
-
-extern bool MutationChangePending;
-extern bool PerformanceChangePending;
-
-extern ImGuiWindowFlags WindowFlags;
-
-
-extern int LoadCraftCount;
-extern bool LoadSuccess;
-
-extern std::vector<std::string> NeuronInputString;
-extern std::vector<std::string> NeuronOutputString;
 
 extern bool Pause;
 
@@ -134,3 +83,5 @@ void AddSpaces(std::string& Output, float Input);
 void StateBar(bool LeftSide, state* d_State, float AngleStart);
 void Run(int OpponentID, int PositionNumber, float AngleStart);
 void Shutdown();
+
+} //End namespace GUI

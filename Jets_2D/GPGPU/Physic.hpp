@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GPGPU/State.hpp"
 
 __device__ void Physic(MatchState* Match, CraftState* CS, config* Config, bool IsOpponent);
 __device__ void CollisionDetect(CraftState* C, int idx1, int idx2);

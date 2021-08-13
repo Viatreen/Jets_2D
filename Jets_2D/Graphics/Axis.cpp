@@ -1,13 +1,13 @@
 // File Header
-#include "Jets_2D/Graphics/Axis.h"
+#include "Jets_2D/Graphics/Axis.hpp"
 
 // OpenGL
 #include "glad/glad.h"
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/ErrorCheck.h"
-#include "Jets_2D/GL/Shader.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/ErrorCheck.hpp"
+#include "Jets_2D/GL/Shader.hpp"
 
 axis* Axis[2];
 

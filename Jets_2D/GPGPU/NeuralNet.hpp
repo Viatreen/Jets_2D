@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GPGPU/State.hpp"
 
 __device__ void RELU_Activate(float& Neuron);
 __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, int ID_Opponent, int ID_Craft, int ID_Weight);

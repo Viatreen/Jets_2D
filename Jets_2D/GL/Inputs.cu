@@ -1,4 +1,4 @@
-#include "Inputs.h"
+#include "Jets_2D/GL/Inputs.hpp"
 
 // Standard Library
 #include <vector>
@@ -18,9 +18,9 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 // Project Headers
-#include "Jets_2D/Graphics/Camera.h"
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GPGPU/SetVariables.h"
+#include "Jets_2D/Graphics/Camera.hpp"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GPGPU/SetVariables.hpp"
 
 double RenderTime = 0.0;
 

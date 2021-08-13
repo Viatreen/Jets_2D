@@ -1,5 +1,5 @@
 //File Header
-#include "Jets_2D/Graphics/Camera.h"
+#include "Jets_2D/Graphics/Camera.hpp"
 
 // Standard Library
 #include <vector>
@@ -13,7 +13,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 // Project Headers
-#include "Jets_2D/Config.h"
+#include "Jets_2D/Config.hpp"
 
 camera Camera;
 

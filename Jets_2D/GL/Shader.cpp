@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GL/Shader.h"
+#include "Jets_2D/GL/Shader.hpp"
 
 // Standard Library
 #include <string>
@@ -11,7 +11,7 @@
 #include "glad/glad.h"
 
 // Project Headers
-#include "Jets_2D/ErrorCheck.h"
+#include "Jets_2D/ErrorCheck.hpp"
 
 void Shader::Create(const std::string FilePath)
 {

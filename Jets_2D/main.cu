@@ -1,16 +1,6 @@
 // Standard Library
 #include <iostream>
-#include <iomanip>
-#include <vector>
-#include <cmath>
 #include <chrono>
-#include <stdint.h>
-#include <stdlib.h>
-#include <istream>
-#include <fstream>
-#include <ostream>
-#include <sstream>
-#include <stdlib.h>
 
 #ifdef _WIN32
 #include <Windows.h>        // Removes glad APIENTRY redefine warning
@@ -20,35 +10,24 @@
 #define GLFW_INCLUDE_NONE
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
 
 // CUDA
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <curand_kernel.h>
-#include <cuda_gl_interop.h>
  
-// ImGUI
-#include "imgui/imgui.h"
-#include "imgui/imgui_internal.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
-
 // Project Headers
-#include "Jets_2D/ErrorCheck.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
-#include "Jets_2D/GL/GLSetup.h"
-#include "Jets_2D/GPGPU/Round.h"
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/MapVertexBuffer.h"
-#include "Jets_2D/GPGPU/Match.h"
-#include "Jets_2D/GPGPU/NeuralNet_Eval.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GUI/GUI.h"
-#include "Jets_2D/GUI/Print_Data_Info.h"
-#include "Jets_2D/Graphics/GrSetup.h"
+#include "Jets_2D/ErrorCheck.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
+#include "Jets_2D/GL/GLSetup.hpp"
+#include "Jets_2D/GPGPU/Round.hpp"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/MapVertexBuffer.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+#include "Jets_2D/GPGPU/NeuralNet_Eval.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GUI/GUI.hpp"
+#include "Jets_2D/GUI/Print_Data_Info.hpp"
+#include "Jets_2D/Graphics/GrSetup.hpp"
 
 int main()
 {
@@ -59,14 +38,14 @@ int main()
     Timer = std::chrono::steady_clock::now();
     GL::Setup();
     Mem::Setup();
-    Setup();
+    GUI::Setup();
     Graphics::Setup();
     Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
     cudaCheck(cudaDeviceSynchronize());
 
     Test_Neural_Net_Eval(Crafts);
 
-    TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
+    GUI::TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
     bool Do_Mutations = true;
 
@@ -85,12 +64,12 @@ int main()
         RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
         cudaCheck(cudaDeviceSynchronize());
 
-        RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, RoundNumber);
+        RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, GUI::RoundNumber);
         cudaCheck(cudaDeviceSynchronize());
 
-        RoundEnd();
+        GUI::RoundEnd();
 
-        h_Config->RoundNumber = RoundNumber;
+        h_Config->RoundNumber = GUI::RoundNumber;
         SyncConfigArray();
         
         if (Do_Mutations)
@@ -111,12 +90,12 @@ int main()
         ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
         cudaCheck(cudaDeviceSynchronize());
 
-        RoundEnd2();
+        GUI::RoundEnd2();
     }
 
     // Cleanup
     Mem::Shutdown();
-    Shutdown();
+    GUI::Shutdown();
     Graphics::Shutdown();
 
     std::cout << "End" << std::endl;

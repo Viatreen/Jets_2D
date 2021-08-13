@@ -7,7 +7,7 @@
 #include "glad/glad.h"
 
 // Project Headers
-#include "Jets_2D/ErrorCheck.h"
+#include "Jets_2D/ErrorCheck.hpp"
 
 struct Shader
 {

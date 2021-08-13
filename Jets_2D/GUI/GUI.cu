@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GUI/GUI.h"
+#include "Jets_2D/GUI/GUI.hpp"
 
 // CUDA
 #include <device_launch_parameters.h>
@@ -30,15 +30,15 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-// Boost
-//#include "boost/filesystem.hpp"
-
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GL/GLSetup.h"
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/SetVariables.h"
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GL/GLSetup.hpp"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/SetVariables.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+
+namespace GUI
+{
 
 CraftWeights* h_CraftWeights;
 CraftWeights* d_CraftWeights;
@@ -1352,3 +1352,5 @@ void Shutdown()
 }
 
 // TODO: Add List of all best IDs from each round
+
+} // End namespace GUI

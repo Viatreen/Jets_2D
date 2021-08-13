@@ -1,7 +1,7 @@
 #pragma once
 
 // Project Headers
-#include "Jets_2D/Config.h"
+#include "Jets_2D/Config.hpp"
 
 enum
 {

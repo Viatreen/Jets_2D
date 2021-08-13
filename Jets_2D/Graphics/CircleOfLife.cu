@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/Graphics/CircleOfLife.h"
+#include "Jets_2D/Graphics/CircleOfLife.hpp"
 
 // Standard Library
 #include <cmath>
@@ -9,9 +9,9 @@
 #include "glad/glad.h"
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/ErrorCheck.h"
-#include "Jets_2D/GL/Shader.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/ErrorCheck.hpp"
+#include "Jets_2D/GL/Shader.hpp"
 
 circleOfLife* CircleOfLife;
 

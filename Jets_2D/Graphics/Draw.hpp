@@ -1,17 +1,18 @@
 #pragma once
 
 // GLM
+#include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
 // Project Headers
-#include "Jets_2D/Graphics/Axis.h"
-#include "Jets_2D/Graphics/Circle.h"
-#include "Jets_2D/Graphics/CircleOfLife.h"
-#include "Jets_2D/Graphics/Component.h"
-#include "Jets_2D/Graphics/GrSetup.h"
-#include "Jets_2D/Graphics/Thrust.h"
-#include "Jets_2D/GUI/GUI.h"
-#include "Jets_2D/Graphics/Camera.h"
+#include "Jets_2D/Graphics/Axis.hpp"
+#include "Jets_2D/Graphics/Circle.hpp"
+#include "Jets_2D/Graphics/CircleOfLife.hpp"
+#include "Jets_2D/Graphics/Component.hpp"
+#include "Jets_2D/Graphics/GrSetup.hpp"
+#include "Jets_2D/Graphics/Thrust.hpp"
+#include "Jets_2D/GUI/GUI.hpp"
+#include "Jets_2D/Graphics/Camera.hpp"
 
 glm::mat4 Projection;
 glm::mat4 View;
@@ -20,12 +21,12 @@ namespace Graphics
 {
     void Draw()
     {
-        Projection = glm::perspective(Camera.zoom, (float)(GL::ScreenWidth - SideBarWidth) / (float)(GL::ScreenHeight - ProgressHeight - MenuHeight), 0.1f, 1000.0f);   // Camera perspective transformation
+        Projection = glm::perspective(Camera.zoom, (float)(GL::ScreenWidth - GUI::SideBarWidth) / (float)(GL::ScreenHeight - GUI::ProgressHeight - GUI::MenuHeight), 0.1f, 1000.0f);   // Camera perspective transformation
         //Projection = glm::perspective(Camera.zoom, (float)(GL::ScreenWidth) / (float)(GL::ScreenHeight), 0.1f, 1000.0f);  // Camera perspective transformation
         //View = Camera.ViewMatrix();
         View = glm::lookAt(glm::vec3(0.f, 0.f, 2.5f * LIFE_RADIUS), glm::vec3(0.f, 0.f, 2.5f * LIFE_RADIUS) + glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f, 1.f, 0.f));
 
-        GLCheck(glViewport(0, 0, ((GL::ScreenWidth > SideBarWidth) ? GL::ScreenWidth - SideBarWidth : SideBarWidth), ((GL::ScreenHeight > ProgressHeight + MenuHeight) ? GL::ScreenHeight - ProgressHeight - MenuHeight : ProgressHeight + MenuHeight)));
+        GLCheck(glViewport(0, 0, ((GL::ScreenWidth > GUI::SideBarWidth) ? GL::ScreenWidth - GUI::SideBarWidth : GUI::SideBarWidth), ((GL::ScreenHeight > GUI::ProgressHeight + GUI::MenuHeight) ? GL::ScreenHeight - GUI::ProgressHeight - GUI::MenuHeight : GUI::ProgressHeight + GUI::MenuHeight)));
         //GLCheck(glViewport(0, 0, GL::ScreenWidth, GL::ScreenHeight));
 
         CraftShader.Bind();

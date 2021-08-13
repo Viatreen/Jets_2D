@@ -1,8 +1,8 @@
 #pragma once
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/ErrorCheck.h"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/ErrorCheck.hpp"
 
 extern CraftState* Crafts;
 

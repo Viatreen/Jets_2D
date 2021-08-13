@@ -1,14 +1,14 @@
 // File Header
-#include "Jets_2D/Graphics/GrSetup.h"
+#include "Jets_2D/Graphics/GrSetup.hpp"
 
 // Project Headers
-#include "Jets_2D/Graphics/Camera.h"
-#include "Jets_2D/Graphics/Circle.h"
-#include "Jets_2D/Graphics/CircleOfLife.h"
-#include "Jets_2D/Graphics/Component.h"
-#include "Jets_2D/Graphics/Thrust.h"
-#include "Jets_2D/GL/GLSetup.h"
-#include "Jets_2D/GL/Shader.h"
+#include "Jets_2D/Graphics/Camera.hpp"
+#include "Jets_2D/Graphics/Circle.hpp"
+#include "Jets_2D/Graphics/CircleOfLife.hpp"
+#include "Jets_2D/Graphics/Component.hpp"
+#include "Jets_2D/Graphics/Thrust.hpp"
+#include "Jets_2D/GL/GLSetup.hpp"
+#include "Jets_2D/GL/Shader.hpp"
 
 Shader CraftShader;
 

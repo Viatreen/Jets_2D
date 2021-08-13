@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/Graphics/Thrust.h"
+#include "Jets_2D/Graphics/Thrust.hpp"
 
 // OpenGL
 #include <glad/glad.h>
@@ -8,9 +8,9 @@
 #include <cuda_gl_interop.h>
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/ErrorCheck.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/ErrorCheck.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
 
 namespace Craft
 {

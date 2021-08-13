@@ -8,7 +8,7 @@
 #include <curand_kernel.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GPGPU/State.hpp"
 
 __device__ void WeightsMutateAndTransfer(CraftState* C, config* Config, int SourceIndex, int TargetIndex);
 __global__ void RoundAssignPlace(CraftState* Crafts);

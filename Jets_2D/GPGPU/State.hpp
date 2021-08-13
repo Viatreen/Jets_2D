@@ -4,7 +4,7 @@
 #include <curand_kernel.h>
 
 // Project Headers
-#include "Jets_2D/Config.h"
+#include "Jets_2D/Config.hpp"
 
 struct Vec2
 {

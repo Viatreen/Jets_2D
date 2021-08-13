@@ -1,13 +1,13 @@
 // File Header
-#include "Jets_2D/GPGPU/Vertices.h"
+#include "Jets_2D/GPGPU/Vertices.hpp"
 
 // CUDA
 #include <device_launch_parameters.h>
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
 
 //namespace GPGPU
 //{

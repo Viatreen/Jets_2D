@@ -2,12 +2,12 @@
 #include <iostream>
 
 // File Header
-#include "Jets_2D/GUI/Print_Data_Info.h"
+#include "Jets_2D/GUI/Print_Data_Info.hpp"
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GPGPU/Match.h"
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
 
 void Print_Data_Info()
 {

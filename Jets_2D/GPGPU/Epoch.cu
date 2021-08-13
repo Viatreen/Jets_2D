@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GPGPU/Epoch.h"
+#include "Jets_2D/GPGPU/Epoch.hpp"
 
 // CUDA
 #include <curand_kernel.h>
@@ -8,14 +8,14 @@
 #include <cooperative_groups.h>
 
 // Project Headers
-#include "Jets_2D/Config.h"
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/Match.h"
-#include "Jets_2D/GPGPU/NeuralNet.h"
-#include "Jets_2D/GPGPU/Vertices.h"
-#include "Jets_2D/GPGPU/Physic.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/Config.hpp"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+#include "Jets_2D/GPGPU/NeuralNet.hpp"
+#include "Jets_2D/GPGPU/Vertices.hpp"
+#include "Jets_2D/GPGPU/Physic.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
 
 __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer *Buffer, config *Config, int Opponent_ID_Weights)
 {

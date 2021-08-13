@@ -1,4 +1,4 @@
-#include "Jets_2D/GPGPU/Helper.h"
+#include "Jets_2D/GPGPU/Helper.hpp"
 
 // CUDA
 #include <cuda_runtime.h>

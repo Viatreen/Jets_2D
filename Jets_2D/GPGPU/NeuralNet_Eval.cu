@@ -9,11 +9,11 @@
 #include <iomanip>
 
 // File Header
-#include "Jets_2D/GPGPU/NeuralNet_Eval.h"
+#include "Jets_2D/GPGPU/NeuralNet_Eval.hpp"
 
 // Project Headers
-#include "Jets_2D/GPGPU/NeuralNet.h"
-#include "Jets_2D/GPGPU/Helper.h"
+#include "Jets_2D/GPGPU/NeuralNet.hpp"
+#include "Jets_2D/GPGPU/Helper.hpp"
 
 __global__ void Initialize_Neural_Net_Eval(CraftState* C)
 {

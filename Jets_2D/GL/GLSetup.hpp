@@ -8,7 +8,7 @@
 #include "GLFW/glfw3.h"
 
 // Project Headers
-#include "Jets_2D/GL/Inputs.h"
+#include "Jets_2D/GL/Inputs.hpp"
 
 extern GLFWwindow *window;
 

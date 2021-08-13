@@ -12,7 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 // Project Headers
-#include "Jets_2D/Config.h"
+#include "Jets_2D/Config.hpp"
 
 extern bool CameraVectorShow;
 extern bool EnableCameraMove;

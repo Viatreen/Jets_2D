@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GPGPU/Match.h"
+#include "Jets_2D/GPGPU/Match.hpp"
 
 // Standard Library
 #include <cmath>
@@ -9,9 +9,9 @@
 #include <curand_kernel.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/Vertices.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/NeuralNet.h"
+#include "Jets_2D/GPGPU/Vertices.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/NeuralNet.hpp"
 
 __device__ void WeightsMutateAndTransfer(CraftState* C, config* Config, int SourceIndex, int TargetIndex)
 {

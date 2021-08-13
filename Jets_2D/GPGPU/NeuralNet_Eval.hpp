@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
+#include "Jets_2D/GPGPU/State.hpp"
 
 struct Weight_Characteristic
 {

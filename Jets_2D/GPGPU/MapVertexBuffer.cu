@@ -1,16 +1,16 @@
 // File Header
-#include "Jets_2D/GPGPU/MapVertexBuffer.h"
+#include "Jets_2D/GPGPU/MapVertexBuffer.hpp"
 
 // OpenGL
 #include "glad/glad.h"
 
 // Project Headers
-#include "Jets_2D/Graphics/Component.h"
-#include "Jets_2D/Graphics/Circle.h"
-#include "Jets_2D/Graphics/Thrust.h"
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/GPSetup.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/Graphics/Component.hpp"
+#include "Jets_2D/Graphics/Circle.hpp"
+#include "Jets_2D/Graphics/Thrust.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
 
 namespace GPGPU
 {

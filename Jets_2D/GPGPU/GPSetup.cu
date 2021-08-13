@@ -1,5 +1,5 @@
 // File Headers
-#include "Jets_2D/GPGPU/GPSetup.h"
+#include "Jets_2D/GPGPU/GPSetup.hpp"
 
 // Standard Library
 #include <iostream>
@@ -9,8 +9,8 @@
 #include <device_launch_parameters.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/GPErrorCheck.h"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
 
 CraftState* Crafts;
 

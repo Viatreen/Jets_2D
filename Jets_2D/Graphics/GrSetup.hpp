@@ -1,7 +1,7 @@
 #pragma once
 
 // Project Headers
-#include "Jets_2D/GL/Shader.h"
+#include "Jets_2D/GL/Shader.hpp"
 
 extern Shader CraftShader;
  

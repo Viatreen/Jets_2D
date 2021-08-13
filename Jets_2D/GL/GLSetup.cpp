@@ -1,5 +1,5 @@
 // File Header
-#include "Jets_2D/GL/GLSetup.h"
+#include "Jets_2D/GL/GLSetup.hpp"
 
 // Standard Library
 #include <iostream>
@@ -13,8 +13,8 @@
 #include "glm/gtc/type_ptr.hpp"
 
 // Project Headers
-#include "Jets_2D/ErrorCheck.h"
-#include "Jets_2D/GL/Inputs.h"
+#include "Jets_2D/ErrorCheck.hpp"
+#include "Jets_2D/GL/Inputs.hpp"
 
 GLFWwindow* window;
 

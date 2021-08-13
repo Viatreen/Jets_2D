@@ -1,12 +1,12 @@
 // File Header
-#include "Jets_2D/GPGPU/Physic.h"
+#include "Jets_2D/GPGPU/Physic.hpp"
 
 // CUDA
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/State.h"
-#include "Jets_2D/GPGPU/Vertices.h"
+#include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/Vertices.hpp"
 
 __device__ void Physic(MatchState* Match, CraftState* CS, config* Config, bool IsOpponent)
 {
