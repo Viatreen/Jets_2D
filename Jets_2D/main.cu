@@ -50,8 +50,6 @@ int main()
     bool Do_Mutations = true;
 
     // Game Loop
-    glfwSetWindowShouldClose(window, 1);
-
     while (!glfwWindowShouldClose(window))
     {
         int h_TournamentEpochNumber = 0;
