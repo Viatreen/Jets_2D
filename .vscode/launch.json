@@ -16,5 +16,17 @@
             "environment": [],
             "console": "integratedTerminal"
         },
+        {
+            "name": "Windows - Release Launch",
+            "type": "cppvsdbg",
+            "preLaunchTask": "Windows - Release",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/Controls.app.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
     ]
 }

@@ -59,17 +59,18 @@ extern int SideBarWidth;
 
 extern bool Pause;
 
-__global__ void SaveWeights(CraftWeights* Weights, CraftState* Crafts, int IndexFrom);  // Kernel called from Save()
-__global__ void LoadWeights(CraftWeights* Weights, CraftState* Crafts, int IndexTo);    // Kernel called from Load()
+__global__ void SaveWeights(CraftWeights* Weights, CraftState* Crafts, int IndexFrom); // Kernel called from Save()
+__global__ void LoadWeights(CraftWeights* Weights, CraftState* Crafts, int IndexTo);   // Kernel called from Load()
 __global__ void CopyState(CraftState* C, state* State, int Index);
 
 // Save data of all crafts in readable format (.csv)
 std::string ApplicationRuntime();
 void SaveCSV();
 void SaveTopBinary(int CraftCount);
-void LoadTopBinary1();		// TODO: Tidy up save and load
-void LoadTopBinary2();		// TODO: Fix loading issue
+void LoadTopBinary1(); // TODO: Tidy up save and load
+void LoadTopBinary2(); // TODO: Fix loading issue
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length);
+
 // Align text of strings that describe neurons
 void NeuronStringAdder(std::vector<std::string>& Vec, std::string Suffix, int Value, int LengthNumber, int LengthString);
 void Setup();

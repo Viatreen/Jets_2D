@@ -126,7 +126,9 @@ __global__ void SaveWeights(CraftWeights* Weights, CraftState* Crafts, int Index
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (idx < WEIGHT_AMOUNT)
+    {
         Weights->w[idx] = Crafts->Weight[CRAFT_COUNT * idx + IndexFrom];
+    }
 }
 
 // Kernel called from Load()
@@ -135,10 +137,12 @@ __global__ void LoadWeights(CraftWeights* Weights, CraftState* Crafts, int Index
     int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
     if (idx < WEIGHT_AMOUNT)
+    {
         Crafts->Weight[CRAFT_COUNT * idx + IndexTo] = Weights->w[idx];
+    }
 }
 
-__global__ void CopyState(CraftState* C, state* State, int Index)   // Must only call 1 thread from kernel call
+__global__ void CopyState(CraftState* C, state* State, int Index)  // Must only call 1 thread from kernel call
 {
     State->Score = C->Score[Index];
 
@@ -169,7 +173,9 @@ __global__ void CopyState(CraftState* C, state* State, int Index)   // Must only
     State->CannonStrength = C->CannonStrength[Index];
 
     for (int i = 0; i < NEURON_AMOUNT; i++)
+    {
         State->Neuron[i] = C->Neuron[i * CRAFT_COUNT * 2 + Index];
+    }
 
     for (int i = 0; i < 4; i++)
     {
@@ -230,11 +236,11 @@ void SaveCSV()
         SaveStream << "Layer Size Array,";
         for (int i = 0; i < LAYER_AMOUNT - 1; i++)
             SaveStream << Config_::LayerSizeArray[i] << ",";
-        SaveStream << Config_::LayerSizeArray[LAYER_AMOUNT - 1] << "\n";        // TODO: Add date, time and array of Parent Rank
+        SaveStream << Config_::LayerSizeArray[LAYER_AMOUNT - 1] << "\n";  // TODO: Add date, time and array of Parent Rank
 
         // World Parameters
         SaveStream << "Best Score," << HighScoreCumulativeAllTime << "\n";
-        SaveStream << "Hours Running," << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - TimerSinceStart).count() / 3600.f << "\n";        // TODO: Add previous duration to current on load
+        SaveStream << "Hours Running," << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - TimerSinceStart).count() / 3600.f << "\n";  // TODO: Add previous duration to current on load
         SaveStream << "Iterations," << RoundNumber << "\n";
         SaveStream << "Number of Crafts," << CRAFT_COUNT << "\n";
         SaveStream << "Mutation Flip Chance," << h_Config->MutationFlipChance << "\n";
@@ -246,7 +252,9 @@ void SaveCSV()
         // Creature distinction
         SaveStream << "Craft Breakdown,";
         for (int i = 0; i < 3; i++)
+        {
             SaveStream << ",";
+        }
         SaveStream << "Weights, Layer Number-Originating Neuron-Target Neuron\n";
 
         File << SaveStream.str();
@@ -255,10 +263,16 @@ void SaveCSV()
         ColumnDescriptionString << "Score,";
         ColumnDescriptionString << "Place,";
 
-        for (unsigned short int L = 0; L < LAYER_AMOUNT - 1; L++)       // Layer Index
-            for (int T = 0; T < Config_::LayerSizeArray[L + 1]; T++)        // Target Neuron Index
-                for (int O = 0; O < Config_::LayerSizeArray[L]; O++)        // Originating Neuron Index
+        for (unsigned short int L = 0; L < LAYER_AMOUNT - 1; L++)    // Layer Index
+        {
+            for (int T = 0; T < Config_::LayerSizeArray[L + 1]; T++) // Target Neuron Index
+            {
+                for (int O = 0; O < Config_::LayerSizeArray[L]; O++) // Originating Neuron Index
+                {
                     ColumnDescriptionString << "W: " << L << "-" << O << "-" << T << ",";
+                }
+            }
+        }
 
         ColumnDescriptionString << "\n";
         File << ColumnDescriptionString.str();
@@ -504,7 +518,9 @@ void LoadTopBinary2()
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length)
 {
     while (str.length() < Length)
+    {
         str = " " + str;
+    }
 
     Vec.push_back(str);
 }
@@ -516,7 +532,9 @@ void NeuronStringAdder(std::vector<std::string>& Vec, std::string Suffix, int Va
     // This function is only run at setup, so don't worry about efficiency
     // Prefix number with spaces
     while (OutString.length() < LengthNumber)
+    {
         OutString = " " + OutString;
+    }
 
     OutString = Suffix + OutString;
 
@@ -565,9 +583,13 @@ void Setup()
     int TextLength = 25;
 
     for (int i = 0; i < SENSORS_EDGE_DISTANCE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Edge ", 360 / SENSORS_EDGE_DISTANCE_COUNT * i, 3, TextLength);
+    }
     for (int i = 0; i < SENSORS_EDGE_DISTANCE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Versed Edge ", 360 / SENSORS_EDGE_DISTANCE_COUNT * i, 3, TextLength);
+    }
     NeuronStringSpacePrefixer(NeuronInputString, "Velocity X", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Velocity Y", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Versed Velocity X", TextLength);
@@ -575,53 +597,81 @@ void Setup()
     NeuronStringSpacePrefixer(NeuronInputString, "Angular Velocity", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Versed Angular Velocity", TextLength);
     for (int i = 0; i < SENSORS_EXTERNAL_FORCE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Acceleration ", 360 / SENSORS_EXTERNAL_FORCE_COUNT * i, 3, TextLength);
+    }
     for (int i = 0; i < SENSORS_EXTERNAL_FORCE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Versed Acceleration ", 360 / SENSORS_EXTERNAL_FORCE_COUNT * i, 3, TextLength);
+    }
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < SENSORS_ENGINE_ANGLE_COUNT; j++)
+        {
             NeuronStringAdder(NeuronInputString, "Engine " + std::to_string(i + 1) + " Angle ", 360 / SENSORS_ENGINE_ANGLE_COUNT * j, 3, TextLength);
+        }
         for (int j = 0; j < SENSORS_ENGINE_ANGLE_COUNT; j++)
+        {
             NeuronStringAdder(NeuronInputString, "Engine " + std::to_string(i + 1) + " Versed Angle ", 360 / SENSORS_ENGINE_ANGLE_COUNT * j, 3, TextLength);
+        }
     }
     for (int i = 0; i < SENSORS_OPPONENT_ANGLE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Opponent Angle ", 360 / SENSORS_OPPONENT_ANGLE_COUNT * i, 3, TextLength);
+    }
     for (int i = 0; i < SENSORS_OPPONENT_ANGLE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Versed Opponent Angle ", 360 / SENSORS_OPPONENT_ANGLE_COUNT * i, 3, TextLength);
+    }
     NeuronStringSpacePrefixer(NeuronInputString, "Opponent Distance", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Versed Opponent Distance", TextLength);
     for (int i = 0; i < SENSORS_BULLET_ANGLE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Bullet Angle ", 360 / SENSORS_BULLET_ANGLE_COUNT * i, 3, TextLength);
+    }
     for (int i = 0; i < SENSORS_BULLET_ANGLE_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Versed Bullet Angle ", 360 / SENSORS_BULLET_ANGLE_COUNT * i, 3, TextLength);
+    }
     NeuronStringSpacePrefixer(NeuronInputString, "Bullet Distance", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Versed Bullet Distance", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Craft Angle", TextLength);
     NeuronStringSpacePrefixer(NeuronInputString, "Versed Craft Angle", TextLength);
     for (int i = 0; i < SENSORS_MEMORY_COUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Memory ", i + 1, 2, TextLength);
+    }
     for (int i = 0; i < SENSORS_BIAS_NEURON_AMOUNT; i++)
+    {
         NeuronStringAdder(NeuronInputString, "Bias ", i + 1, 1, TextLength);
+    }
 
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 3; j++)
+        {
             NeuronOutputString.push_back("Engine " + std::to_string(i + 1) + " Rotate Command " + std::to_string(j));
+        }
         NeuronOutputString.push_back("Engine " + std::to_string(i + 1) + " Brake");
     }
 
     for (int i = 0; i < 3; i++)
+    {
         NeuronOutputString.push_back("Cannon Rotate Command " + std::to_string(i));
+    }
     NeuronOutputString.push_back("Cannon Brake Command");
 
     NeuronOutputString.push_back("Cannon Fire Command");
 
     for (int i = 0; i < 4; i++)
+    {
         NeuronOutputString.push_back("Engine " + std::to_string(i + 1) + " Thrust Command");
+    }
 
     for (int i = 0; i < SENSORS_MEMORY_COUNT; i++)
+    {
         NeuronOutputString.push_back("Memory " + std::to_string(i + 1));
+    }
 }
 
 void MatchEnd()
@@ -649,26 +699,36 @@ void RoundEnd()
 
     HighScoreCumulative = 0;
     for (int i = 0; i < CRAFT_COUNT; i++)
+    {
         if (ScoreCumulative[i] > HighScoreCumulative)
         {
             HighScoreCumulative = ScoreCumulative[i];
             IndexHighScore = i;
         }
+    }
 
-    HighScoreCumulative /= 2.f * 2.f;  // Find average
+    HighScoreCumulative /= 2.f * 2.f; // Find average
 
     if (HighScoreCumulative > HighScoreCumulativeAllTime)
+    {
         HighScoreCumulativeAllTime = HighScoreCumulative;
+    }
 
     HighScoreCumulativeVec.push_back(HighScoreCumulative);
     HighScoreCumulativeVecReverse.push_back(0.f);
     for (int i = 0; i < HighScoreCumulativeVec.size(); i++)
+    {
         HighScoreCumulativeVecReverse[i] = HighScoreCumulativeVec[HighScoreCumulativeVec.size() - 1 - i];
+    }
 
     if (HighScoreCumulativeVec.size() < 250)
+    {
         ProgressDataWidth = GL::ScreenWidth - 15.f;
+    }
     else
+    {
         ProgressDataWidth = (float)(HighScoreCumulativeVec.size()) / 250.f * (GL::ScreenWidth - 15.f);
+    }
 
     char Title[64];
     sprintf(Title, "Rnd %d, HS %1.0f", RoundNumber, HighScoreCumulative);
@@ -678,7 +738,9 @@ void RoundEnd()
 void RoundEnd2()
 {
     if (RoundNumber % 2000 == 0)
+    {
         SaveFlagEndRound = true;
+    }
 
     if (SaveFlagEndRound)
     {
@@ -699,9 +761,13 @@ void AddSpaces(std::string& Output, float Input)
     Output = std::to_string(Input);
 
     if (Input > 0.f)
+    {
         Output.insert(0, " ");
+    }
     if (Input < 10.f && Input > -10.f)
+    {
         Output.insert(0, " ");
+    }
 }
 
 void StateBar(bool LeftSide, state* d_State, float AngleStart)
@@ -709,17 +775,25 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
     char Title[16];
 
     if (LeftSide)
+    {
         sprintf(Title, "Trainee");
+    }
     else
+    {
         sprintf(Title, "Opponent");
+    }
 
     ImGui::Begin(Title, &ShowStateBar, WindowFlags | ImGuiWindowFlags_HorizontalScrollbar);
 
     // TODO: Test opponent craft index
     if (LeftSide)
+    {
         CopyState<<<1, 1>>>(Crafts, d_State, 0);
+    }
     else
+    {
         CopyState<<<1, 1>>>(Crafts, d_State, 0 + CRAFT_COUNT);
+    }
     cudaCheck(cudaDeviceSynchronize());
 
     state h_State;
@@ -834,20 +908,30 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
         {
             // TODO: Move numbering to GUI setup function
             if (i < 9)
+            {
                 sprintf(GenericString, "00%d: ", i + 1);
+            }
             else if (i < 99)
+            {
                 sprintf(GenericString, "0%d: ", i + 1);
+            }
             else
+            {
                 sprintf(GenericString, "%d: ", i + 1);
+            }
 
             char NeuronValue[64];
 
             if (i < LAYER_SIZE_INPUT)
             {
                 if (h_State.Neuron[i] < 0.f)
+                {
                     sprintf(NeuronValue, "%s: %1.2f", NeuronInputString[i].c_str(), h_State.Neuron[i]);
+                }
                 else
+                {
                     sprintf(NeuronValue, "%s:  %1.2f", NeuronInputString[i].c_str(), h_State.Neuron[i]);
+                }
                 strcat(GenericString, NeuronValue);
             }
             else
@@ -873,9 +957,13 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
             if (i < LAYER_SIZE_OUTPUT)
             {
                 if (h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX] < 0.f)
+                {
                     sprintf(NeuronValue, "  %1.2f: %s", h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX], NeuronOutputString[i].c_str());
+                }
                 else
+                {
                     sprintf(NeuronValue, "   %1.2f: %s", h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX], NeuronOutputString[i].c_str());
+                }
                 strcat(GenericString, NeuronValue);
             }
 
@@ -941,7 +1029,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::Checkbox("Render None", &RenderNone);
 
             if (!RenderAll && !RenderFit && !RenderOne && !RenderNone)
+            {
                 RenderNone = true;
+            }
 
             if (RenderAllWasFalseLastFrame && RenderAll)
             {
@@ -1003,7 +1093,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             if (OpponentRankRange < OpponentRankRangeLast)
             {
                 if (OpponentRankRange < 1)
+                {
                     OpponentRankRange = 1;
+                }
                 else
                 {
                     OpponentRankRange += 1;
@@ -1013,7 +1105,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             else if (OpponentRankRange > OpponentRankRangeLast)
             {
                 if (OpponentRankRange > FIT_COUNT)
+                {
                     OpponentRankRange = FIT_COUNT;
+                }
                 else
                 {
                     OpponentRankRange -= 1;
@@ -1043,7 +1137,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             if (SaveCount < SaveAmountLast)
             {
                 if (SaveCount < 1)
+                {
                     SaveCount = 1;
+                }
                 else
                 {
                     SaveCount += 1;
@@ -1056,14 +1152,20 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
                 SaveCount *= 2;
 
                 if (SaveCount > FIT_COUNT)
+                {
                     SaveCount = FIT_COUNT;
+                }
             }
 
             // Check for save button press
             if (SaveFlagEndRound)
+            {
                 SaveFlag = ImGui::Button("Save Pending", ImVec2(120.f, 20.f));
+            }
             else
+            {
                 SaveFlag = ImGui::Button("Save", ImVec2(70.f, 20.f));
+            }
 
             if (SaveFlag)
             {
@@ -1073,9 +1175,13 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 
             // Check for load button press
             if (LoadBinaryFlagEndRound)
+            {
                 LoadBinaryFlag = ImGui::Button("Load Binary Pending", ImVec2(170.f, 20.f));
+            }
             else
+            {
                 LoadBinaryFlag = ImGui::Button("Load Binary", ImVec2(120.f, 20.f));
+            }
 
             if (LoadBinaryFlag)
             {
@@ -1122,7 +1228,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::Text("%s", GenericString);
         }
 
-        if (ImGui::CollapsingHeader("Mutation Parameters")) // , ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Mutation Parameters")) // ImGuiTreeNodeFlags_DefaultOpen))
         {
             float MutationFlipChanceLast = h_Config->MutationFlipChance;
             float MutationScaleChanceLast = h_Config->MutationScaleChance;
@@ -1139,16 +1245,22 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::InputFloat("Max Weight Magnitude", &h_Config->WeightMax, 0.1f, 1.0f);
 
             if (MutationFlipChanceLast != h_Config->MutationFlipChance || MutationScaleChanceLast != h_Config->MutationScaleChance || MutationAmountLast != h_Config->MutationScale || MutationSlideChanceLast != h_Config->MutationSlideChance || MutationSigmaLast != h_Config->MutationSigma)
+            {
                 MutationChangePending = true;
+            }
 
             bool Apply = ImGui::Button("Apply", ImVec2(70.f, 20.f));
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 
             // TODO: Change button colors
             if (MutationChangePending)
+            {
                 ImGui::Button("Pending", ImVec2(70.f, 20.f));
+            }
             else
+            {
                 ImGui::Button("Applied", ImVec2(70.f, 20.f));
+            }
 
             if (Apply)
             {
@@ -1167,7 +1279,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             if (h_Config->TimeSpeed < TimeSpeedLast)
             {
                 if (h_Config->TimeSpeed < 1)
+                {
                     h_Config->TimeSpeed = 1;
+                }
                 else
                 {
                     h_Config->TimeSpeed += 1;
@@ -1179,7 +1293,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             else if (h_Config->TimeSpeed > TimeSpeedLast)
             {
                 if (h_Config->TimeSpeed > 2048)
+                {
                     h_Config->TimeSpeed = 2048;
+                }
                 else
                 {
                     h_Config->TimeSpeed -= 1;
@@ -1192,9 +1308,13 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             bool Apply = ImGui::Button("Apply", ImVec2(70.f, 20.f));
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             if (PerformanceChangePending)
+            {
                 ImGui::Button("Pending", ImVec2(70.f, 20.f));
+            }
             else
+            {
                 ImGui::Button("Applied", ImVec2(70.f, 20.f));
+            }
 
             if (Apply)
             {
@@ -1204,7 +1324,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 
             if (!SimulationSpeedToggle)
                 if (SimulateFastFlag)
+                {
                     SimulationSpeedToggle = ImGui::Button("Simulate Real-Time", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
+                }
                 else
                 {
                     SimulationSpeedToggle = ImGui::Button("Simulate Fast", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
@@ -1231,7 +1353,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
                         h_Config->TimeSpeedFast *= 2;
 
                         if (h_Config->TimeSpeedFast > h_Config->TimeSpeedFastDefault)
+                        {
                             h_Config->TimeSpeedFast = h_Config->TimeSpeedFastDefault;
+                        }
                     }
                 }
 
@@ -1268,12 +1392,18 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 
             bool PauseFlag = false;
             if (Pause)
+            {
                 PauseFlag = ImGui::Button("Continue", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
+            }
             else
-                PauseFlag = ImGui::Button("Pause", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
+            {
+                PauseFlag = ImGui::Button("Pause", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));\
+            }
 
             if (PauseFlag)
+            {
                 Pause = !Pause;
+            }
 
             ImGui::Separator();
 
@@ -1290,9 +1420,13 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
         }
 
         if (ShowSideBar)
+        {
             SideBarWidth = SideBarWidthDefault;
+        }
         else
+        {
             SideBarWidth = 0;
+        }
 
         ImGui::End();
     }
@@ -1311,9 +1445,13 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
         ImGui::End();
 
         if (ShowProgress)
+        {
             ProgressHeight = ProgressHeightDefault;
+        }
         else
+        {
             ProgressHeight = 0;
+        }
     }
 
     if (ImGui::BeginMainMenuBar())
@@ -1337,7 +1475,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     if (!Pause)
+    {
         StepNumber += h_Config->IterationsPerCall;
+    }
 }
 
 void Shutdown()
