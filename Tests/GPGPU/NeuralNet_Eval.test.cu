@@ -5,7 +5,9 @@
 #include <cuda_runtime.h>
 
 // Project Headers
-#include "Jets_2D/GPGPU/Helper.hpp"
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
+#include "Jets_2D/GPGPU/Launcher.hpp"
+#include "Jets_2D/GPGPU/State.hpp"
 
 // File Header
 #include "Tests/GPGPU/NeuralNet_Eval.test.hpp"
@@ -13,53 +15,40 @@
 __host__ void Test_Neural_Net_Eval(CraftState* C)
 {
     Initialize_Neural_Net_Eval<<<Div_Up(WEIGHT_AMOUNT_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C);
-    cudaDeviceSynchronize();
+    cudaCheck(cudaDeviceSynchronize());
 
-    // std::cout << "Run 1" << std::endl;
     float Result = Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Out(C);
 
     for (int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++)
     {
         std::cout << "Layer " << Layer << ": ";
         Print_Layer_Eval<<<Div_Up(NEURON_AMOUNT_MAX_LAYER_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-        cudaDeviceSynchronize();
+        cudaCheck(cudaDeviceSynchronize());
         std::cout << std::endl;
     }
 
-    // std::cout << "Run 2" << std::endl;
-    // Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Out(C);
-    // for (int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++)
-    // {
-    //     std::cout << "Layer " << Layer << ": ";
-    //     Print_Layer_Eval<<<Div_Up(NEURON_AMOUNT_MAX_LAYER_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-    //     cudaDeviceSynchronize();
-    //     std::cout << std::endl;
-    // }
-
-    // std::cout << "Run 1" << std::endl;
     float Target_Result = 1.f;
     BackPropagate_Eval_Host(C, Target_Result);
+    cudaCheck(cudaDeviceSynchronize());
 
     std::cout << "BackPropagation:" << std::endl;
     std::cout << "Target Result: " << Target_Result << ", Actual Result: " << Result << std::endl;
 
-    std::cout << "Neurons" << std::endl;
-    for (int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++)
+    std::cout << "Delta Neurons" << std::endl;
+    for (int Layer = 0; Layer < LAYER_AMOUNT_HIDDEN_EVAL; Layer++)
     {
         std::cout << "Layer " << Layer << ": ";
-        // Print_Layer_Eval_Delta_Neurons<<<NEURON_AMOUNT_INPUT_EVAL, BLOCK_SIZE>>>(C, Layer);
         Print_Layer_Eval_Delta_Neurons<<<Div_Up(Get_Neuron_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-        cudaDeviceSynchronize();
+        cudaCheck(cudaDeviceSynchronize());
         std::cout << std::endl;
     }
 
-    std::cout << "Weights" << std::endl;
+    std::cout << "Delta Weights" << std::endl;
     for (int Layer = 0; Layer < LAYER_AMOUNT_EVAL - 1; Layer++)
     {
         std::cout << "Layer " << Layer << ": ";
-        // Print_Layer_Eval_Delta_Neurons<<<NEURON_AMOUNT_INPUT_EVAL, BLOCK_SIZE>>>(C, Layer);
         Print_Layer_Eval_Delta_Weights<<<Div_Up(Get_Weight_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-        cudaDeviceSynchronize();
+        cudaCheck(cudaDeviceSynchronize());
         std::cout << std::endl;
     }
 

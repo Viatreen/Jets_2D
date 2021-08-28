@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.17)
 
 if (UNIX)
     set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
@@ -54,19 +54,19 @@ include_directories(${OpenglIncludeSubdir})
 set(sources
     # Program
     Jets_2D/main.cu
-    
+
     Jets_2D/ErrorCheck.cpp
     Jets_2D/Config.cpp
     Jets_2D/GL/Inputs.cu
     Jets_2D/GL/GLSetup.cpp
     Jets_2D/GL/Shader.cpp
-    Jets_2D/GPGPU/NeuralNet.cu
-    Jets_2D/GPGPU/NeuralNet_Eval.cu
     Jets_2D/GPGPU/Epoch.cu
     Jets_2D/GPGPU/GPSetup.cu
-    Jets_2D/GPGPU/Helper.cu
+    Jets_2D/GPGPU/Launcher.cu
     Jets_2D/GPGPU/MapVertexBuffer.cu
     Jets_2D/GPGPU/Match.cu
+    Jets_2D/GPGPU/NeuralNet.cu
+    Jets_2D/GPGPU/NeuralNet_Eval.cu
     Jets_2D/GPGPU/Physic.cu
     Jets_2D/GPGPU/Round.cu
     Jets_2D/GPGPU/SetVariables.cu

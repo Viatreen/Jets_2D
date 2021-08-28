@@ -20,6 +20,7 @@
 #include "Jets_2D/GPGPU/GPErrorCheck.hpp"
 #include "Jets_2D/GPGPU/Round.hpp"
 #include "Jets_2D/GPGPU/GPSetup.hpp"
+#include "Jets_2D/GPGPU/Launcher.hpp"
 #include "Jets_2D/GPGPU/MapVertexBuffer.hpp"
 #include "Jets_2D/GPGPU/Match.hpp"
 #include "Jets_2D/GPGPU/NeuralNet_Eval.hpp"
@@ -31,14 +32,10 @@
 
 // Tests
 #include "Tests/GPGPU/NeuralNet_Eval.test.hpp"
-#include "Tests/GPGPU/Coop_Test.hpp"
 
 int main()
 {
     std::cout << "Begin" << std::endl;
-
-    int in = 5;
-    Launch_Coop_Test_Kernel(in);
 
     Print_Data_Info();
 
@@ -56,6 +53,8 @@ int main()
     GUI::TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
     bool Do_Mutations = true;
+
+    glfwSetWindowShouldClose(window, 1);
 
     // Game Loop
     while (!glfwWindowShouldClose(window))
@@ -101,7 +100,7 @@ int main()
 
     // Cleanup
     Mem::Shutdown();
-    GUI::Shutdown();
+    // GUI::Shutdown();
     Graphics::Shutdown();
 
     std::cout << "End" << std::endl;

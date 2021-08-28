@@ -11,8 +11,9 @@
 #include "Jets_2D/GPGPU/NeuralNet_Eval.hpp"
 
 // Project Headers
+#include "Jets_2D/GPGPU/GPErrorCheck.hpp"
+#include "Jets_2D/GPGPU/Launcher.hpp"
 #include "Jets_2D/GPGPU/NeuralNet.hpp"
-#include "Jets_2D/GPGPU/Helper.hpp"
 
 __global__ void Initialize_Neural_Net_Eval(CraftState* C)
 {
@@ -34,77 +35,90 @@ __global__ void Initialize_Neural_Net_Eval(CraftState* C)
             C->Eval_Network.Weight[Weight_Index] = 0.09f;
             if (Weight_Index == 600)
             {
-                C->Eval_Network.Weight[Weight_Index] = 0.09f + 0.9f;
-                printf("Weight: %f\n", C->Eval_Network.Weight[Weight_Index]);
+                C->Eval_Network.Weight[Weight_Index] = 0.09f + 1.f/0.531411f;
+                // printf("Weight: %f\n", C->Eval_Network.Weight[Weight_Index]); Layer 7: 0.478297,
             }
         }
     }
 }
 
-__host__ void BackPropagate_Eval_Host(CraftState* C, float Target_Result)
-{
-    float Result = Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Out(C);
-
-    Reset_Neural_Net_Eval_Delta_Neuron<<<Div_Up(NEURON_AMOUNT_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C);
-    cudaDeviceSynchronize();
-
-    float Delta_Error = Target_Result - Result;
-
-    for (int Layer = LAYER_AMOUNT_EVAL - 2; Layer >= 0; Layer--)
-    {
-        BackPropagate_Eval_Compute_Deltas_To_Neurons<<<Div_Up(Get_Weight_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer, Delta_Error);
-        cudaDeviceSynchronize();
-        // int Neuron_Amount = Get_Neuron_Amount_In_Layer(Layer);
-        //BackPropagate_Eval_Account_For_Activation_Slope<<<Div_Up(Neuron_Amount, BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-        //cudaDeviceSynchronize();
-        BackPropagate_Eval_Compute_Deltas<<<Div_Up(Get_Weight_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
-        cudaDeviceSynchronize();
-    }
-}
-
-__global__ void BackPropagate_Eval_Compute_Deltas_To_Neurons(CraftState* C, int Layer, float Delta_Error)
+__global__ void BackPropagate_Eval_Compute_Deltas_To_Neurons(CraftState* C) //, float Delta_Error)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-    if (idx >= Get_Weight_Amount_In_Layer(Layer))
+    float Delta_Error = 1.f;
+
+    // cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+
+    for (int Layer = LAYER_AMOUNT_EVAL - 2; Layer >= 0; Layer--)
     {
-        return;
-    }
+        if (idx < Get_Weight_Amount_In_Layer(Layer))
+        {
+            int Weight_Index = Get_Weight_Begin_Index(Layer) + idx;
+            neuron_Indices Neuron_Value = Get_Neuron_Indices(C, Weight_Index, Layer);
 
-    int Weight_Index = Get_Weight_Begin_Index(Layer) + idx;
-    neuron_Indices Neuron_Value = Get_Neuron_Indices(C, Weight_Index, Layer);
+            if (Layer == LAYER_AMOUNT_EVAL - 2) // Last Layer. Called First
+            {
+                if (idx == 0)
+                    printf("Weight Amount: %d, Neuron Amount: %d\n", WEIGHT_AMOUNT_EVAL, NEURON_AMOUNT_EVAL);
+                printf("WI: %d, ON: %d, TN: %d\n", Weight_Index, Neuron_Value.Origin_Neuron_Index, Neuron_Value.Target_Neuron_Index);
+                
+                // Calculate delta neurons for the first hidden layer based on input layer
+                C->Eval_Network.Delta_Result_Over_Delta_Weight[Weight_Index] = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index] * Delta_Error;
+                atomicAdd(&C->Eval_Network.Delta_Neuron[Neuron_Value.Origin_Neuron_Index], C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index]);
 
-    if (Layer == LAYER_AMOUNT_EVAL - 2) // Last Layer
-    {
-        // Calculate delta neurons for the first hidden layer based on input layer
-        C->Eval_Network.Delta_Result_Over_Delta_Weight[Weight_Index] = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index] * Delta_Error;
-        atomicAdd(&C->Eval_Network.Delta_Neuron[Neuron_Value.Origin_Neuron_Index], C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index]);
+                // C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index] = 5.f;
+                // C->Eval_Network.Delta_Neuron[Neuron_Value.Origin_Neuron_Index] = 5.f;
+                // C->Eval_Network.Delta_Result_Over_Delta_Weight[Weight_Index] = 5.f;
+                // C->Eval_Network.Weight[0] = 5.f;
+                // C->Eval_Network.Neuron[0] = 5.f;
+                // C->Eval_Network.Delta_Neuron[0] = 5.f;
+            }
+            else
+            {
+                // printf("Thread: %d, BackPropagate_Signal: %f\n", idx, BackPropagate_Signal);
+                // printf("Thread: %d, Target_Neuron_Index: %d\n", idx, Neuron_Value.Target_Neuron_Index);
 
-        // if (idx < Get_Neuron_Amount_In_Layer(Layer))
-        // {
-        //     C->Eval_Network.Delta_Neuron[Neuron_Value.Target_Neuron_Index] = 1.f;
-        // }
+                float BackPropagate_Signal = C->Eval_Network.Weight[Weight_Index] * C->Eval_Network.Delta_Neuron[Neuron_Value.Target_Neuron_Index];
+                atomicAdd(&C->Eval_Network.Delta_Neuron[Neuron_Value.Origin_Neuron_Index], BackPropagate_Signal);
+            }
 
-        // printf("idx: %d, WI: %d, ON: %d, TN: %d, TotalN: %d\n", idx, Weight_Index, Neuron_Value.Origin_Neuron_Index, Neuron_Value.Target_Neuron_Index, NEURON_AMOUNT_EVAL);
+            // grid.sync();
 
-        // TODO: Implement after cooperative groups is working
+            C->Eval_Network.Delta_Result_Over_Delta_Weight[Weight_Index] = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index] * C->Eval_Network.Delta_Neuron[Neuron_Value.Target_Neuron_Index];
+        }
+
         // grid.sync();
     }
-    else
-    {
-        float BackPropagate_Signal = C->Eval_Network.Weight[Weight_Index] * C->Eval_Network.Delta_Neuron[Neuron_Value.Target_Neuron_Index];
+}
 
-        // printf("Thread: %d, BackPropagate_Signal: %f\n", idx, BackPropagate_Signal);
-        // printf("Thread: %d, Target_Neuron_Index: %d\n", idx, Neuron_Value.Target_Neuron_Index);
+__host__ void BackPropagate_Eval_Host(CraftState* C, float Target_Result)
+{
+    Cooperative_Kernel_Launch(Run_Neural_Net_Eval, WEIGHT_AMOUNT_MAX_LAYER_EVAL, C);
+    cudaCheck(cudaDeviceSynchronize());
 
-        atomicAdd(&C->Eval_Network.Delta_Neuron[Neuron_Value.Origin_Neuron_Index], BackPropagate_Signal);
+    float Result;
+    cudaMemcpy(&Result, &C->Eval_Network.Neuron[OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL], sizeof(float) , cudaMemcpyDeviceToHost);
 
-        // TODO: Implement after cooperative groups is working
-        // grid.sync();
-    }
+    Reset_Neural_Net_Eval_Delta_Neuron<<<Div_Up(NEURON_AMOUNT_EVAL - 1, BLOCK_SIZE), BLOCK_SIZE>>>(C);
+    cudaCheck(cudaDeviceSynchronize());
 
-    // TODO: Implement after cooperative groups is working
-    // grid.sync();
+    float Delta_Error = 1.f; //Target_Result - Result;
+
+    Cooperative_Kernel_Launch(BackPropagate_Eval_Compute_Deltas_To_Neurons, WEIGHT_AMOUNT_MAX_LAYER_EVAL, C); //, Delta_Error);
+    // BackPropagate_Eval_Compute_Deltas_To_Neurons<<<Div_Up(WEIGHT_AMOUNT_MAX_LAYER_EVAL - 1, BLOCK_SIZE), BLOCK_SIZE>>>(C);
+    cudaCheck(cudaDeviceSynchronize());
+
+    // for (int Layer = LAYER_AMOUNT_EVAL - 2; Layer >= 0; Layer--)
+    // {
+    //     BackPropagate_Eval_Compute_Deltas_To_Neurons<<<Div_Up(Get_Weight_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer, Delta_Error);
+    //     cudaDeviceSynchronize();
+    //     // int Neuron_Amount = Get_Neuron_Amount_In_Layer(Layer);
+    //     //BackPropagate_Eval_Account_For_Activation_Slope<<<Div_Up(Neuron_Amount, BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
+    //     //cudaDeviceSynchronize();
+    //     BackPropagate_Eval_Compute_Deltas<<<Div_Up(Get_Weight_Amount_In_Layer(Layer), BLOCK_SIZE), BLOCK_SIZE>>>(C, Layer);
+    //     cudaDeviceSynchronize();
+    // }
 }
 
 __global__ void BackPropagate_Eval_Account_For_Activation_Slope(CraftState* C, int Layer)
@@ -146,7 +160,7 @@ __global__ void BackPropagate_Eval_Compute_Deltas(CraftState* C, int Layer)
     // grid.sync();
 }
 
-__global__ void Reset_Neural_Net_Eval(CraftState* C)
+__global__ void Zeroize_Non_Input_Layers(CraftState* C)
 {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -160,7 +174,7 @@ __global__ void Reset_Neural_Net_Eval_Delta_Neuron(CraftState* C)
 {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (idx < NEURON_AMOUNT_EVAL)
+    if (idx < NEURON_AMOUNT_EVAL - 1)
     {
         C->Eval_Network.Delta_Neuron[idx] = 0.f;
     }
@@ -181,16 +195,8 @@ __global__ void RELU_Activate_Layer_Eval(CraftState* C, unsigned int Layer)
 
 __host__ float Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Out(CraftState* C)
 {
-    Reset_Neural_Net_Eval<<<Div_Up(NEURON_AMOUNT_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C);
-    cudaDeviceSynchronize();
-
-    for (unsigned int i = 0; i < LAYER_AMOUNT_EVAL; i++)
-    {
-        Run_Neural_Net_Eval<<<Div_Up(WEIGHT_AMOUNT_MAX_LAYER_EVAL, BLOCK_SIZE), BLOCK_SIZE>>>(C, i);
-        cudaDeviceSynchronize();
-        // RELU_Activate_Layer_Eval<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(C, i);
-        // cudaDeviceSynchronize();
-    }
+    Cooperative_Kernel_Launch(Run_Neural_Net_Eval, WEIGHT_AMOUNT_MAX_LAYER_EVAL, C);
+    cudaCheck(cudaDeviceSynchronize());
 
     float Result;
     cudaMemcpy(&Result, &C->Eval_Network.Neuron[OUTPUT_LAYER_NEURON_BEGIN_IDX_EVAL], sizeof(float) , cudaMemcpyDeviceToHost);
@@ -200,14 +206,18 @@ __host__ float Run_Neural_Net_Eval_This_Is_The_Function_Until_Sync_Is_Figured_Ou
     return Result;
 }
 
-__global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
+__global__ void Run_Neural_Net_Eval(CraftState* C)
 {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // TODO Grid sync placeholder
-    // cooperative_groups::grid_group grid = cooperative_groups::this_grid()
+    if (idx < NEURON_AMOUNT_EVAL - NEURON_AMOUNT_INPUT_EVAL)
+    {
+        C->Eval_Network.Neuron[NEURON_AMOUNT_INPUT_EVAL + idx] = 0.f;
+    }
 
-    // for (unsigned int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++) // TODO: Add back after grid sync is established
+    cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+
+    for (unsigned int Layer = 0; Layer < LAYER_AMOUNT_EVAL; Layer++)
     {
         int Weight_Index = Get_Weight_Begin_Index(Layer) + idx;
 
@@ -215,26 +225,18 @@ __global__ void Run_Neural_Net_Eval(CraftState* C, unsigned int Layer)
         {
             int Weight_Index = Get_Weight_Begin_Index(Layer) + idx;
             neuron_Indices Neuron_Value = Get_Neuron_Indices(C, Weight_Index, Layer);
-            Run_Neural_Net_Layer_Eval(C, Weight_Index, true, Layer, Neuron_Value);
+            
+            float Weight = C->Eval_Network.Weight[Weight_Index];
+            float Neuron = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index];
+            float Signal = Neuron * Weight;
+
+            atomicAdd(&C->Eval_Network.Neuron[Neuron_Value.Target_Neuron_Index], Signal);
         }
 
-        // grid.sync();
+        grid.sync();
         // TODO: Activate Layers
         // grid.sync();
     }
-}
-
-__device__ void Run_Neural_Net_Layer_Eval(CraftState* C, const unsigned int &Weight_Index, const bool &Do_Activation, unsigned int Layer, neuron_Indices Neuron_Value)
-{
-    float Weight = C->Eval_Network.Weight[Weight_Index];
-    float Neuron = C->Eval_Network.Neuron[Neuron_Value.Origin_Neuron_Index];
-
-    float Signal = Neuron * Weight;
-
-    atomicAdd(&C->Eval_Network.Neuron[Neuron_Value.Target_Neuron_Index], Signal);
-
-    // TODO: synchronize grid
-    // grid.sync();
 }
 
 // Get origin neuron index and target neuron index of each weight. Make sure the Weight_Index value is bounds checked before passed in

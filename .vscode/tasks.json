@@ -11,12 +11,13 @@
             "args": [
                 "--build",
                 "${workspaceRoot}/build",
+                //"--clean-first",
                 "--config",
                 "Debug",
                 "--target",
                 "Controls.app",
                 "-j",
-                "14"
+                "16"
             ],
             "problemMatcher": ["$msCompile"],
             "group": {
@@ -39,7 +40,7 @@
                 "--target",
                 "Controls.app",
                 "-j",
-                "14"
+                "16"
             ],
             "problemMatcher": ["$msCompile"],
             "group": {
