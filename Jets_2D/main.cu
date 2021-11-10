@@ -37,9 +37,6 @@ int main()
 {
     std::cout << "Begin" << std::endl;
 
-    int in = 5;
-    Launch_Coop_Test_Kernel(in);
-
     Print_Data_Info();
 
     // Setup
@@ -56,6 +53,12 @@ int main()
     GUI::TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
     bool Do_Mutations = true;
+
+    int in1 = 5;
+    int in2 = 7;
+    Launch_Coop_Test_Kernel(in1, in2);
+
+    glfwSetWindowShouldClose(window, 1);
 
     // Game Loop
     while (!glfwWindowShouldClose(window))

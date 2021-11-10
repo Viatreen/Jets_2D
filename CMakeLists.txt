@@ -82,6 +82,7 @@ set(sources
     Jets_2D/GUI/Print_Data_Info.cu
 
     Tests/GPGPU/NeuralNet_Eval.test.cu
+    Tests/GPGPU/Coop_Test.cu
     
     # Glad
     lib/glad/glad.c

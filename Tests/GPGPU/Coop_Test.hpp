@@ -6,4 +6,4 @@
 #include <device_launch_parameters.h>
 
 __global__ void Coop_Test_Kernel(int in);
-void Launch_Coop_Test_Kernel(int in);
+void Launch_Coop_Test_Kernel(int in1, int in2);
