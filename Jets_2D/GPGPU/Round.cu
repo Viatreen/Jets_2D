@@ -22,7 +22,7 @@
 #include "Jets_2D/Graphics/Component.hpp"
 #include "Jets_2D/GUI/GUI.hpp"
 #include "Jets_2D/GPGPU/GPErrorCheck.hpp"
-#include "Jets_2D/GPGPU/Cooperative_Call.hpp"
+#include "Jets_2D/GPGPU/Launcher.hpp"
 
 std::chrono::steady_clock::time_point Timer;
 
