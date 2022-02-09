@@ -5,9 +5,9 @@ namespace Config_
 {
     // Default rendering
     bool RenderAllDefault = false;
-    bool RenderOneDefault = false;
+    bool RenderOneDefault = true;
     bool RenderFitDefault = false;
-    bool RenderNoneDefault = true;      // Setting this true defaults fast simulation
+    bool RenderNoneDefault = false;      // Setting this true defaults fast simulation
 
     int LayerSizeArray[LAYER_AMOUNT] = LAYER_ARRAY;
 }

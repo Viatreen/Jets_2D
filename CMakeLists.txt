@@ -44,9 +44,9 @@ endif()
 
 include_directories(
     lib/
-    lib/dear_imgui
-    lib/GLFW/include
-    /
+    lib/dear_imgui/
+    lib/GLFW/include/
+    ./
     )
 
 include_directories(${OpenglIncludeSubdir})

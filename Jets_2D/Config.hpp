@@ -3,7 +3,7 @@
 // Standard Library
 #include <cmath>
 
-#define GTX_1080TI                            // Sets SM count to 28
+//#define GTX_1080TI                            // Sets SM count to 28
 //#define GTX_1660TI                            // Sets SM count to 12
 
 // TODO: Implement NN_Float
@@ -176,12 +176,12 @@
                                                 + SENSORS_BULLET_ANGLE_COUNT * 2 + SENSORS_BULLET_DISTANCE_COUNT + SENSORS_ANGLE_COUNT \
                                                 + SENSORS_MEMORY_COUNT + SENSORS_BIAS_NEURON_AMOUNT )
 
-#define LAYER_AMOUNT_HIDDEN                   3
-#define LAYER_SIZE_HIDDEN                     16
+#define LAYER_AMOUNT_HIDDEN                   1
+#define LAYER_SIZE_HIDDEN                     128
 #define LAYER_AMOUNT                        ( 2 + LAYER_AMOUNT_HIDDEN )        // Input, Hidden, and Output
 
 #define LAYER_SIZE_OUTPUT                   ( 25 + SENSORS_MEMORY_COUNT )
-#define LAYER_ARRAY                         { LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }    // Used for saving neural network
+#define LAYER_ARRAY                         { LAYER_SIZE_INPUT, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT } // LAYER_SIZE_HIDDEN, LAYER_SIZE_HIDDEN, LAYER_SIZE_OUTPUT }    // Used for saving neural network
 
 #define WEIGHT_AMOUNT_INPUT_LAYER           ( LAYER_SIZE_INPUT * LAYER_SIZE_HIDDEN )
 #define WEIGHT_AMOUNT_HIDDEN_LAYER          ( LAYER_SIZE_HIDDEN * LAYER_SIZE_HIDDEN )

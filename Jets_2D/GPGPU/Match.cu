@@ -191,7 +191,7 @@ __device__ void Shrink_Weights(CraftState* C)
 
     for (int i = 0; i < LAYER_SIZE_INPUT; i++)
     {
-        C->Neuron[2 * CRAFT_COUNT * i + idx] = 1.f;
+        C->Neuron[2 * CRAFT_COUNT * i + idx] = 0.5f;
     }
 
     int Shrink_Count = 0;
@@ -210,7 +210,7 @@ __device__ void Shrink_Weights(CraftState* C)
         {
             Sum += abs(C->Neuron[2 * CRAFT_COUNT * ( OUTPUT_LAYER_NEURON_BEGIN_INDEX + i ) + idx]);
         }
-        if (Sum > float(LAYER_SIZE_OUTPUT))
+        if (Sum > 0.5f * float(LAYER_SIZE_OUTPUT))
         {
             if (idx == 0)
             {

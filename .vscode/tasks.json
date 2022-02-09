@@ -16,13 +16,36 @@
                 "--target",
                 "Controls.app",
                 "-j",
-                "14"
+                "16"
             ],
             "problemMatcher": ["$msCompile"],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
-        }
+        },
+        {
+            "label": "Linux - Debug",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}/build"
+            },
+            "command": "make dbg=1",
+            "args": [
+                "--build",
+                "${workspaceRoot}/build",
+                "--config",
+                "Debug",
+                "--target",
+                "Controls.app",
+                "-j",
+                "16"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$nvcc"],
+        },
     ]
 }
