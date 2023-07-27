@@ -3,7 +3,8 @@
 // Standard Library
 #include <cmath>
 
-//#define GTX_1080TI                            // Sets SM count to 28
+
+// #define GTX_1080TI                            // Sets SM count to 28
 //#define GTX_1660TI                            // Sets SM count to 12
 
 // TODO: Implement NN_Float
@@ -25,11 +26,18 @@
 #define TOTAL_FRAMES                        ( FRAMERATE_PHYSICS * (int)(TIME_MATCH) )
 
 #if defined (GTX_1080TI)
+#pragma message("Building for GTX 1080TI")
 #define SM_COUNT                              28
 #define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
 #define NN_Float                              float
 #elif defined (GTX_1660TI)
+#pragma message("Building for GTX 1660TI")
 #define SM_COUNT                              12
+#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
+#define NN_Float                              __half
+#elif defined (ORIN)
+#pragma message("Building for Jetson AGX Orin")
+#define SM_COUNT                              16
 #define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
 #define NN_Float                              __half
 #else

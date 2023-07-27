@@ -48,21 +48,21 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
         if (C->Active[idx + CRAFT_COUNT])
             Physic(Match, C, Config, true);
 
-        if (C->Active[idx] )
+        if (C->Active[idx])
             CollisionDetect(C, idx, idx + CRAFT_COUNT);
 
         // TODO: Convert to single function
         BulletMechanics(Buffer, C, idx, idx + CRAFT_COUNT, Config);
         BulletMechanics(Buffer, C, idx + CRAFT_COUNT, idx, Config);
 
-        C->Score[idx]               = C->ScoreTime[idx]               + C->ScoreFuelEfficiency[idx]               + C->ScoreDistance[idx]  / 1000.f              + C->ScoreBullet[idx]               - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumuulating score
+        C->Score[idx] = C->ScoreTime[idx] + C->ScoreFuelEfficiency[idx] + C->ScoreDistance[idx]  / 1000.f + C->ScoreBullet[idx] - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumulating score
 
         if (!C->Active[idx] || Match->ElapsedTicks[idx] == (Config->TimeStepLimit - 1))
         {
             Match->Done[idx] = true;
 
             ConcealVertices(Buffer, idx, idx + CRAFT_COUNT);
-            C->Score[idx]               = C->ScoreTime[idx]               + C->ScoreFuelEfficiency[idx]               + C->ScoreDistance[idx]  / 1000.f              + C->ScoreBullet[idx]               - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumuulating score
+            C->Score[idx] = C->ScoreTime[idx] + C->ScoreFuelEfficiency[idx] + C->ScoreDistance[idx]  / 1000.f + C->ScoreBullet[idx] - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumulating score
             C->Score[idx + CRAFT_COUNT] = C->ScoreTime[idx + CRAFT_COUNT] + C->ScoreFuelEfficiency[idx + CRAFT_COUNT] + C->ScoreDistance[idx + CRAFT_COUNT] / 1000.f + C->ScoreBullet[idx + CRAFT_COUNT] - C->ScoreBullet[idx]  / 10.f;              // Score of opponent does not matter except
         }
 

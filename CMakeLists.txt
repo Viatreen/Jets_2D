@@ -1,14 +1,25 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 if (UNIX)
     set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 endif()
 
-project(Controls.app LANGUAGES CXX C CUDA)
+if(WIN32)
+    message(STATUS "Project is building for Windows")
+    set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1")
+    set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe")
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    message(STATUS "Building in Debug mode")
+endif()
+
+project(Jets_2D LANGUAGES CXX C CUDA)
 message("Project name: " ${CMAKE_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
+
 # set(CMAKE_VERBOSE_MAKEFILE ON)    # For debugging
 
 find_package(OpenGL REQUIRED)
@@ -37,8 +48,10 @@ if (WIN32)
 
     # Workarounds for VS deprecating parts of the standard library
     if (MSVC)
+        message(STATUS "Building for Windows with MSVC")
         set(_CRT_SECURE_NO_WARNINGS 1)
         set(CURL_STATICLIB 1)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
     endif()
 endif()
 
@@ -46,8 +59,8 @@ include_directories(
     lib/
     lib/dear_imgui/
     lib/GLFW/include/
-    ./
-    )
+    .
+)
 
 include_directories(${OpenglIncludeSubdir})
 
@@ -156,7 +169,7 @@ endif()
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES} 
-    )
+)
 
 target_compile_options(${CMAKE_PROJECT_NAME}
     PRIVATE $<$<COMPILE_LANGUAGE:C>:   >
@@ -168,8 +181,39 @@ target_compile_options(${CMAKE_PROJECT_NAME}
 )
 
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61 62 70 72 75) # 61 = GTX 1080 Ti
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(ARCH_61)
+    set(${CMAKE_BUILD_TYPE} "Building for CUDA architecture 6.1. GTX 1080 Ti")
+    set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61)
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE GTX_1080TI)
+elseif(ARCH_75)
+    set(${CMAKE_BUILD_TYPE} "Building for CUDA architecture 7.5. GTX 1660 Ti")
+    set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 75)
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE GTX_1660TI)
+elseif(ARCH_87)
+    set(${CMAKE_BUILD_TYPE} "Building for CUDA architecture 8.7. Jetson AGX Orin")
+    set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 87)
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE ORIN)
+else()
+    message(STATUS "Must have CUDA architecture of 61, 75, or 87")
+endif()
+
+if(NOT DEFINED ${CMAKE_BUILD_TYPE})
+    set(${CMAKE_BUILD_TYPE} "Debug")
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    message(STATUS "Building in Debug mode")
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _DEBUG)
     target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    message(STATUS "Building in Release mode")
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>)# -Xptxas=–allow-expensive-optimizations=true>)
+    if(MSVC)
+        target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>: /Oxs>)
+    else()
+        target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-O3>)
+    endif()
 endif()
