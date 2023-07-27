@@ -76,8 +76,8 @@ void Round()
                         // std::cout << "d_Config: " << d_Config << std::endl;
                         // std::cout << "Opponent_ID_Weights: " << Opponent_ID_Weights << std::endl;
 
-                        cudaDeviceProp DeviceProp;
-                        cudaGetDeviceProperties(&DeviceProp, 0);
+                        // cudaDeviceProp DeviceProp;
+                        // cudaGetDeviceProperties(&DeviceProp, 0);
 
                         //void *Args[] { &Match, &Crafts, &d_Buffer, &d_Config, &Opponent_ID_Weights };
                         //cudaLaunchCooperativeKernel((void*)RunEpoch, 50, 50, Args);

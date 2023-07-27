@@ -10,7 +10,7 @@ if(WIN32)
     set(CMAKE_CUDA_COMPILER "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe")
 endif()
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     message(STATUS "Building in Debug mode")
 endif()
 
@@ -43,8 +43,6 @@ if (WIN32)
     if (GLFW_USE_HYBRID_HPG)
         set(_GLFW_USE_HYBRID_HPG 1)
     endif()
-
-    add_definitions(-D_GLFW_WIN32)
 
     # Workarounds for VS deprecating parts of the standard library
     if (MSVC)
@@ -117,13 +115,22 @@ set(sources
     lib/GLFW/src/vulkan.c
 )
 
+if(MSVC)
+    set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
 add_executable(${CMAKE_PROJECT_NAME} ${sources})
+
+if (WIN32)
+    message(STATUS "Defining _WIN32 for vs command-line support")
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _WIN32)
+endif()
 
 # if (WIN32)
 #     # Not Working. Compiling with MSVC between vscode and Visual Studio is currently incompatible due to shader and font loading paths
 #     set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 #                                                            VS_DEBUGGER_COMMAND           "${CMAKE_SOURCE_DIR}")
-#     message("Setting working directory to ${CMAKE_SOURCE_DIR}")
+#     message(STATUS "Setting working directory to ${CMAKE_SOURCE_DIR}")
 # endif()
 
 if (_GLFW_X11)
@@ -202,13 +209,13 @@ if(NOT DEFINED ${CMAKE_BUILD_TYPE})
     set(${CMAKE_BUILD_TYPE} "Debug")
 endif()
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     message(STATUS "Building in Debug mode")
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _DEBUG)
     target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
 endif()
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     message(STATUS "Building in Release mode")
     target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>)# -Xptxas=–allow-expensive-optimizations=true>)
     if(MSVC)

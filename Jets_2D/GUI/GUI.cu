@@ -204,7 +204,7 @@ void SaveCSV()
         FileNameStream << "Saves/";
     #endif
 
-    FileNameStream << "Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
+    FileNameStream << "Jets_2D " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
     << TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
     << std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
     << std::fixed << HighScoreCumulative << ".csv";
@@ -329,7 +329,7 @@ void SaveTopBinary(int CraftCount)
         FileNameStream << "Saves/";
     #endif
 
-    FileNameStream << "Cntrls " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
+    FileNameStream << "Jets_2D " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
             << TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
             << std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
             << std::fixed << HighScoreCumulative << ".craft";
@@ -532,7 +532,7 @@ void Setup()
     const char* glsl_version = "#version 450";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    io.Fonts->AddFontFromFileTTF("./res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
+    io.Fonts->AddFontFromFileTTF("../res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
 
     ImGui::StyleColorsDark();
 

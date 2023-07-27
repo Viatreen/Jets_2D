@@ -23,22 +23,22 @@ __device__ void RELU_Activate(float& Neuron)
 
 __device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, int ID_Opponent, int ID_Craft, int ID_Weight)
 {
-    ///////////////////////////////////////////////////////////////////////////
-    //// Environment Input to Input Neuron Conversion
+    /////////////////////////////////////////////////////////////////////////
+    // Environment Input to Input Neuron Conversion
     Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
 
-    ///////////////////////////////////////////////////////////////////////////
-    //// Neural Net Processing
+    /////////////////////////////////////////////////////////////////////////
+    // Neural Net Processing
     Run_Neural_Net(C, true, ID_Craft, ID_Weight);
 
-    ////////////////////////////////////////////////////////////////////////////
-    //// Output Conversion
+    //////////////////////////////////////////////////////////////////////////
+    // Output Conversion
     Output_Neurons_To_Action(C, ID_Craft, Buffer);
 }
 
 __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int ID_Craft)
 {
-#ifdef DEBUG
+#ifdef _DEBUG
     if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
         printf("NN Before- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
     if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
@@ -610,7 +610,7 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
     for (int i = 0; i < 4; i++)
         C->Engine[i].ThrustNormalized[ID_Craft] = C->Neuron[((21 + i) + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
-#ifdef DEBUG
+#ifdef _DEBUG
     for (int i = 0; i < NEURON_AMOUNT; i++)
         if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
         {

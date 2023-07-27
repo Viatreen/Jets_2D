@@ -55,8 +55,6 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
         BulletMechanics(Buffer, C, idx, idx + CRAFT_COUNT, Config);
         BulletMechanics(Buffer, C, idx + CRAFT_COUNT, idx, Config);
 
-        C->Score[idx] = C->ScoreTime[idx] + C->ScoreFuelEfficiency[idx] + C->ScoreDistance[idx]  / 1000.f + C->ScoreBullet[idx] - C->ScoreBullet[idx + CRAFT_COUNT] / 10.f;    // TODO: Consider floating point precision for accumulating score
-
         if (!C->Active[idx] || Match->ElapsedTicks[idx] == (Config->TimeStepLimit - 1))
         {
             Match->Done[idx] = true;

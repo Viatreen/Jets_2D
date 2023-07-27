@@ -43,7 +43,7 @@ int main()
     Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
     cudaCheck(cudaDeviceSynchronize());
 
-    Test_Neural_Net_Eval(Crafts);
+    // Test_Neural_Net_Eval(Crafts);
 
     GUI::TimerStartup = float(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count()) / 1000.f;
 
