@@ -3,10 +3,6 @@
 // Standard Library
 #include <cmath>
 
-#ifdef _DEBUG
-#pragma message("Building in Debug Mode")
-#endif
-
 // #define GTX_1080TI                            // Sets SM count to 28
 //#define GTX_1660TI                            // Sets SM count to 12
 
@@ -29,19 +25,16 @@
 #define TOTAL_FRAMES                        ( FRAMERATE_PHYSICS * (int)(TIME_MATCH) )
 
 #if defined (GTX_1080TI)
-#pragma message("Building for GTX 1080 Ti")
 #define SM_COUNT                              28
 #define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
 #define NN_Float                              float
 #elif defined (GTX_1660TI)
-#pragma message("Building for GTX 1660 Ti")
 #define SM_COUNT                              12
 #define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
 #define NN_Float                              __half
 #elif defined (ORIN)
-#pragma message("Building for Jetson AGX Orin")
-#define SM_COUNT                              16
-#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 4 )
+#define SM_COUNT                              4
+#define TIME_SPEED_FAST_DEFAULT             ( TOTAL_FRAMES / 8 )
 #define NN_Float                              __half
 #else
 #define SM_COUNT                              4
@@ -50,7 +43,7 @@
 #endif
 
 // CUDA
-#define BLOCK_SIZE                            128 //256
+#define BLOCK_SIZE                            256
 
 // Match Configuration
 #define CRAFT_COUNT                         ( 128 * 8 * SM_COUNT  )

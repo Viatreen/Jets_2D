@@ -36,12 +36,19 @@ int main()
 
     // Setup
     Timer = std::chrono::steady_clock::now();
+    std::cout << "Setting up OpenGL" << std::endl;
     GL::Setup();
+    std::cout << "Allocating memory" << std::endl;
     Mem::Setup();
+    std::cout << "Setting up graphical user interface" << std::endl;
     GUI::Setup();
+    std::cout << "Setting up graphics objects" << std::endl;
     Graphics::Setup();
+    std::cout << "Initializing craft state" << std::endl;
     Init<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
     cudaCheck(cudaDeviceSynchronize());
+    std::cout << "Initialization done" << std::endl;
+
 
     // Test_Neural_Net_Eval(Crafts);
 

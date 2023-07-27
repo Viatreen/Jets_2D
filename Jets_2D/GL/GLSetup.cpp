@@ -4,6 +4,7 @@
 // Standard Library
 #include <iostream>
 #include <chrono>
+#include <stdio.h>
 
 // OpenGL
 #include "glad/glad.h"
@@ -54,12 +55,13 @@ namespace GL
         glfwWindowHint(GLFW_FOCUSED, GL_TRUE);
 
         // Create OpenGL window context using GLFW. Resolution is arbitrary because window will be maximized soon.
-        window = glfwCreateWindow(1920, 1080, "Controls", nullptr, nullptr); // Windowed
+        window = glfwCreateWindow(1920, 1080, "Jets_2D", nullptr, nullptr); // Windowed
         if (nullptr == window)
         {
             std::cout << "Failed to create GLFW window" << std::endl;
             glfwTerminate();
-            system("Pause");
+            printf("Press Enter to continue...\n");
+            getchar();
         }
 
         glfwMakeContextCurrent(window);
@@ -76,7 +78,8 @@ namespace GL
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             std::cout << "Failed to initialize GLAD" << std::endl;
-            system("Pause");
+            printf("Press Enter to continue...\n");
+            getchar();
         }
 
         // Assign GLFW function callbacks

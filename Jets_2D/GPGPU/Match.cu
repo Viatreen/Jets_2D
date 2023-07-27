@@ -294,7 +294,7 @@ __global__ void Init(CraftState* C)
     for (int i = 0; i < WEIGHT_AMOUNT; i++)
         C->Weight[CRAFT_COUNT * i + idx] = (curand_uniform(&C->RandState[idx]) - 0.5f) * 2.f * WEIGHTS_MULTIPLIER;
 
-    Shrink_Weights(C);
+    // Shrink_Weights(C);
 
     //if (idx < CRAFT_COUNT)
     //{
