@@ -23,8 +23,8 @@
 // ImGui
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 
 // Boost
 //#include "boost/filesystem.hpp"
@@ -67,7 +67,7 @@ __global__ void CopyState(CraftState* C, state* State, int Index);
 std::string ApplicationRuntime();
 void SaveCSV();
 void SaveTopBinary(int CraftCount);
-void LoadTopBinary1();		// TODO: Tidy up save and load
+void LoadTopBinary1(std::string filename);		// TODO: Tidy up save and load
 void LoadTopBinary2();		// TODO: Fix loading issue
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length);
 // Align text of strings that describe neurons
@@ -81,7 +81,7 @@ void RoundEnd2();
 
 void AddSpaces(std::string& Output, float Input);
 void StateBar(bool LeftSide, state* d_State, float AngleStart);
-void Run(int OpponentID, int PositionNumber, float AngleStart);
+void Run(int OpponentID, int PositionNumber, float AngleStart, bool MatchOver);
 void Shutdown();
 
 } //End namespace GUI

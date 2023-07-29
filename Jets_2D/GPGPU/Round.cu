@@ -93,7 +93,7 @@ void Round()
                         Graphics::Draw();
                     }
 
-                    GUI::Run(Opponent_ID_Weights, PositionNumber, AngleStart);
+                    GUI::Run(Opponent_ID_Weights, PositionNumber, AngleStart, h_AllDone);
                     glfwSwapBuffers(window);
                 }
             }

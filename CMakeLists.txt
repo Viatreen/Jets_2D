@@ -1,7 +1,19 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 if (UNIX)
-    set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+    set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.2/bin/nvcc)
+    if(ARCH_61)
+        message(STATUS "Building for CUDA architecture 6.1. GTX 1080 Ti")
+        set(CMAKE_CUDA_ARCHITECTURES 61)
+    elseif(ARCH_75)
+        message(STATUS "Building for CUDA architecture 7.5. GTX 1660 Ti")
+        set(CMAKE_CUDA_ARCHITECTURES 75)
+    elseif(ARCH_87)
+        message(STATUS "Building for CUDA architecture 8.7. Jetson AGX Orin")
+        set(CMAKE_CUDA_ARCHITECTURES 87)
+    else()
+        message(STATUS "Must have CUDA architecture of 61, 75, or 87. Feel free to add any that are 60 or higher")
+    endif()
 endif()
 
 if(WIN32)
@@ -55,8 +67,10 @@ endif()
 
 include_directories(
     lib/
-    lib/dear_imgui/
+    lib/imgui/
+    lib/imgui/backends/
     lib/GLFW/include/
+    lib/ImGuiFileDialog/
     .
 )
 
@@ -98,9 +112,11 @@ set(sources
     # Dear ImGUI
     lib/imgui/imgui.cpp
     lib/imgui/imgui_draw.cpp
-    lib/imgui/imgui_impl_glfw.cpp
-    lib/imgui/imgui_impl_opengl3.cpp
+    lib/imgui/backends/imgui_impl_glfw.cpp
+    lib/imgui/backends/imgui_impl_opengl3.cpp
     lib/imgui/imgui_widgets.cpp
+    lib/imgui/imgui_tables.cpp
+    lib/ImGuiFileDialog/ImGuiFileDialog.cpp
 
     # GLFW
     lib/GLFW/src/egl_context.h
@@ -190,23 +206,16 @@ target_compile_options(${CMAKE_PROJECT_NAME}
 set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
 if(ARCH_61)
-    message(STATUS "Building for CUDA architecture 6.1. GTX 1080 Ti")
     set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 61)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE GTX_1080TI)
 elseif(ARCH_75)
-message(STATUS "Building for CUDA architecture 7.5. GTX 1660 Ti")
     set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 75)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE GTX_1660TI)
 elseif(ARCH_87)
-    message(STATUS "Building for CUDA architecture 8.7. Jetson AGX Orin")
     set_property(TARGET ${CMAKE_PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 87)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE ORIN)
 else()
     message(STATUS "Must have CUDA architecture of 61, 75, or 87")
-endif()
-
-if(NOT DEFINED ${CMAKE_BUILD_TYPE})
-    set(${CMAKE_BUILD_TYPE} "Debug")
 endif()
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")

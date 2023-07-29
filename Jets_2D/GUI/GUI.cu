@@ -27,8 +27,11 @@
 // ImGui
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
+
+// ImGuiFileDialog
+#include "ImGuiFileDialog.h"
 
 // Project Headers
 #include "Jets_2D/Config.hpp"
@@ -56,8 +59,7 @@ bool SimulationSpeedToggle = Config_::RenderNoneDefault;
 bool SaveFlag = false;
 bool SaveFlagEndRound = false;
 int SaveCount = SAVE_COUNT_DEFAULT;
-bool LoadBinaryFlag = false;
-bool LoadBinaryFlagEndMatch = false;
+bool LoadBinaryFlag = false;    // TODO: Probably remove this
 bool LoadBinaryFlagEndRound = false;
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -329,9 +331,9 @@ void SaveTopBinary(int CraftCount)
         FileNameStream << "Saves/";
     #endif
 
-    FileNameStream << "Jets_2D " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
-            << TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
-            << std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
+    FileNameStream << "Jets_2D_" << TimeInfo->tm_year + 1900 << std::setw(2) << std::setfill('0')
+            << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour 
+            << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
             << std::fixed << HighScoreCumulative << ".craft";
 
     std::cout << "Filename: " << FileNameStream.str() << std::endl;
@@ -382,105 +384,57 @@ void SaveTopBinary(int CraftCount)
 }
 
 // TODO: Tidy up save and load
-void LoadTopBinary1()
+void LoadTopBinary1(std::string filename)
 {
-#ifdef _WIN32   // TODO: Add linux support
-    std::cout << "Loading craft files" << std::endl;
+    std::cout << "Opening \"" << filename << "\"" << std::endl;
 
-    char FileName[MAX_PATH];
-
-    OPENFILENAME OpenFileName;
-    ZeroMemory(&FileName, sizeof(FileName));
-    ZeroMemory(&OpenFileName, sizeof(OpenFileName));
-    OpenFileName.lStructSize = sizeof(OpenFileName);
-    OpenFileName.hwndOwner = NULL;
-    OpenFileName.lpstrFilter = "Craft Files (*.craft)\0*.craft\0All Files (*.*)\0*.*\0";
-    OpenFileName.lpstrFile = FileName;
-    OpenFileName.nMaxFile = MAX_PATH;
-    OpenFileName.lpstrTitle = "Select a Craft File";
-    OpenFileName.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
-
-    LoadSuccess = false;
-
-    if (GetOpenFileNameA(&OpenFileName))
+    std::ifstream File;
+    File.open(filename.c_str(), std::ios::binary | std::ios::in);
+    if (!File)
     {
-        std::cout << "Opening \"" << FileName << "\"" << std::endl;
-
-        std::ifstream File;
-        File.open(FileName, std::ios::binary | std::ios::in);
-        if (!File)
-        {
-            std::cout << "Error opening file" << std::endl;
-        }
-        else
-        {
-            std::cout << "File opened successfully. Copying queued until after round" << std::endl;
-
-            File.read((char*)&LoadCraftCount, sizeof(int));
-
-            int WeightCount;
-            File.read((char*)&WeightCount, sizeof(int));
-
-            if (LoadCraftCount > FIT_COUNT)
-                LoadCraftCount = FIT_COUNT;
-
-            if (WeightCount != WEIGHT_AMOUNT)
-            {
-                std::cout << "Error loading file: Incompatible number of weights in file" << std::endl;
-                std::cout << "Target: " << WEIGHT_AMOUNT << ", Source: " << WeightCount << std::endl;
-            }
-            else
-            {
-                LoadSuccess = true;
-
-                cudaCheck(cudaMalloc(&d_CraftWeights, LoadCraftCount * sizeof(CraftWeights)));
-                cudaCheck(cudaDeviceSynchronize());
-                h_CraftWeights = new CraftWeights[LoadCraftCount];
-
-                for (int i = 0; i < LoadCraftCount; i++)
-                {
-                    File.read((char*)h_CraftWeights + i * sizeof(CraftWeights), sizeof(CraftWeights));
-                    cudaCheck(cudaMemcpy(&d_CraftWeights[i], &h_CraftWeights[i], sizeof(CraftWeights), cudaMemcpyHostToDevice));
-                }
-
-                delete h_CraftWeights;
-            }
-
-            File.close();
-        }
+        std::cout << "Error opening file" << std::endl;
     }
     else
     {
-        std::cout << "Error opening file-" << std::endl;
-        switch (CommDlgExtendedError())
+        std::cout << "File opened successfully. Copying queued until after round" << std::endl;
+
+        File.read((char*)&LoadCraftCount, sizeof(int));
+
+        int WeightCount;
+        File.read((char*)&WeightCount, sizeof(int));
+
+        if (LoadCraftCount > FIT_COUNT)
+            LoadCraftCount = FIT_COUNT;
+
+        if (WeightCount != WEIGHT_AMOUNT)
         {
-        case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE" << std::endl;   break;
-        case CDERR_FINDRESFAILURE: std::cout << "CDERR_FINDRESFAILURE" << std::endl;  break;
-        case CDERR_INITIALIZATION: std::cout << "CDERR_INITIALIZATION" << std::endl;  break;
-        case CDERR_LOADRESFAILURE: std::cout << "CDERR_LOADRESFAILURE" << std::endl;  break;
-        case CDERR_LOADSTRFAILURE: std::cout << "CDERR_LOADSTRFAILURE" << std::endl;  break;
-        case CDERR_LOCKRESFAILURE: std::cout << "CDERR_LOCKRESFAILURE" << std::endl;  break;
-        case CDERR_MEMALLOCFAILURE: std::cout << "CDERR_MEMALLOCFAILURE" << std::endl; break;
-        case CDERR_MEMLOCKFAILURE: std::cout << "CDERR_MEMLOCKFAILURE" << std::endl;  break;
-        case CDERR_NOHINSTANCE: std::cout << "CDERR_NOHINSTANCE" << std::endl;     break;
-        case CDERR_NOHOOK: std::cout << "CDERR_NOHOOK" << std::endl;          break;
-        case CDERR_NOTEMPLATE: std::cout << "CDERR_NOTEMPLATE" << std::endl;      break;
-        case CDERR_STRUCTSIZE: std::cout << "CDERR_STRUCTSIZE" << std::endl;      break;
-        case FNERR_BUFFERTOOSMALL: std::cout << "FNERR_BUFFERTOOSMALL" << std::endl;  break;
-        case FNERR_INVALIDFILENAME: std::cout << "FNERR_INVALIDFILENAME" << std::endl; break;
-        case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE" << std::endl; break;
-        default: std::cout << "User cancelled" << std::endl;
+            std::cout << "Error loading file: Incompatible number of weights in file" << std::endl;
+            std::cout << "Target: " << WEIGHT_AMOUNT << ", Source: " << WeightCount << std::endl;
         }
+        else
+        {
+            LoadSuccess = true;
+
+            cudaCheck(cudaMalloc(&d_CraftWeights, LoadCraftCount * sizeof(CraftWeights)));
+            cudaCheck(cudaDeviceSynchronize());
+            h_CraftWeights = new CraftWeights[LoadCraftCount];
+
+            for (int i = 0; i < LoadCraftCount; i++)
+            {
+                File.read((char*)h_CraftWeights + i * sizeof(CraftWeights), sizeof(CraftWeights));
+                cudaCheck(cudaMemcpy(&d_CraftWeights[i], &h_CraftWeights[i], sizeof(CraftWeights), cudaMemcpyHostToDevice));
+            }
+
+            delete h_CraftWeights;
+        }
+
+        File.close();
     }
-#else
-    std::cout << "No loading functionality applied for Linux yet" << std::endl;
-#endif
 }
 
 // TODO: Fix loading issue
 void LoadTopBinary2()
 {
-#ifdef _WIN32
     if (LoadSuccess)
     {
         std::cout << "Copying loaded weights" << std::endl;
@@ -498,7 +452,6 @@ void LoadTopBinary2()
 
         LoadSuccess = false;
     }
-#endif
 }
 
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length)
@@ -628,12 +581,6 @@ void MatchEnd()
 {
     StepNumber = 0;
     MatchNumber++;
-
-    if (LoadBinaryFlagEndMatch)
-    {
-        LoadTopBinary1();
-        LoadBinaryFlagEndMatch = false;
-    }
 }
 
 void RoundEnd()
@@ -648,27 +595,32 @@ void RoundEnd()
         std::cout << std::setw(3) << i << " " << ScoreCumulative[i] / 8.f << std::endl;*/
 
     HighScoreCumulative = 0;
-    for (int i = 0; i < CRAFT_COUNT; i++)
+    for (int i = 0; i < CRAFT_COUNT; i++) {
         if (ScoreCumulative[i] > HighScoreCumulative)
         {
             HighScoreCumulative = ScoreCumulative[i];
             IndexHighScore = i;
         }
+    }
 
     HighScoreCumulative /= 2.f * 2.f;  // Find average
 
-    if (HighScoreCumulative > HighScoreCumulativeAllTime)
+    if (HighScoreCumulative > HighScoreCumulativeAllTime) {
         HighScoreCumulativeAllTime = HighScoreCumulative;
+    }
 
     HighScoreCumulativeVec.push_back(HighScoreCumulative);
     HighScoreCumulativeVecReverse.push_back(0.f);
-    for (int i = 0; i < HighScoreCumulativeVec.size(); i++)
+    for (int i = 0; i < HighScoreCumulativeVec.size(); i++) {
         HighScoreCumulativeVecReverse[i] = HighScoreCumulativeVec[HighScoreCumulativeVec.size() - 1 - i];
+    }
 
-    if (HighScoreCumulativeVec.size() < 250)
+    if (HighScoreCumulativeVec.size() < 250) {
         ProgressDataWidth = GL::ScreenWidth - 15.f;
-    else
+    }
+    else {
         ProgressDataWidth = (float)(HighScoreCumulativeVec.size()) / 250.f * (GL::ScreenWidth - 15.f);
+    }
 
     char Title[64];
     sprintf(Title, "Rnd %d, HS %1.0f", RoundNumber, HighScoreCumulative);
@@ -886,7 +838,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
     ImGui::End();
 }
 
-void Run(int OpponentID, int PositionNumber, float AngleStart)
+void Run(int OpponentID, int PositionNumber, float AngleStart, bool MatchOver)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -1021,7 +973,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
                 }
             }
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 100);
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 100);
 
             sprintf(GenericString, "%d/%d", StepNumber, h_Config->TimeStepLimit);
             float IterationProgressRatio = float(StepNumber) / h_Config->TimeStepLimit;
@@ -1072,14 +1024,15 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             }
 
             // Check for load button press
-            if (LoadBinaryFlagEndRound)
+            if (LoadBinaryFlagEndRound) {
                 LoadBinaryFlag = ImGui::Button("Load Binary Pending", ImVec2(170.f, 20.f));
-            else
+            }
+            else {
                 LoadBinaryFlag = ImGui::Button("Load Binary", ImVec2(120.f, 20.f));
+            }
 
             if (LoadBinaryFlag)
             {
-                LoadBinaryFlagEndMatch = true;
                 LoadBinaryFlagEndRound = true;
                 LoadBinaryFlag = false;
             }
@@ -1283,7 +1236,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             char FrameRateString[32];
             float FrameRate = 1000000.f / FrameTimeMcs;
             sprintf(FrameRateString, "%2.1f/%d.0", FrameRate, int(FRAMES_PER_SECOND));
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 100);
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 100);
             ImGui::ProgressBar(FrameRate / FRAMES_PER_SECOND, ImVec2(0.f, 0.f), FrameRateString);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             ImGui::Text("Frame Rate");
@@ -1332,6 +1285,30 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
         }
         ImGui::EndMainMenuBar();
     }
+
+    {
+        ImGui::Begin("Sample Window");
+
+        if (ImGui::Button("Open File Dialog")) {
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".craft", ".");
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+                std::cout << "filePathName: " << filePathName << ", filePath: " << filePath << std::endl;
+                LoadTopBinary1(filePathName);
+            }
+            // close dialog
+            ImGuiFileDialog::Instance()->Close();
+            // ImGuiFileDialog::Instance()->CloseDialog("ChooseFileDlgKey");
+        }
+
+        ImGui::End();
+    }
+
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
