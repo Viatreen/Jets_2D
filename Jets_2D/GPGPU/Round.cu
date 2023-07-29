@@ -25,13 +25,14 @@
 #include "Jets_2D/GPGPU/Cooperative_Call.hpp"
 
 std::chrono::steady_clock::time_point Timer;
+bool exit_round = false;
 
 void Round()
 {
     int Opponent_ID_Weights = rand() % GUI::OpponentRankRange;
     float AngleStart;
 
-    for (int Angle = 0; Angle < 2; Angle++) // TODO: Change back to 2 ater mutation test
+    for (int Angle = 0; Angle < MATCHES_PER_ROUND / 2; Angle++) // TODO: Change back to 2 ater mutation test
     {
         if (Angle == 0)
             AngleStart = (float(rand()) / RAND_MAX * 2.f - 1.f) * 5.f + 30.f;
@@ -94,14 +95,27 @@ void Round()
                     }
 
                     GUI::Run(Opponent_ID_Weights, PositionNumber, AngleStart, h_AllDone);
+
+                    if (exit_round) {
+                        break;
+                    }
                     glfwSwapBuffers(window);
+                }
+                if (exit_round) {
+                    break;
                 }
             }
 
-            ScoreCumulativeCalc<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+            if (!exit_round) {
+                ScoreCumulativeCalc<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
+            }
 
             GUI::MatchEnd();
             h_AllDone = false;
+        }
+
+        if (exit_round) {
+            break;
         }
     }
 }

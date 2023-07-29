@@ -39,6 +39,10 @@
 #include "Jets_2D/GPGPU/GPSetup.hpp"
 #include "Jets_2D/GPGPU/SetVariables.hpp"
 #include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/Round.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+
+extern bool exit_round;
 
 namespace GUI
 {
@@ -59,8 +63,6 @@ bool SimulationSpeedToggle = Config_::RenderNoneDefault;
 bool SaveFlag = false;
 bool SaveFlagEndRound = false;
 int SaveCount = SAVE_COUNT_DEFAULT;
-bool LoadBinaryFlag = false;    // TODO: Probably remove this
-bool LoadBinaryFlagEndRound = false;
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -485,7 +487,7 @@ void Setup()
     const char* glsl_version = "#version 450";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    io.Fonts->AddFontFromFileTTF("../res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
+    io.Fonts->AddFontFromFileTTF("./res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
 
     ImGui::StyleColorsDark();
 
@@ -590,10 +592,6 @@ void RoundEnd()
     float ScoreCumulative[CRAFT_COUNT];
     cudaCheck(cudaMemcpy(&ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));
 
-    /*std::cout << "Score Cumulative:" << std::endl;
-    for (int i = 0; i < CRAFT_COUNT; i++)
-        std::cout << std::setw(3) << i << " " << ScoreCumulative[i] / 8.f << std::endl;*/
-
     HighScoreCumulative = 0;
     for (int i = 0; i < CRAFT_COUNT; i++) {
         if (ScoreCumulative[i] > HighScoreCumulative)
@@ -637,12 +635,6 @@ void RoundEnd2()
         // Top
         SaveTopBinary(SaveCount);
         SaveFlagEndRound = false;
-    }
-
-    if (LoadBinaryFlagEndRound)
-    {
-        LoadTopBinary2();
-        LoadBinaryFlagEndRound = false;
     }
 }
 
@@ -1023,18 +1015,25 @@ void Run(int OpponentID, int PositionNumber, float AngleStart, bool MatchOver)
                 SaveFlag = false;
             }
 
-            // Check for load button press
-            if (LoadBinaryFlagEndRound) {
-                LoadBinaryFlag = ImGui::Button("Load Binary Pending", ImVec2(170.f, 20.f));
-            }
-            else {
-                LoadBinaryFlag = ImGui::Button("Load Binary", ImVec2(120.f, 20.f));
+            if (ImGui::Button("Load Binary")) {
+                Pause = true;
+                ImGuiFileDialog::Instance()->OpenDialog("Choose craft file to load", "Choose File", ".craft", ".");
             }
 
-            if (LoadBinaryFlag)
-            {
-                LoadBinaryFlagEndRound = true;
-                LoadBinaryFlag = false;
+            if (ImGuiFileDialog::Instance()->Display("Choose craft file to load")) {
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                    std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+                    std::cout << "filePathName: " << filePathName << ", filePath: " << filePath << std::endl;
+                    LoadTopBinary1(filePathName);
+                    LoadTopBinary2();
+                    exit_round = true;
+                }
+                // close dialog
+                ImGuiFileDialog::Instance()->Close();
+                Pause = false;
+                // ImGuiFileDialog::Instance()->CloseDialog("ChooseFileDlgKey");
             }
         }
 
@@ -1285,30 +1284,6 @@ void Run(int OpponentID, int PositionNumber, float AngleStart, bool MatchOver)
         }
         ImGui::EndMainMenuBar();
     }
-
-    {
-        ImGui::Begin("Sample Window");
-
-        if (ImGui::Button("Open File Dialog")) {
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".craft", ".");
-        }
-
-        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey")) {
-            if (ImGuiFileDialog::Instance()->IsOk()) {
-                std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-                std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-
-                std::cout << "filePathName: " << filePathName << ", filePath: " << filePath << std::endl;
-                LoadTopBinary1(filePathName);
-            }
-            // close dialog
-            ImGuiFileDialog::Instance()->Close();
-            // ImGuiFileDialog::Instance()->CloseDialog("ChooseFileDlgKey");
-        }
-
-        ImGui::End();
-    }
-
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

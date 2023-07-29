@@ -21,6 +21,7 @@
 #define FRAMERATE_NN_PHYSICS                ( FRAMERATE_PHYSICS / FRAMERATE_NN )
 #define TIME_STEP                           ( 1.f / float(FRAMERATE_PHYSICS) )    // Divide by a power of 2 for bit manipulation+
 #define TIME_MATCH                            30.f  // Seconds
+#define MATCHES_PER_ROUND                     4     // Must be even
 
 #define TOTAL_FRAMES                        ( FRAMERATE_PHYSICS * (int)(TIME_MATCH) )
 
@@ -225,7 +226,7 @@
 #define NEURON_AMOUNT_MAX_LAYER_EVAL        ( MAX(NEURON_AMOUNT_INPUT_EVAL, MAX(NEURON_AMOUNT_HIDDEN_EVAL, NEURON_AMOUNT_OUTPUT_EVAL)) )
 #define WEIGHT_AMOUNT_MAX_LAYER_EVAL        ( NEURON_AMOUNT_MAX_LAYER_EVAL * NEURON_AMOUNT_HIDDEN_EVAL )
 
-#define SHRINK_COEFFICIENT_WEIGHTS            0.9999f
+#define SHRINK_COEFFICIENT_WEIGHTS            0.99f
 /* ^^ After neural network is randomly generated, all weights are iteratively shrunk until a reasonable output
 for all output neurons is achieved (Given an input of all ones to the network and the network having no activation function) */
 
@@ -247,9 +248,9 @@ namespace Config_
 struct config
 {
     float MutationFlipChance     = 0.005f;    // Percent chance of each weight flipping sign
-    float MutationScaleChance    = 0.08f;    // Percent chance of each weight mutating        
+    float MutationScaleChance    = 0.02f;    // Percent chance of each weight mutating        
     float MutationScale          = 0.1f;        // Percent that each weight could possibly change
-    float MutationSlideChance    = 0.08f;
+    float MutationSlideChance    = 0.02f;
     float MutationSigma          = 0.08f;    // Sigma parameter of normal distribution
     float WeightMax              = 1.f;        // Maximum magnitude of a weight
     

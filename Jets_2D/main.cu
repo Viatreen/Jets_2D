@@ -29,6 +29,8 @@
 #include "Jets_2D/GUI/Print_Data_Info.hpp"
 #include "Jets_2D/Graphics/GrSetup.hpp"
 
+extern bool exit_round;
+
 int main()
 {
     std::cout << "Begin" << std::endl;
@@ -59,43 +61,44 @@ int main()
     // Game Loop
     while (!glfwWindowShouldClose(window))
     {
-        int h_TournamentEpochNumber = 0;
-        cudaCheck(cudaMemcpy(&Match->TournamentEpochNumber, &h_TournamentEpochNumber, sizeof(int), cudaMemcpyHostToDevice));
-        cudaCheck(cudaDeviceSynchronize());
-
-        // Original Side of the Circle
         Round();
 
-        RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
-        cudaCheck(cudaDeviceSynchronize());
-
-        RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, GUI::RoundNumber);
-        cudaCheck(cudaDeviceSynchronize());
-
-        GUI::RoundEnd();
-
-        h_Config->RoundNumber = GUI::RoundNumber;
-        SyncConfigArray();
-        
-        if (Do_Mutations)
-        {
-            WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+        if (!exit_round) {
+            RoundAssignPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
             cudaCheck(cudaDeviceSynchronize());
 
-            WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+            RoundPrintFirstPlace<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, GUI::RoundNumber);
             cudaCheck(cudaDeviceSynchronize());
 
-            WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-            cudaCheck(cudaDeviceSynchronize());
+            GUI::RoundEnd();
 
-            IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
-            cudaCheck(cudaDeviceSynchronize());
+            h_Config->RoundNumber = GUI::RoundNumber;
+            SyncConfigArray();
+            
+            if (Do_Mutations)
+            {
+                WeightsAndIDTempSave<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+                cudaCheck(cudaDeviceSynchronize());
+
+                WeightsAndIDTransfer<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, Temp);
+                cudaCheck(cudaDeviceSynchronize());
+
+                WeightsMutate<<<FIT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+                cudaCheck(cudaDeviceSynchronize());
+
+                IDAssign<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts, d_Config);
+                cudaCheck(cudaDeviceSynchronize());
+            }
+
+
+            GUI::RoundEnd2();
+        }
+        else {
+            exit_round = false;
         }
 
         ResetScoreCumulative<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
         cudaCheck(cudaDeviceSynchronize());
-
-        GUI::RoundEnd2();
     }
 
     // Cleanup

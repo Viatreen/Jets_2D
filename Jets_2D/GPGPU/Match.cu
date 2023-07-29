@@ -76,7 +76,7 @@ __global__ void RoundPrintFirstPlace(CraftState* C, int RoundNumber)
     int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
     if (C->Place[idx] == 0)
-        printf("Round: %4d, First place ID: %6d, Score: %7.2f\n", RoundNumber, idx, C->ScoreCumulative[idx] / (4));
+        printf("Round: %4d, First place ID: %6d, Score: %7.2f\n", RoundNumber, idx, C->ScoreCumulative[idx] / MATCHES_PER_ROUND);
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -383,9 +383,6 @@ __device__ void Reset(CraftState* Crafts, int idx, GraphicsObjectPointer* Buffer
 __global__ void ResetMatch(MatchState* Match, CraftState* Crafts, GraphicsObjectPointer* Buffer, int PositionNumber, float AngleStart)
 {
     int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
-
-    if (idx == 0)
-        Match->TournamentEpochNumber++;
 
     Match->Done[idx] = false;
     Match->ElapsedTicks[idx] = 0;
