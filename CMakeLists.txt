@@ -12,7 +12,7 @@ if (UNIX)
         message(STATUS "Building for CUDA architecture 8.7. Jetson AGX Orin")
         set(CMAKE_CUDA_ARCHITECTURES 87)
     else()
-        message(STATUS "Must have CUDA architecture of 61, 75, or 87. Feel free to add any that are 60 or higher")
+        message(STATUS "Must have CUDA architecture of 61, 75, or 87. Feel free to add any that are 60 or higher (cooperative kernels must be supported)")
     endif()
 endif()
 
