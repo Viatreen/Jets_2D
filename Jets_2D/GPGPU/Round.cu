@@ -29,34 +29,34 @@ bool exit_round = false;
 
 void Round()
 {
+    GUI::ResetMatch();
+
     int Opponent_ID_Weights = rand() % GUI::OpponentRankRange;
     float AngleStart;
 
     for (int Angle = 0; Angle < MATCHES_PER_ROUND / 2; Angle++) // TODO: Change back to 2 ater mutation test
     {
-        if (Angle == 0)
+        if (Angle == 0) {
             AngleStart = (float(rand()) / RAND_MAX * 2.f - 1.f) * 5.f + 30.f;
-        else if (Angle == 1)
+        }
+        else if (Angle == 1) {
             AngleStart = -(float(rand()) / RAND_MAX * 2.f - 1.f) * 5.f - 30.f;
+        }
 
         // One once when opponent is on left side and once when opponent is on right side
-        for (int PositionNumber = 0; PositionNumber < 2; PositionNumber++)
-        {
+        for (int PositionNumber = 0; PositionNumber < 2; PositionNumber++) {
             GPGPU::CUDA_Map();
             ResetMatch<<<MATCH_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Match, Crafts, d_Buffer, PositionNumber, AngleStart);
             cudaCheck(cudaDeviceSynchronize());
             GPGPU::CUDA_Unmap();
 
-            while (!h_AllDone && !glfwWindowShouldClose(window))
-            {
-                if ((float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count() > 1000.f / FRAMES_PER_SECOND)
-                {
+            while (!h_AllDone && !glfwWindowShouldClose(window)) {
+                if ((float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - Timer).count() > 1000.f / FRAMES_PER_SECOND) {
                     Timer = std::chrono::steady_clock::now();
 
                     glfwPollEvents();
 
-                    if (!GUI::Pause)
-                    {
+                    if (!GUI::Pause) {
                         cudaCheck(cudaDeviceSynchronize());
 
                         GLCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -70,15 +70,6 @@ void Round()
 
                         GPGPU::CUDA_Map();
                         cudaCheck(cudaDeviceSynchronize());
-
-                        // std::cout << "Match: " << Match << std::endl;
-                        // std::cout << "Crafts: " << Crafts << std::endl;
-                        // std::cout << "d_Buffer: " << d_Buffer << std::endl;
-                        // std::cout << "d_Config: " << d_Config << std::endl;
-                        // std::cout << "Opponent_ID_Weights: " << Opponent_ID_Weights << std::endl;
-
-                        // cudaDeviceProp DeviceProp;
-                        // cudaGetDeviceProperties(&DeviceProp, 0);
 
                         //void *Args[] { &Match, &Crafts, &d_Buffer, &d_Config, &Opponent_ID_Weights };
                         //cudaLaunchCooperativeKernel((void*)RunEpoch, 50, 50, Args);
@@ -110,7 +101,14 @@ void Round()
                 ScoreCumulativeCalc<<<CRAFT_COUNT / BLOCK_SIZE, BLOCK_SIZE>>>(Crafts);
             }
 
-            GUI::MatchEnd();
+            GUI::ResetStep();
+
+            if (exit_round) {
+                break;
+            }
+
+            GUI::IncrementMatch();
+
             h_AllDone = false;
         }
 

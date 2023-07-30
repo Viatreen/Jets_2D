@@ -67,13 +67,14 @@ __global__ void CopyState(CraftState* C, state* State, int Index);
 std::string ApplicationRuntime();
 void SaveCSV();
 void SaveTopBinary(int CraftCount);
-void LoadTopBinary1(std::string filename);		// TODO: Tidy up save and load
-void LoadTopBinary2();		// TODO: Fix loading issue
+void LoadTopBinary(std::string filename);		// TODO: Tidy up save and load
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length);
 // Align text of strings that describe neurons
 void NeuronStringAdder(std::vector<std::string>& Vec, std::string Suffix, int Value, int LengthNumber, int LengthString);
 void Setup();
-void MatchEnd();
+void ResetStep();
+void IncrementMatch();
+void ResetMatch();
 void RoundEnd();
 void RoundEnd2();
 
