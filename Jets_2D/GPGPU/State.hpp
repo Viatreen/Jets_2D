@@ -98,8 +98,6 @@ struct MatchState
     unsigned int ElapsedTicks[MATCH_COUNT];
 
     // Tournament Variables
-    int TournamentEpochNumber;
-
     // Requirement: When this signal is high, it is guaranteed to be turned on within the render frame
     bool RenderOnFirstFrame[MATCH_COUNT];       // First frame render after switching from off to on. Used to assign color floats
     // Requirement: When this signal is high, it is guaranteed to be turned off within the render frame

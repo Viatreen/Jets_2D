@@ -16,7 +16,7 @@ namespace Graphics
 {
     void Setup()
     {
-        CraftShader.Create("../res/Shaders/Craft.shader");
+        CraftShader.Create("./res/Shaders/Craft.shader");
 
         //Axis[0]               = new axis(AxisVertices::X);
         //Axis[1]               = new axis(AxisVertices::Y);

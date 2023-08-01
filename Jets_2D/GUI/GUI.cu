@@ -28,8 +28,11 @@
 // ImGui
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
+
+// ImGuiFileDialog
+#include "ImGuiFileDialog.h"
 
 // Project Headers
 #include "Jets_2D/Config.hpp"
@@ -37,6 +40,10 @@
 #include "Jets_2D/GPGPU/GPSetup.hpp"
 #include "Jets_2D/GPGPU/SetVariables.hpp"
 #include "Jets_2D/GPGPU/State.hpp"
+#include "Jets_2D/GPGPU/Round.hpp"
+#include "Jets_2D/GPGPU/Match.hpp"
+
+extern bool exit_round;
 
 namespace GUI
 {
@@ -57,9 +64,6 @@ bool SimulationSpeedToggle = Config_::RenderNoneDefault;
 bool SaveFlag = false;
 bool SaveFlagEndRound = false;
 int SaveCount = SAVE_COUNT_DEFAULT;
-bool LoadBinaryFlag = false;
-bool LoadBinaryFlagEndMatch = false;
-bool LoadBinaryFlagEndRound = false;
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -98,9 +102,6 @@ bool MutationChangePending = false;
 bool PerformanceChangePending = false;
 
 ImGuiWindowFlags WindowFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
-
-int LoadCraftCount;
-bool LoadSuccess = false;
 
 std::vector<std::string> NeuronInputString;
 std::vector<std::string> NeuronOutputString;
@@ -382,13 +383,11 @@ void SaveTopBinary(int CraftCount)
 }
 
 // TODO: Tidy up save and load
-void LoadTopBinary1()
+void LoadTopBinary(std::string filename)
 {
+#ifdef _WIN32   // TODO: Add linux support
     std::cout << "Loading craft files" << std::endl;
-    LoadSuccess = false;
-    int result;
 
-#ifdef _WIN32
     char FileName[MAX_PATH];
 
     OPENFILENAME OpenFileName;
@@ -402,67 +401,51 @@ void LoadTopBinary1()
     OpenFileName.lpstrTitle = "Select a Craft File";
     OpenFileName.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
 
-    result = GetOpenFileNameA(&OpenFileName);
-#else
-    char FileName[128];
-    std::shared_ptr<FILE> pipe(popen("zenity --file-selection", "r"), pclose);
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    while (!feof(pipe.get())) {
-        if (fgets(FileName, 128, pipe.get()) != nullptr) {
-            result = 1;
-            std::cout << "File name read successfully" << std::endl;
-        }
-        else {
-            result = 0;
-            std::cout << "Could not open file" << std::endl;
-        }
-        std::cout << "Filename: " << FileName << std::endl;
-    }
-#endif
+    LoadSuccess = false;
 
-    if (result)
+    if (GetOpenFileNameA(&OpenFileName))
     {
         std::cout << "Opening \"" << FileName << "\"" << std::endl;
 
-        std::ifstream File;
-        File.open(FileName, std::ios::binary | std::ios::in);
-        if (!File)
+    std::ifstream File;
+    File.open(filename.c_str(), std::ios::binary | std::ios::in);
+    if (!File)
+    {
+        std::cout << "Error opening file" << std::endl;
+    }
+    else
+    {
+        std::cout << "File opened successfully. Copying queued until after round" << std::endl;
+
+        File.read((char*)&LoadCraftCount, sizeof(int));
+
+        int WeightCount;
+        File.read((char*)&WeightCount, sizeof(int));
+
+        if (LoadCraftCount > FIT_COUNT)
+            LoadCraftCount = FIT_COUNT;
+
+        if (WeightCount != WEIGHT_AMOUNT)
         {
-            std::cout << "Error opening file" << std::endl;
+            std::cout << "Error loading file: Incompatible number of weights in file" << std::endl;
+            std::cout << "Target: " << WEIGHT_AMOUNT << ", Source: " << WeightCount << std::endl;
         }
         else
         {
-            std::cout << "File opened successfully. Copying queued until after round" << std::endl;
+            LoadSuccess = true;
 
-            File.read((char*)&LoadCraftCount, sizeof(int));
+            cudaCheck(cudaMalloc(&d_CraftWeights, LoadCraftCount * sizeof(CraftWeights)));
+            cudaCheck(cudaDeviceSynchronize());
+            h_CraftWeights = new CraftWeights[LoadCraftCount];
 
-            int WeightCount;
-            File.read((char*)&WeightCount, sizeof(int));
-
-            if (LoadCraftCount > FIT_COUNT)
-                LoadCraftCount = FIT_COUNT;
-
-            if (WeightCount != WEIGHT_AMOUNT)
+            for (int i = 0; i < LoadCraftCount; i++)
             {
-                std::cout << "Error loading file: Incompatible number of weights in file" << std::endl;
-                std::cout << "Target: " << WEIGHT_AMOUNT << ", Source: " << WeightCount << std::endl;
+                File.read((char*)h_CraftWeights + i * sizeof(CraftWeights), sizeof(CraftWeights));
+                cudaCheck(cudaMemcpy(&d_CraftWeights[i], &h_CraftWeights[i], sizeof(CraftWeights), cudaMemcpyHostToDevice));
             }
-            else
-            {
-                LoadSuccess = true;
 
-                cudaCheck(cudaMalloc(&d_CraftWeights, LoadCraftCount * sizeof(CraftWeights)));
-                cudaCheck(cudaDeviceSynchronize());
-                h_CraftWeights = new CraftWeights[LoadCraftCount];
-
-                for (int i = 0; i < LoadCraftCount; i++)
-                {
-                    File.read((char*)h_CraftWeights + i * sizeof(CraftWeights), sizeof(CraftWeights));
-                    cudaCheck(cudaMemcpy(&d_CraftWeights[i], &h_CraftWeights[i], sizeof(CraftWeights), cudaMemcpyHostToDevice));
-                }
-
-                delete h_CraftWeights;
-            }
+            delete h_CraftWeights;
+        }
 
             File.close();
         }
@@ -470,8 +453,6 @@ void LoadTopBinary1()
     else
     {
         std::cout << "Error opening file-" << std::endl;
-
-#ifdef _WIN32
         switch (CommDlgExtendedError())
         {
         case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE" << std::endl;   break;
@@ -491,11 +472,10 @@ void LoadTopBinary1()
         case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE" << std::endl; break;
         default: std::cout << "User cancelled" << std::endl;
         }
-#else
-    // TODO: Linux code here
-#endif
-
     }
+#else
+    std::cout << "No loading functionality applied for Linux yet" << std::endl;
+#endif
 }
 
 // TODO: Fix loading issue
@@ -519,7 +499,6 @@ void LoadTopBinary2()
 
         LoadSuccess = false;
     }
-#endif
 }
 
 void NeuronStringSpacePrefixer(std::vector<std::string>& Vec, std::string str, int Length)
@@ -553,7 +532,7 @@ void Setup()
     const char* glsl_version = "#version 450";
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    io.Fonts->AddFontFromFileTTF("../res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
+    io.Fonts->AddFontFromFileTTF("./res/fonts/Inconsolata-Medium.ttf", Config_::GUI::Font_Size);
 
     ImGui::StyleColorsDark();
 
@@ -645,16 +624,16 @@ void Setup()
         NeuronOutputString.push_back("Memory " + std::to_string(i + 1));
 }
 
-void MatchEnd()
-{
+void ResetStep() {
     StepNumber = 0;
-    MatchNumber++;
+}
 
-    if (LoadBinaryFlagEndMatch)
-    {
-        LoadTopBinary1();
-        LoadBinaryFlagEndMatch = false;
-    }
+void IncrementMatch() {
+    MatchNumber++;
+}
+
+void ResetMatch() {
+    MatchNumber = 0;
 }
 
 void RoundEnd()
@@ -664,32 +643,33 @@ void RoundEnd()
     float ScoreCumulative[CRAFT_COUNT];
     cudaCheck(cudaMemcpy(&ScoreCumulative, Crafts->ScoreCumulative, CRAFT_COUNT * sizeof(float), cudaMemcpyDeviceToHost));
 
-    /*std::cout << "Score Cumulative:" << std::endl;
-    for (int i = 0; i < CRAFT_COUNT; i++)
-        std::cout << std::setw(3) << i << " " << ScoreCumulative[i] / 8.f << std::endl;*/
-
     HighScoreCumulative = 0;
-    for (int i = 0; i < CRAFT_COUNT; i++)
+    for (int i = 0; i < CRAFT_COUNT; i++) {
         if (ScoreCumulative[i] > HighScoreCumulative)
         {
             HighScoreCumulative = ScoreCumulative[i];
             IndexHighScore = i;
         }
+    }
 
     HighScoreCumulative /= 2.f * 2.f;  // Find average
 
-    if (HighScoreCumulative > HighScoreCumulativeAllTime)
+    if (HighScoreCumulative > HighScoreCumulativeAllTime) {
         HighScoreCumulativeAllTime = HighScoreCumulative;
+    }
 
     HighScoreCumulativeVec.push_back(HighScoreCumulative);
     HighScoreCumulativeVecReverse.push_back(0.f);
-    for (int i = 0; i < HighScoreCumulativeVec.size(); i++)
+    for (int i = 0; i < HighScoreCumulativeVec.size(); i++) {
         HighScoreCumulativeVecReverse[i] = HighScoreCumulativeVec[HighScoreCumulativeVec.size() - 1 - i];
+    }
 
-    if (HighScoreCumulativeVec.size() < 250)
+    if (HighScoreCumulativeVec.size() < 250) {
         ProgressDataWidth = GL::ScreenWidth - 15.f;
-    else
+    }
+    else {
         ProgressDataWidth = (float)(HighScoreCumulativeVec.size()) / 250.f * (GL::ScreenWidth - 15.f);
+    }
 
     char Title[64];
     sprintf(Title, "Rnd %d, HS %1.0f", RoundNumber, HighScoreCumulative);
@@ -706,12 +686,6 @@ void RoundEnd2()
         // Top
         SaveTopBinary(SaveCount);
         SaveFlagEndRound = false;
-    }
-
-    if (LoadBinaryFlagEndRound)
-    {
-        LoadTopBinary2();
-        LoadBinaryFlagEndRound = false;
     }
 }
 
@@ -747,8 +721,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
     cudaCheck(cudaMemcpy(&h_State, d_State, sizeof(state), cudaMemcpyDeviceToHost));
     cudaCheck(cudaDeviceSynchronize());
 
-    if (ImGui::CollapsingHeader("Physical State", ImGuiTreeNodeFlags_DefaultOpen))
-    {
+    if (ImGui::CollapsingHeader("Physical State", ImGuiTreeNodeFlags_DefaultOpen)) {
         //TODO: Align spaces
 
         char GenericCharArray[64];
@@ -840,19 +813,16 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
         ImGui::Text("%s", GenericCharArray);*/
     }
 
-    if (ImGui::CollapsingHeader("Neural Network", ImGuiTreeNodeFlags_DefaultOpen))
-    {
+    if (ImGui::CollapsingHeader("Neural Network", ImGuiTreeNodeFlags_DefaultOpen)) {
         char GenericString[256];
         sprintf(GenericString, "                                Input ");
-        for (int i = 0; i < LAYER_AMOUNT_HIDDEN; i++)
-        {
+        for (int i = 0; i < LAYER_AMOUNT_HIDDEN; i++) {
             std::strcat(GenericString, "      ");
         }
         std::strcat(GenericString, "Output");
         ImGui::Text("%s", GenericString);
 
-        for (int i = 0; i < LAYER_SIZE_INPUT || i < LAYER_SIZE_HIDDEN || i < LAYER_SIZE_OUTPUT; i++)
-        {
+        for (int i = 0; i < LAYER_SIZE_INPUT || i < LAYER_SIZE_HIDDEN || i < LAYER_SIZE_OUTPUT; i++) {
             // TODO: Move numbering to GUI setup function
             if (i < 9)
                 sprintf(GenericString, "00%d: ", i + 1);
@@ -863,36 +833,30 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
 
             char NeuronValue[64];
 
-            if (i < LAYER_SIZE_INPUT)
-            {
+            if (i < LAYER_SIZE_INPUT) {
                 if (h_State.Neuron[i] < 0.f)
                     sprintf(NeuronValue, "%s: %1.2f", NeuronInputString[i].c_str(), h_State.Neuron[i]);
                 else
                     sprintf(NeuronValue, "%s:  %1.2f", NeuronInputString[i].c_str(), h_State.Neuron[i]);
                 strcat(GenericString, NeuronValue);
             }
-            else
-            {
+            else {
                 sprintf(NeuronValue, "      ");
                 strcat(GenericString, NeuronValue);
             }
 
-            for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++)
-            {
-                if (i < LAYER_SIZE_HIDDEN)
-                {
+            for (int j = 0; j < LAYER_AMOUNT_HIDDEN; j++) {
+                if (i < LAYER_SIZE_HIDDEN) {
                     sprintf(NeuronValue, " %5.2f", h_State.Neuron[LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN * j + i]);
                     strcat(GenericString, NeuronValue);
                 }
-                else
-                {
+                else {
                     sprintf(NeuronValue, "      ");
                     strcat(GenericString, NeuronValue);
                 }
             }
 
-            if (i < LAYER_SIZE_OUTPUT)
-            {
+            if (i < LAYER_SIZE_OUTPUT) {
                 if (h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX] < 0.f)
                     sprintf(NeuronValue, "  %1.2f: %s", h_State.Neuron[i + OUTPUT_LAYER_NEURON_BEGIN_INDEX], NeuronOutputString[i].c_str());
                 else
@@ -907,7 +871,7 @@ void StateBar(bool LeftSide, state* d_State, float AngleStart)
     ImGui::End();
 }
 
-void Run(int OpponentID, int PositionNumber, float AngleStart)
+void Run(int OpponentID, int PositionNumber, float AngleStart, bool MatchOver)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -919,8 +883,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
         ImGui::ShowDemoWindow(&show_demo_window);
     }*/
 
-    if (ShowStateBar)
-    {
+    if (ShowStateBar) {
         state* d_State;
         cudaCheck(cudaMalloc(&d_State, sizeof(state)));
         cudaCheck(cudaDeviceSynchronize());
@@ -941,8 +904,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
         cudaCheck(cudaDeviceSynchronize());
     }
 
-    if (ShowSideBar)
-    {
+    if (ShowSideBar) {
         ImGui::SetNextWindowPos(ImVec2(GL::ScreenWidth - SideBarWidth, ProgressHeight + MenuHeight), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2(SideBarWidth, GL::ScreenHeight - ProgressHeight - MenuHeight), ImGuiCond_Always);
 
@@ -964,32 +926,28 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             if (!RenderAll && !RenderFit && !RenderOne && !RenderNone)
                 RenderNone = true;
 
-            if (RenderAllWasFalseLastFrame && RenderAll)
-            {
+            if (RenderAllWasFalseLastFrame && RenderAll) {
                 RenderOne = false;
                 RenderNone = false;
                 RenderFit = false;
 
                 RenderAllMatches();
             }
-            if (RenderFitWasFalseLastFrame && RenderFit)
-            {
+            if (RenderFitWasFalseLastFrame && RenderFit) {
                 RenderOne = false;
                 RenderNone = false;
                 RenderAll = false;
 
                 RenderFitMatches();
             }
-            else if (RenderOneFalseLastFrame && RenderOne)
-            {
+            else if (RenderOneFalseLastFrame && RenderOne) {
                 RenderAll = false;
                 RenderNone = false;
                 RenderFit = false;
 
                 RenderBestMatch();
             }
-            else if (RenderNoneWasFalseLastFrame && RenderNone)
-            {
+            else if (RenderNoneWasFalseLastFrame && RenderNone) {
                 RenderAll = false;
                 RenderOne = false;
                 RenderFit = false;
@@ -998,8 +956,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             }
         }
 
-        if (ImGui::CollapsingHeader("Progress", ImGuiTreeNodeFlags_DefaultOpen))
-        {
+        if (ImGui::CollapsingHeader("Progress", ImGuiTreeNodeFlags_DefaultOpen)) {
             char GenericString[64];
             sprintf(GenericString, "Runtime: %s", ApplicationRuntime().c_str());
             ImGui::Text("%s", GenericString);
@@ -1021,28 +978,26 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::PushItemWidth(144);
             ImGui::InputScalar("Opponent Rank Range", ImGuiDataType_S32, &OpponentRankRange, &one, NULL, "%d");
 
-            if (OpponentRankRange < OpponentRankRangeLast)
-            {
-                if (OpponentRankRange < 1)
+            if (OpponentRankRange < OpponentRankRangeLast) {
+            if (OpponentRankRange < 1) {
                     OpponentRankRange = 1;
-                else
-                {
+            }
+                else {
                     OpponentRankRange += 1;
                     OpponentRankRange /= 2;
                 }
             }
-            else if (OpponentRankRange > OpponentRankRangeLast)
-            {
-                if (OpponentRankRange > FIT_COUNT)
+            else if (OpponentRankRange > OpponentRankRangeLast) {
+                if (OpponentRankRange > FIT_COUNT) {
                     OpponentRankRange = FIT_COUNT;
-                else
-                {
+                }
+                else {
                     OpponentRankRange -= 1;
                     OpponentRankRange *= 2;
                 }
             }
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 100);
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 100);
 
             sprintf(GenericString, "%d/%d", StepNumber, h_Config->TimeStepLimit);
             float IterationProgressRatio = float(StepNumber) / h_Config->TimeStepLimit;
@@ -1050,8 +1005,8 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             ImGui::Text("Match Progress");
 
-            sprintf(GenericString, "%d/%d", MatchNumber % (2 * 2) + 1, 2 * 2);
-            float RoundProgressRatio = float(MatchNumber % (2 * 2)) / (2.f * 2.f) + IterationProgressRatio / (2.f * 2.f);
+            sprintf(GenericString, "%d/%d", MatchNumber % (MATCHES_PER_ROUND) + 1, MATCHES_PER_ROUND);
+            float RoundProgressRatio = float(MatchNumber % (MATCHES_PER_ROUND)) / (MATCHES_PER_ROUND) + IterationProgressRatio / (MATCHES_PER_ROUND);
             ImGui::ProgressBar(RoundProgressRatio, ImVec2(0.f, 0.f), GenericString);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             ImGui::Text("Round Progress");
@@ -1061,18 +1016,16 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::PushItemWidth(120);
             ImGui::InputScalar("Crafts to Save", ImGuiDataType_S32, &SaveCount, &One1, NULL, "%d");
 
-            if (SaveCount < SaveAmountLast)
-            {
-                if (SaveCount < 1)
+            if (SaveCount < SaveAmountLast) {
+                if (SaveCount < 1) {
                     SaveCount = 1;
-                else
-                {
+                }
+                else {
                     SaveCount += 1;
                     SaveCount /= 2;
                 }
             }
-            else if (SaveCount > SaveAmountLast)
-            {
+            else if (SaveCount > SaveAmountLast) {
                 SaveCount -= 1;
                 SaveCount *= 2;
 
@@ -1081,33 +1034,40 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             }
 
             // Check for save button press
-            if (SaveFlagEndRound)
+            if (SaveFlagEndRound) {
                 SaveFlag = ImGui::Button("Save Pending", ImVec2(120.f, 20.f));
-            else
+            }
+            else {
                 SaveFlag = ImGui::Button("Save", ImVec2(70.f, 20.f));
+            }
 
-            if (SaveFlag)
-            {
+            if (SaveFlag) {
                 SaveFlagEndRound = true;
                 SaveFlag = false;
             }
 
-            // Check for load button press
-            if (LoadBinaryFlagEndRound)
-                LoadBinaryFlag = ImGui::Button("Load Binary Pending", ImVec2(170.f, 20.f));
-            else
-                LoadBinaryFlag = ImGui::Button("Load Binary", ImVec2(120.f, 20.f));
+            if (ImGui::Button("Load Binary")) {
+                Pause = true;
+                ImGuiFileDialog::Instance()->OpenDialog("Choose craft file to load", "Choose File", ".craft", ".");
+            }
 
-            if (LoadBinaryFlag)
-            {
-                LoadBinaryFlagEndMatch = true;
-                LoadBinaryFlagEndRound = true;
-                LoadBinaryFlag = false;
+            if (ImGuiFileDialog::Instance()->Display("Choose craft file to load")) {
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                    std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+                    std::cout << "filePathName: " << filePathName << ", filePath: " << filePath << std::endl;
+                    LoadTopBinary(filePathName);
+                    exit_round = true;
+                }
+                // close dialog
+                ImGuiFileDialog::Instance()->Close();
+                Pause = false;
+                // ImGuiFileDialog::Instance()->CloseDialog("ChooseFileDlgKey");
             }
         }
 
-        if (ImGui::CollapsingHeader("Environment Parameters", ImGuiTreeNodeFlags_DefaultOpen))
-        {
+        if (ImGui::CollapsingHeader("Environment Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
             char GenericString[64];
             sprintf(GenericString, "Craft Count: %d \tFit Count: %d", CRAFT_COUNT, FIT_COUNT);
             ImGui::Text("%s", GenericString);
@@ -1143,8 +1103,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::Text("%s", GenericString);
         }
 
-        if (ImGui::CollapsingHeader("Mutation Parameters")) // , ImGuiTreeNodeFlags_DefaultOpen))
-        {
+        if (ImGui::CollapsingHeader("Mutation Parameters")) {
             float MutationFlipChanceLast = h_Config->MutationFlipChance;
             float MutationScaleChanceLast = h_Config->MutationScaleChance;
             float MutationAmountLast = h_Config->MutationScale;
@@ -1159,50 +1118,49 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             ImGui::Separator();
             ImGui::InputFloat("Max Weight Magnitude", &h_Config->WeightMax, 0.1f, 1.0f);
 
-            if (MutationFlipChanceLast != h_Config->MutationFlipChance || MutationScaleChanceLast != h_Config->MutationScaleChance || MutationAmountLast != h_Config->MutationScale || MutationSlideChanceLast != h_Config->MutationSlideChance || MutationSigmaLast != h_Config->MutationSigma)
+            if (MutationFlipChanceLast != h_Config->MutationFlipChance || MutationScaleChanceLast != h_Config->MutationScaleChance || MutationAmountLast != h_Config->MutationScale || MutationSlideChanceLast != h_Config->MutationSlideChance || MutationSigmaLast != h_Config->MutationSigma) {
                 MutationChangePending = true;
+            }
 
             bool Apply = ImGui::Button("Apply", ImVec2(70.f, 20.f));
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 
             // TODO: Change button colors
-            if (MutationChangePending)
+            if (MutationChangePending) {
                 ImGui::Button("Pending", ImVec2(70.f, 20.f));
-            else
+            }
+            else {
                 ImGui::Button("Applied", ImVec2(70.f, 20.f));
+            }
 
-            if (Apply)
-            {
+            if (Apply) {
                 SyncConfigArray();
                 MutationChangePending = false;
             }
         }
 
-        if (ImGui::CollapsingHeader("Speed", ImGuiTreeNodeFlags_DefaultOpen))
-        {
+        if (ImGui::CollapsingHeader("Speed", ImGuiTreeNodeFlags_DefaultOpen)) {
             int TimeSpeedLast = h_Config->TimeSpeed;
             int one = 1;
             ImGui::PushItemWidth(144);
             ImGui::InputScalar("Time Speed", ImGuiDataType_S32, &h_Config->TimeSpeed, &one, NULL, "%d");
 
-            if (h_Config->TimeSpeed < TimeSpeedLast)
-            {
-                if (h_Config->TimeSpeed < 1)
+            if (h_Config->TimeSpeed < TimeSpeedLast) {
+                if (h_Config->TimeSpeed < 1) {
                     h_Config->TimeSpeed = 1;
-                else
-                {
+                }
+                else {
                     h_Config->TimeSpeed += 1;
                     h_Config->TimeSpeed /= 2;
 
                     PerformanceChangePending = true;
                 }
             }
-            else if (h_Config->TimeSpeed > TimeSpeedLast)
-            {
-                if (h_Config->TimeSpeed > 2048)
+            else if (h_Config->TimeSpeed > TimeSpeedLast) {
+                if (h_Config->TimeSpeed > 2048) {
                     h_Config->TimeSpeed = 2048;
-                else
-                {
+                }
+                else {
                     h_Config->TimeSpeed -= 1;
                     h_Config->TimeSpeed *= 2;
 
@@ -1212,20 +1170,22 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
 
             bool Apply = ImGui::Button("Apply", ImVec2(70.f, 20.f));
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-            if (PerformanceChangePending)
+            if (PerformanceChangePending) {
                 ImGui::Button("Pending", ImVec2(70.f, 20.f));
-            else
+            }
+            else {
                 ImGui::Button("Applied", ImVec2(70.f, 20.f));
+            }
 
-            if (Apply)
-            {
+            if (Apply) {
                 SyncConfigArray();
                 PerformanceChangePending = false;
             }
 
-            if (!SimulationSpeedToggle)
-                if (SimulateFastFlag)
-                    SimulationSpeedToggle = ImGui::Button("Simulate Real-Time", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
+            if (!SimulationSpeedToggle) {
+                if (SimulateFastFlag) {
+                    SimulationSpeedToggle = ImGui::Button("Simulate Real-Time", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));\
+                }
                 else
                 {
                     SimulationSpeedToggle = ImGui::Button("Simulate Fast", ImVec2(140.f + ImGui::GetStyle().ItemInnerSpacing.x, 20.f));
@@ -1255,9 +1215,9 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
                             h_Config->TimeSpeedFast = h_Config->TimeSpeedFastDefault;
                     }
                 }
+            }
 
-            if (SimulationSpeedToggle)
-            {
+            if (SimulationSpeedToggle) {
                 SimulateFastFlag = !SimulateFastFlag;
 
                 if (SimulateFastFlag)
@@ -1304,7 +1264,7 @@ void Run(int OpponentID, int PositionNumber, float AngleStart)
             char FrameRateString[32];
             float FrameRate = 1000000.f / FrameTimeMcs;
             sprintf(FrameRateString, "%2.1f/%d.0", FrameRate, int(FRAMES_PER_SECOND));
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 100);
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 100);
             ImGui::ProgressBar(FrameRate / FRAMES_PER_SECOND, ImVec2(0.f, 0.f), FrameRateString);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             ImGui::Text("Frame Rate");
