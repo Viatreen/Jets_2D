@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <vector>
 #include <cerrno>
+#include <memory>
 
 // Windows
 #ifdef _WIN32
@@ -204,9 +205,8 @@ void SaveCSV()
         FileNameStream << "Saves/";
     #endif
 
-    FileNameStream << "Jets_2D " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
-    << TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
-    << std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
+    FileNameStream << "Jets_2D_" << TimeInfo->tm_year + 1900 << std::setw(2) << std::setfill('0')
+    << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
     << std::fixed << HighScoreCumulative << ".csv";
 
     std::ofstream File;
@@ -309,6 +309,7 @@ void SaveCSV()
 
 void SaveTopBinary(int CraftCount)
 {
+    // TODO: Remove duplicate code with SaveCSV
     // Create and timestamp file
     time_t RawTime;
     tm* TimeInfo;
@@ -329,10 +330,9 @@ void SaveTopBinary(int CraftCount)
         FileNameStream << "Saves/";
     #endif
 
-    FileNameStream << "Jets_2D " << TimeInfo->tm_year + 1900 << " " << std::setw(2) << std::setfill('0')
-            << TimeInfo->tm_mon + 1 << " " << std::setw(2) << TimeInfo->tm_mday << " " << std::setw(2) << TimeInfo->tm_hour << " "
-            << std::setw(2) << TimeInfo->tm_min << " " << std::setw(2) << TimeInfo->tm_sec << " Score- " << std::setprecision(3)
-            << std::fixed << HighScoreCumulative << ".craft";
+    FileNameStream << "Jets_2D_" << TimeInfo->tm_year + 1900 << std::setw(2) << std::setfill('0')
+    << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
+    << std::fixed << HighScoreCumulative << ".craft";
 
     std::cout << "Filename: " << FileNameStream.str() << std::endl;
 
@@ -384,9 +384,11 @@ void SaveTopBinary(int CraftCount)
 // TODO: Tidy up save and load
 void LoadTopBinary1()
 {
-#ifdef _WIN32   // TODO: Add linux support
     std::cout << "Loading craft files" << std::endl;
+    LoadSuccess = false;
+    int result;
 
+#ifdef _WIN32
     char FileName[MAX_PATH];
 
     OPENFILENAME OpenFileName;
@@ -400,9 +402,25 @@ void LoadTopBinary1()
     OpenFileName.lpstrTitle = "Select a Craft File";
     OpenFileName.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
 
-    LoadSuccess = false;
+    result = GetOpenFileNameA(&OpenFileName);
+#else
+    char FileName[128];
+    std::shared_ptr<FILE> pipe(popen("zenity --file-selection", "r"), pclose);
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    while (!feof(pipe.get())) {
+        if (fgets(FileName, 128, pipe.get()) != nullptr) {
+            result = 1;
+            std::cout << "File name read successfully" << std::endl;
+        }
+        else {
+            result = 0;
+            std::cout << "Could not open file" << std::endl;
+        }
+        std::cout << "Filename: " << FileName << std::endl;
+    }
+#endif
 
-    if (GetOpenFileNameA(&OpenFileName))
+    if (result)
     {
         std::cout << "Opening \"" << FileName << "\"" << std::endl;
 
@@ -452,6 +470,8 @@ void LoadTopBinary1()
     else
     {
         std::cout << "Error opening file-" << std::endl;
+
+#ifdef _WIN32
         switch (CommDlgExtendedError())
         {
         case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE" << std::endl;   break;
@@ -471,10 +491,11 @@ void LoadTopBinary1()
         case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE" << std::endl; break;
         default: std::cout << "User cancelled" << std::endl;
         }
-    }
 #else
-    std::cout << "No loading functionality applied for Linux yet" << std::endl;
+    // TODO: Linux code here
 #endif
+
+    }
 }
 
 // TODO: Fix loading issue

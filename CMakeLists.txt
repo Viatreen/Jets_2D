@@ -126,13 +126,6 @@ if (WIN32)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE _WIN32)
 endif()
 
-# if (WIN32)
-#     # Not Working. Compiling with MSVC between vscode and Visual Studio is currently incompatible due to shader and font loading paths
-#     set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-#                                                            VS_DEBUGGER_COMMAND           "${CMAKE_SOURCE_DIR}")
-#     message(STATUS "Setting working directory to ${CMAKE_SOURCE_DIR}")
-# endif()
-
 if (_GLFW_X11)
     target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     lib/GLFW/src/x11_platform.h
