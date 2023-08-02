@@ -481,7 +481,6 @@ void LoadTopBinary(std::string filename)
 // TODO: Fix loading issue
 void LoadTopBinary2()
 {
-#ifdef _WIN32
     if (LoadSuccess)
     {
         std::cout << "Copying loaded weights" << std::endl;
