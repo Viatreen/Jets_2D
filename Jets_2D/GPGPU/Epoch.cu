@@ -36,11 +36,11 @@ __global__ void RunEpoch(MatchState *Match, CraftState *C, GraphicsObjectPointer
         {
             // Trainee neural network
             if (C->Active[idx])
-                State_Processing(C, Buffer, idx + CRAFT_COUNT, idx, idx);
+                State_Processing(C, Buffer, idx + CRAFT_COUNT, idx, idx, TimeStepIteration);
             // Opponent neural network
             if (C->Active[idx + CRAFT_COUNT])
                 // Each opponent has their own set of neurons and state but uses the same weight vector as all other oppenents
-                State_Processing(C, Buffer, idx, idx + CRAFT_COUNT, Opponent_ID_Weights);
+                State_Processing(C, Buffer, idx, idx + CRAFT_COUNT, Opponent_ID_Weights, TimeStepIteration);
         }
 
         if (C->Active[idx])

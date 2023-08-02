@@ -75,8 +75,9 @@ __global__ void RoundPrintFirstPlace(CraftState* C, int RoundNumber)
 {
     int idx = BLOCK_SIZE * blockIdx.x + threadIdx.x;
 
-    if (C->Place[idx] == 0)
-        printf("Round: %4d, First place ID: %6d, Score: %7.2f\n", RoundNumber, idx, C->ScoreCumulative[idx] / MATCHES_PER_ROUND);
+    if (C->Place[idx] == 0) {
+        // printf("Round: %4d, First place ID: %6d, Score: %7.2f\n", RoundNumber, idx, C->ScoreCumulative[idx] / MATCHES_PER_ROUND);
+    }
 }
 
 __global__ void IDAssign(CraftState* C, config* Config)
@@ -203,7 +204,7 @@ __device__ void Shrink_Weights(CraftState* C)
 
     while (Too_Large)
     {
-        Run_Neural_Net(C, false, idx, idx);
+        Run_Neural_Net(C, false, idx, idx, Shrink_Count);
 
         float Sum = 0.f;
         for (int i = 0; i < LAYER_SIZE_OUTPUT; i++)

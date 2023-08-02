@@ -84,7 +84,6 @@ if(MSVC)
     set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
-# add_executable(${CMAKE_PROJECT_NAME} ${sources})
 add_executable(${CMAKE_PROJECT_NAME})
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE

@@ -21,72 +21,76 @@ __device__ void RELU_Activate(float& Neuron)
         Neuron = NETWORK_ACTIVATION_SLOPE * Neuron - 1.f + NETWORK_ACTIVATION_SLOPE;
 }
 
-__device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, int ID_Opponent, int ID_Craft, int ID_Weight)
+__device__ void State_Processing(CraftState* C, GraphicsObjectPointer* Buffer, int ID_Opponent, int ID_Craft, int ID_Weight, int TimeStep)
 {
     /////////////////////////////////////////////////////////////////////////
     // Environment Input to Input Neuron Conversion
-    Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft);
+    Environment_To_Input_Neurons(C, ID_Opponent, ID_Craft, TimeStep);
 
     /////////////////////////////////////////////////////////////////////////
     // Neural Net Processing
-    Run_Neural_Net(C, true, ID_Craft, ID_Weight);
+    Run_Neural_Net(C, true, ID_Craft, ID_Weight, TimeStep);
 
     //////////////////////////////////////////////////////////////////////////
     // Output Conversion
-    Output_Neurons_To_Action(C, ID_Craft, Buffer);
+    Output_Neurons_To_Action(C, ID_Craft, Buffer, TimeStep);
 }
 
-__device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int ID_Craft)
+__device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int ID_Craft, int TimeStep)
 {
-#ifdef _DEBUG
-    if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
-        printf("NN Before- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
-    if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
-        printf("NN Before- Craft(%d), Position Y NaN, %f\n", ID_Craft, C->Position.Y[ID_Craft]);
-    if (C->Velocity.X[ID_Craft] != C->Velocity.X[ID_Craft])
-        printf("NN Before- Craft(%d), Velocity X NaN, %f\n", ID_Craft, C->Velocity.X[ID_Craft]);
-    if (C->Velocity.Y[ID_Craft] != C->Velocity.Y[ID_Craft])
-        printf("NN Before- Craft(%d), Velocity Y NaN, %f\n", ID_Craft, C->Velocity.Y[ID_Craft]);
-    if (C->Acceleration.X[ID_Craft] != C->Acceleration.X[ID_Craft])
-        printf("NN Before- Craft(%d), Acceleration X NaN, %f\n", ID_Craft, C->Acceleration.X[ID_Craft]);
-    if (C->Acceleration.Y[ID_Craft] != C->Acceleration.Y[ID_Craft])
-        printf("NN Before- Craft(%d), Acceleration Y NaN, %f\n", ID_Craft, C->Acceleration.Y[ID_Craft]);
-    if (C->Angle[ID_Craft] != C->Angle[ID_Craft])
-        printf("NN Before- Craft(%d), Angle NaN, %f\n", ID_Craft, C->Angle[ID_Craft]);
-    if (C->AngularVelocity[ID_Craft] != C->AngularVelocity[ID_Craft])
-        printf("NN Before- Craft(%d), Angular Velocity NaN, %f\n", ID_Craft, C->AngularVelocity[ID_Craft]);
-    if (C->AngularAcceleration[ID_Craft] != C->AngularAcceleration[ID_Craft])
-        printf("NN Before- Craft(%d), AngularAcceleration NaN, %f\n", ID_Craft, C->AngularAcceleration[ID_Craft]);
-    if (C->Cannon.Angle[ID_Craft] != C->Cannon.Angle[ID_Craft])
-        printf("NN Before- Craft(%d), Cannon Angle NaN, %f\n", ID_Craft, C->Cannon.Angle[ID_Craft]);
-    if (C->Cannon.AngularVelocity[ID_Craft] != C->Cannon.AngularVelocity[ID_Craft])
-        printf("NN Before- Craft(%d), Cannon Angle Vel NaN, %f\n", ID_Craft, C->Cannon.AngularVelocity[ID_Craft]);
-    if (C->Cannon.AngularAcceleration[ID_Craft] != C->Cannon.AngularAcceleration[ID_Craft])
-        printf("NN Before- Craft(%d), Cannon Angle Acc NaN, %f\n", ID_Craft, C->Cannon.AngularAcceleration[ID_Craft]);
-    if (C->Score[ID_Craft] != C->Score[ID_Craft])
-        printf("NN Before- Craft(%d), Score NaN, %f\n", ID_Craft, C->Score[ID_Craft]);
+// #ifdef _DEBUG
+// #define CHANGE_THIS // TODO: Change this
+// #ifdef CHANGE_THIS
+// if (1) {
+//     if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
+//         printf("NN Before- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
+//     if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
+//         printf("NN Before- Craft(%d), Position Y NaN, %f\n", ID_Craft, C->Position.Y[ID_Craft]);
+//     if (C->Velocity.X[ID_Craft] != C->Velocity.X[ID_Craft])
+//         printf("NN Before- Craft(%d), Velocity X NaN, %f\n", ID_Craft, C->Velocity.X[ID_Craft]);
+//     if (C->Velocity.Y[ID_Craft] != C->Velocity.Y[ID_Craft])
+//         printf("NN Before- Craft(%d), Velocity Y NaN, %f\n", ID_Craft, C->Velocity.Y[ID_Craft]);
+//     if (C->Acceleration.X[ID_Craft] != C->Acceleration.X[ID_Craft])
+//         printf("NN Before- Craft(%d), Acceleration X NaN, %f\n", ID_Craft, C->Acceleration.X[ID_Craft]);
+//     if (C->Acceleration.Y[ID_Craft] != C->Acceleration.Y[ID_Craft])
+//         printf("NN Before- Craft(%d), Acceleration Y NaN, %f\n", ID_Craft, C->Acceleration.Y[ID_Craft]);
+//     if (C->Angle[ID_Craft] != C->Angle[ID_Craft])
+//         printf("NN Before- Craft(%d), Angle NaN, %f\n", ID_Craft, C->Angle[ID_Craft]);
+//     if (C->AngularVelocity[ID_Craft] != C->AngularVelocity[ID_Craft])
+//         printf("NN Before- Craft(%d), Angular Velocity NaN, %f\n", ID_Craft, C->AngularVelocity[ID_Craft]);
+//     if (C->AngularAcceleration[ID_Craft] != C->AngularAcceleration[ID_Craft])
+//         printf("NN Before- Craft(%d), AngularAcceleration NaN, %f\n", ID_Craft, C->AngularAcceleration[ID_Craft]);
+//     if (C->Cannon.Angle[ID_Craft] != C->Cannon.Angle[ID_Craft])
+//         printf("NN Before- Craft(%d), Cannon Angle NaN, %f\n", ID_Craft, C->Cannon.Angle[ID_Craft]);
+//     if (C->Cannon.AngularVelocity[ID_Craft] != C->Cannon.AngularVelocity[ID_Craft])
+//         printf("NN Before- Craft(%d), Cannon Angle Vel NaN, %f\n", ID_Craft, C->Cannon.AngularVelocity[ID_Craft]);
+//     if (C->Cannon.AngularAcceleration[ID_Craft] != C->Cannon.AngularAcceleration[ID_Craft])
+//         printf("NN Before- Craft(%d), Cannon Angle Acc NaN, %f\n", ID_Craft, C->Cannon.AngularAcceleration[ID_Craft]);
+//     if (C->Score[ID_Craft] != C->Score[ID_Craft])
+//         printf("NN Before- Craft(%d), Score NaN, %f\n", ID_Craft, C->Score[ID_Craft]);
 
-    for (int i = 0; i < 4; i++)
-    {
-        if (C->Engine[i].Angle[ID_Craft] != C->Engine[i].Angle[ID_Craft])
-            printf("NN Before- Craft(%d), Eng(%d), Angle NaN, %f\n", ID_Craft, i, C->Engine[i].Angle[ID_Craft]);
-        if (C->Engine[i].AngularVelocity[ID_Craft] != C->Engine[i].AngularVelocity[ID_Craft])
-            printf("NN Before- Craft(%d), Eng(%d), Angle Vel NaN, %f\n", ID_Craft, i, C->Engine[i].AngularVelocity[ID_Craft]);
-        if (C->Engine[i].AngularAcceleration[ID_Craft] != C->Engine[i].AngularAcceleration[ID_Craft])
-            printf("NN Before- Craft(%d), Eng(%d), Angle Acc NaN, %f\n", ID_Craft, i, C->Engine[i].AngularAcceleration[ID_Craft]);
-        if (C->Engine[i].Thrust[ID_Craft] != C->Engine[i].Thrust[ID_Craft])
-            printf("NN Before- Craft(%d), Eng(%d), Thrust NaN, %f\n", ID_Craft, i, C->Engine[i].Thrust[ID_Craft]);
-        if (C->Engine[i].ThrustNormalized[ID_Craft] != C->Engine[i].ThrustNormalized[ID_Craft])
-            printf("NN Before- Craft(%d), Eng(%d), Thrust Norm NaN, %f\n", ID_Craft, i, C->Engine[i].ThrustNormalized[ID_Craft]);
-    }
+//     for (int i = 0; i < 4; i++)
+//     {
+//         if (C->Engine[i].Angle[ID_Craft] != C->Engine[i].Angle[ID_Craft])
+//             printf("NN Before- Craft(%d), Eng(%d), Angle NaN, %f\n", ID_Craft, i, C->Engine[i].Angle[ID_Craft]);
+//         if (C->Engine[i].AngularVelocity[ID_Craft] != C->Engine[i].AngularVelocity[ID_Craft])
+//             printf("NN Before- Craft(%d), Eng(%d), Angle Vel NaN, %f\n", ID_Craft, i, C->Engine[i].AngularVelocity[ID_Craft]);
+//         if (C->Engine[i].AngularAcceleration[ID_Craft] != C->Engine[i].AngularAcceleration[ID_Craft])
+//             printf("NN Before- Craft(%d), Eng(%d), Angle Acc NaN, %f\n", ID_Craft, i, C->Engine[i].AngularAcceleration[ID_Craft]);
+//         if (C->Engine[i].Thrust[ID_Craft] != C->Engine[i].Thrust[ID_Craft])
+//             printf("NN Before- Craft(%d), Eng(%d), Thrust NaN, %f\n", ID_Craft, i, C->Engine[i].Thrust[ID_Craft]);
+//         if (C->Engine[i].ThrustNormalized[ID_Craft] != C->Engine[i].ThrustNormalized[ID_Craft])
+//             printf("NN Before- Craft(%d), Eng(%d), Thrust Norm NaN, %f\n", ID_Craft, i, C->Engine[i].ThrustNormalized[ID_Craft]);
+//     }
 
-    for (int i = 0; i < NEURON_AMOUNT; i++)
-        if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
-        {
-            printf("1 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
-            C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
-        }
-#endif
+    // // for (int i = 0; i < NEURON_AMOUNT; i++)
+    // //     if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
+    // //     {
+    // //         printf("1 NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
+    // //         C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
+    // //     }
+// }
+// #endif
 
     ///////////////////////////////////////////////////////////////////////
     //// Input
@@ -351,19 +355,21 @@ __device__ void Environment_To_Input_Neurons(CraftState* C, int ID_Opponent, int
     //  C->Neuron[CRAFT_COUNT * 2 * (SENSORS_MEMORY_START + i) + ID_Craft] += C->Neuron[CRAFT_COUNT * 2 * (LAYER_SIZE_INPUT + LAYER_SIZE_HIDDEN + 25 + i) + ID_Craft] / float(1 << i);
     //}
 
-    /*for (int i = 0; i < NEURON_AMOUNT; i++)
+    if (TimeStep == 0 && ID_Craft == 0)
+    for (int i = 0; i < NEURON_AMOUNT; i++) {
         if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
         {
-            printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
+            printf("Environment_To_Input_Neurons, NaN Neuron, TimeStep(%d), Thread(%d) Neuron(%d): %f\n", TimeStep, ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
             C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
-        }*/
+        }
+    }
 }
 
-__device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons, int ID_Weights)
+__device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Craft, int ID_Weights, int TimeStep)
 {
     // Init network to zero (Except for input neurons)
     for (unsigned int i = LAYER_SIZE_INPUT; i < NEURON_AMOUNT; i++)
-        C->Neuron[2 * CRAFT_COUNT * i + ID_Neurons] = 0.f;
+        C->Neuron[2 * CRAFT_COUNT * i + ID_Craft] = 0.f;
 
     // Calculate values of first hidden layer
     for (unsigned int Input = 0; Input < LAYER_SIZE_INPUT; Input++)
@@ -372,7 +378,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
         {
             unsigned int Weight_Index = Input * LAYER_SIZE_HIDDEN + Output; // TODO: Investigate. This is never 0
 
-            C->Neuron[2 * CRAFT_COUNT * Output + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+            C->Neuron[2 * CRAFT_COUNT * Output + ID_Craft] += C->Neuron[2 * CRAFT_COUNT * Input + ID_Craft] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
         }
     }
 
@@ -382,7 +388,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
         unsigned int Index = i + LAYER_SIZE_INPUT;
 
         if (Do_Activation)
-            RELU_Activate(C->Neuron[2 * CRAFT_COUNT * Index + ID_Neurons]);
+            RELU_Activate(C->Neuron[2 * CRAFT_COUNT * Index + ID_Craft]);
     }
 
     // Calculate values for neurons of hidden layers
@@ -401,7 +407,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
                     + Input * LAYER_SIZE_HIDDEN
                     + Output;
 
-                C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+                C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Craft] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
             }
         }
 
@@ -411,7 +417,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
 
             if (Do_Activation)
                 for (unsigned int i = 0; i < LAYER_SIZE_HIDDEN; i++)
-                    RELU_Activate(C->Neuron[2 * CRAFT_COUNT * Index + ID_Neurons]);
+                    RELU_Activate(C->Neuron[2 * CRAFT_COUNT * Index + ID_Craft]);
         }
     }
 
@@ -430,7 +436,7 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
                 + Input * LAYER_SIZE_OUTPUT
                 + Output;
 
-            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Neurons] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
+            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] += C->Neuron[2 * CRAFT_COUNT * Input_Index + ID_Craft] * C->Weight[CRAFT_COUNT * Weight_Index + ID_Weights];
         }
     }
 
@@ -439,18 +445,27 @@ __device__ void Run_Neural_Net(CraftState* C, bool Do_Activation, int ID_Neurons
     {
         unsigned int Output_Index = OUTPUT_LAYER_NEURON_BEGIN_INDEX + Output;
 
-        if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] > 1.f)
+        if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] > 1.f)
         {
-            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] = 1.f;
+            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] = 1.f;
         }
-        else if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] < 0.f)
+        else if (C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] < 0.f)
         {
-            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Neurons] = 0.f;
+            C->Neuron[2 * CRAFT_COUNT * Output_Index + ID_Craft] = 0.f;
         }
     }
+
+    // if (TimeStep == 0)
+    // for (int i = 0; i < NEURON_AMOUNT; i++) {
+    //     if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
+    //     {
+    //         printf("NaN Neuron, TimeStep(%d), Thread(%d) Neuron(%d): %f\n", TimeStep, ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
+    //         C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
+    //     }
+    // }
 }
 
-__device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsObjectPointer* Buffer)
+__device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsObjectPointer* Buffer, int TimeStep)
 {
     static float dx_cannon_prev = 0.f;
     static float dy_cannon_prev = 1.f;
@@ -610,55 +625,59 @@ __device__ void Output_Neurons_To_Action(CraftState *C, int ID_Craft, GraphicsOb
     for (int i = 0; i < 4; i++)
         C->Engine[i].ThrustNormalized[ID_Craft] = C->Neuron[((21 + i) + OUTPUT_LAYER_NEURON_BEGIN_INDEX) * CRAFT_COUNT * 2 + ID_Craft];
 
-#ifdef _DEBUG
-    for (int i = 0; i < NEURON_AMOUNT; i++)
-        if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
-        {
-            printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
-            C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
-        }
+// #ifdef _DEBUG
+// #define CHANGE_THIS // TODO: Change this
+// #ifdef CHANGE_THIS
+// if (1) {
+//     // for (int i = 0; i < NEURON_AMOUNT; i++)
+//     //     if (C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] != C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft])
+//     //     {
+//     //         printf("NaN Neuron, Thread(%d) Neuron(%d): %f\n", ID_Craft, i, C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft]);
+//     //         C->Neuron[CRAFT_COUNT * 2 * i + ID_Craft] = 0.f;
+//     //     }
 
-    if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
-        printf("NN After- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
-    if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
-        printf("NN After- Craft(%d), Position Y NaN, %f\n", ID_Craft, C->Position.Y[ID_Craft]);
-    if (C->Velocity.X[ID_Craft] != C->Velocity.X[ID_Craft])
-        printf("NN After- Craft(%d), Velocity X NaN, %f\n", ID_Craft, C->Velocity.X[ID_Craft]);
-    if (C->Velocity.Y[ID_Craft] != C->Velocity.Y[ID_Craft])
-        printf("NN After- Craft(%d), Velocity Y NaN, %f\n", ID_Craft, C->Velocity.Y[ID_Craft]);
-    if (C->Acceleration.X[ID_Craft] != C->Acceleration.X[ID_Craft])
-        printf("NN After- Craft(%d), Acceleration X NaN, %f\n", ID_Craft, C->Acceleration.X[ID_Craft]);
-    if (C->Acceleration.Y[ID_Craft] != C->Acceleration.Y[ID_Craft])
-        printf("NN After- Craft(%d), Acceleration Y NaN, %f\n", ID_Craft, C->Acceleration.Y[ID_Craft]);
-    if (C->Angle[ID_Craft] != C->Angle[ID_Craft])
-        printf("NN After- Craft(%d), Angle NaN, %f\n", ID_Craft, C->Angle[ID_Craft]);
-    if (C->AngularVelocity[ID_Craft] != C->AngularVelocity[ID_Craft])
-        printf("NN After- Craft(%d), Angular Velocity NaN, %f\n", ID_Craft, C->AngularVelocity[ID_Craft]);
-    if (C->AngularAcceleration[ID_Craft] != C->AngularAcceleration[ID_Craft])
-        printf("NN After- Craft(%d), AngularAcceleration NaN, %f\n", ID_Craft, C->AngularAcceleration[ID_Craft]);
-    if (C->Cannon.Angle[ID_Craft] != C->Cannon.Angle[ID_Craft])
-        printf("NN After- Craft(%d), Cannon Angle NaN, %f\n", ID_Craft, C->Cannon.Angle[ID_Craft]);
-    if (C->Cannon.AngularVelocity[ID_Craft] != C->Cannon.AngularVelocity[ID_Craft])
-        printf("NN After- Craft(%d), Cannon Angle Vel NaN, %f\n", ID_Craft, C->Cannon.AngularVelocity[ID_Craft]);
-    if (C->Cannon.AngularAcceleration[ID_Craft] != C->Cannon.AngularAcceleration[ID_Craft])
-        printf("NN After- Craft(%d), Cannon Angle Acc NaN, %f\n", ID_Craft, C->Cannon.AngularAcceleration[ID_Craft]);
-    if (C->Score[ID_Craft] != C->Score[ID_Craft])
-        printf("NN After- Craft(%d), Score NaN, %f\n", ID_Craft, C->Score[ID_Craft]);
+//     if (C->Position.X[ID_Craft] != C->Position.X[ID_Craft])
+//         printf("NN After- Craft(%d), Position X NaN, %f\n", ID_Craft, C->Position.X[ID_Craft]);
+//     if (C->Position.Y[ID_Craft] != C->Position.Y[ID_Craft])
+//         printf("NN After- Craft(%d), Position Y NaN, %f\n", ID_Craft, C->Position.Y[ID_Craft]);
+//     if (C->Velocity.X[ID_Craft] != C->Velocity.X[ID_Craft])
+//         printf("NN After- Craft(%d), Velocity X NaN, %f\n", ID_Craft, C->Velocity.X[ID_Craft]);
+//     if (C->Velocity.Y[ID_Craft] != C->Velocity.Y[ID_Craft])
+//         printf("NN After- Craft(%d), Velocity Y NaN, %f\n", ID_Craft, C->Velocity.Y[ID_Craft]);
+//     if (C->Acceleration.X[ID_Craft] != C->Acceleration.X[ID_Craft])
+//         printf("NN After- Craft(%d), Acceleration X NaN, %f\n", ID_Craft, C->Acceleration.X[ID_Craft]);
+//     if (C->Acceleration.Y[ID_Craft] != C->Acceleration.Y[ID_Craft])
+//         printf("NN After- Craft(%d), Acceleration Y NaN, %f\n", ID_Craft, C->Acceleration.Y[ID_Craft]);
+//     if (C->Angle[ID_Craft] != C->Angle[ID_Craft])
+//         printf("NN After- Craft(%d), Angle NaN, %f\n", ID_Craft, C->Angle[ID_Craft]);
+//     if (C->AngularVelocity[ID_Craft] != C->AngularVelocity[ID_Craft])
+//         printf("NN After- Craft(%d), Angular Velocity NaN, %f\n", ID_Craft, C->AngularVelocity[ID_Craft]);
+//     if (C->AngularAcceleration[ID_Craft] != C->AngularAcceleration[ID_Craft])
+//         printf("NN After- Craft(%d), AngularAcceleration NaN, %f\n", ID_Craft, C->AngularAcceleration[ID_Craft]);
+//     if (C->Cannon.Angle[ID_Craft] != C->Cannon.Angle[ID_Craft])
+//         printf("NN After- Craft(%d), Cannon Angle NaN, %f\n", ID_Craft, C->Cannon.Angle[ID_Craft]);
+//     if (C->Cannon.AngularVelocity[ID_Craft] != C->Cannon.AngularVelocity[ID_Craft])
+//         printf("NN After- Craft(%d), Cannon Angle Vel NaN, %f\n", ID_Craft, C->Cannon.AngularVelocity[ID_Craft]);
+//     if (C->Cannon.AngularAcceleration[ID_Craft] != C->Cannon.AngularAcceleration[ID_Craft])
+//         printf("NN After- Craft(%d), Cannon Angle Acc NaN, %f\n", ID_Craft, C->Cannon.AngularAcceleration[ID_Craft]);
+//     if (C->Score[ID_Craft] != C->Score[ID_Craft])
+//         printf("NN After- Craft(%d), Score NaN, %f\n", ID_Craft, C->Score[ID_Craft]);
 
-    for (int i = 0; i < 4; i++)
-    {
-        if (C->Engine[i].Angle[ID_Craft] != C->Engine[i].Angle[ID_Craft])
-            printf("NN After- Craft(%d), Eng(%d), Angle NaN, %f\n", ID_Craft, i, C->Engine[i].Angle[ID_Craft]);
-        if (C->Engine[i].AngularVelocity[ID_Craft] != C->Engine[i].AngularVelocity[ID_Craft])
-            printf("NN After- Craft(%d), Eng(%d), Angle Vel NaN, %f\n", ID_Craft, i, C->Engine[i].AngularVelocity[ID_Craft]);
-        if (C->Engine[i].AngularAcceleration[ID_Craft] != C->Engine[i].AngularAcceleration[ID_Craft])
-            printf("NN After- Craft(%d), Eng(%d), Angle Acc NaN, %f\n", ID_Craft, i, C->Engine[i].AngularAcceleration[ID_Craft]);
-        if (C->Engine[i].Thrust[ID_Craft] != C->Engine[i].Thrust[ID_Craft])
-            printf("NN After- Craft(%d), Eng(%d), Thrust NaN, %f\n", ID_Craft, i, C->Engine[i].Thrust[ID_Craft]);
-        if (C->Engine[i].ThrustNormalized[ID_Craft] != C->Engine[i].ThrustNormalized[ID_Craft])
-            printf("NN After- Craft(%d), Eng(%d), Thrust Norm NaN, %f\n", ID_Craft, i, C->Engine[i].ThrustNormalized[ID_Craft]);
-    }
-#endif
+//     for (int i = 0; i < 4; i++)
+//     {
+//         if (C->Engine[i].Angle[ID_Craft] != C->Engine[i].Angle[ID_Craft])
+//             printf("NN After- Craft(%d), Eng(%d), Angle NaN, %f\n", ID_Craft, i, C->Engine[i].Angle[ID_Craft]);
+//         if (C->Engine[i].AngularVelocity[ID_Craft] != C->Engine[i].AngularVelocity[ID_Craft])
+//             printf("NN After- Craft(%d), Eng(%d), Angle Vel NaN, %f\n", ID_Craft, i, C->Engine[i].AngularVelocity[ID_Craft]);
+//         if (C->Engine[i].AngularAcceleration[ID_Craft] != C->Engine[i].AngularAcceleration[ID_Craft])
+//             printf("NN After- Craft(%d), Eng(%d), Angle Acc NaN, %f\n", ID_Craft, i, C->Engine[i].AngularAcceleration[ID_Craft]);
+//         if (C->Engine[i].Thrust[ID_Craft] != C->Engine[i].Thrust[ID_Craft])
+//             printf("NN After- Craft(%d), Eng(%d), Thrust NaN, %f\n", ID_Craft, i, C->Engine[i].Thrust[ID_Craft]);
+//         if (C->Engine[i].ThrustNormalized[ID_Craft] != C->Engine[i].ThrustNormalized[ID_Craft])
+//             printf("NN After- Craft(%d), Eng(%d), Thrust Norm NaN, %f\n", ID_Craft, i, C->Engine[i].ThrustNormalized[ID_Craft]);
+//     }
+// }
+// #endif
 }
 
 //*

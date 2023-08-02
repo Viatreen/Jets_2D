@@ -44,13 +44,13 @@
 #endif
 
 // CUDA
-#define BLOCK_SIZE                            256
+#define BLOCK_SIZE                            16
 
 // Match Configuration
-#define CRAFT_COUNT                         ( 128 * 8 * SM_COUNT  )
+#define CRAFT_COUNT                           16 //( 128 * 8 * SM_COUNT  )
 #define FIT_COUNT                           ( CRAFT_COUNT / 2 )        // Must be a factor of CRAFT_COUNT
 #define MATCH_COUNT                         ( CRAFT_COUNT )
-#define OPPONENT_RANK_RANGE_DEFAULT           128 //128        // Must be equal or less than FIT_COUNT
+#define OPPONENT_RANK_RANGE_DEFAULT           16 //128        // Must be equal or less than FIT_COUNT
 
 #define MAX(X, Y)                           ( X > Y ? X : Y )
 
