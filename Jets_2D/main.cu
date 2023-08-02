@@ -91,7 +91,7 @@ int main()
             }
 
 
-            GUI::RoundEnd2();
+            GUI::CheckForAutoSave();
         }
         else {
             exit_round = false;

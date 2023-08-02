@@ -627,9 +627,9 @@ void RoundEnd()
     glfwSetWindowTitle(window, Title);
 }
 
-void RoundEnd2()
+void CheckForAutoSave()
 {
-    if (RoundNumber % 2000 == 0)
+    if (RoundNumber % 500 == 0)
         SaveFlagEndRound = true;
 
     if (SaveFlagEndRound)

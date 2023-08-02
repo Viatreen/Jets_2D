@@ -76,7 +76,7 @@ void ResetStep();
 void IncrementMatch();
 void ResetMatch();
 void RoundEnd();
-void RoundEnd2();
+void CheckForAutoSave();
 
 //bool show_demo_window = true;
 
