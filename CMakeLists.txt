@@ -5,7 +5,8 @@ if (UNIX)
     if(ARCH_61)
         message(STATUS "Building for CUDA architecture 6.1. GTX 1080 Ti")
         set(CMAKE_CUDA_ARCHITECTURES 61)
-    elseif(ARCH_75)
+        set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+        elseif(ARCH_75)
         message(STATUS "Building for CUDA architecture 7.5. GTX 1660 Ti")
         set(CMAKE_CUDA_ARCHITECTURES 75)
     elseif(ARCH_87)
@@ -15,7 +16,8 @@ if (UNIX)
         set(CMAKE_C_COMPILER /usr/bin/gcc)
     else()
         message(STATUS "Must have CUDA architecture of 61, 75, or 87. Feel free to add any that are 60 or higher (cooperative kernels must be supported)")
-    endif()
+        set(CMAKE_CUDA_ARCHITECTURES 60)
+        endif()
 endif()
 
 if(WIN32)
@@ -78,7 +80,14 @@ include_directories(
 
 include_directories(${OpenglIncludeSubdir})
 
-set(sources
+if(MSVC)
+    set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
+# add_executable(${CMAKE_PROJECT_NAME} ${sources})
+add_executable(${CMAKE_PROJECT_NAME})
+
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Program
     Jets_2D/main.cu
     
@@ -132,12 +141,6 @@ set(sources
     lib/GLFW/src/context.c
     lib/GLFW/src/vulkan.c
 )
-
-if(MSVC)
-    set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-endif()
-
-add_executable(${CMAKE_PROJECT_NAME} ${sources})
 
 if (WIN32)
     message(STATUS "Defining _WIN32 for vs command-line support")
