@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <vector>
 #include <cerrno>
-#include <memory>
 
 // Windows
 #ifdef _WIN32
@@ -207,7 +206,8 @@ void SaveCSV()
     #endif
 
     FileNameStream << "Jets_2D_" << TimeInfo->tm_year + 1900 << std::setw(2) << std::setfill('0')
-    << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
+    << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour 
+    << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
     << std::fixed << HighScoreCumulative << ".csv";
 
     std::ofstream File;
@@ -310,7 +310,6 @@ void SaveCSV()
 
 void SaveTopBinary(int CraftCount)
 {
-    // TODO: Remove duplicate code with SaveCSV
     // Create and timestamp file
     time_t RawTime;
     tm* TimeInfo;
@@ -332,8 +331,9 @@ void SaveTopBinary(int CraftCount)
     #endif
 
     FileNameStream << "Jets_2D_" << TimeInfo->tm_year + 1900 << std::setw(2) << std::setfill('0')
-    << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
-    << std::fixed << HighScoreCumulative << ".craft";
+            << TimeInfo->tm_mon + 1 << std::setw(2) << TimeInfo->tm_mday << "_" << std::setw(2) << TimeInfo->tm_hour 
+            << std::setw(2) << TimeInfo->tm_min << std::setw(2) << TimeInfo->tm_sec << "_Score_" << std::setprecision(3)
+            << std::fixed << HighScoreCumulative << ".craft";
 
     std::cout << "Filename: " << FileNameStream.str() << std::endl;
 
@@ -385,27 +385,10 @@ void SaveTopBinary(int CraftCount)
 // TODO: Tidy up save and load
 void LoadTopBinary(std::string filename)
 {
-#ifdef _WIN32   // TODO: Add linux support
-    std::cout << "Loading craft files" << std::endl;
+    std::cout << "Opening \"" << filename << "\"" << std::endl;
 
-    char FileName[MAX_PATH];
-
-    OPENFILENAME OpenFileName;
-    ZeroMemory(&FileName, sizeof(FileName));
-    ZeroMemory(&OpenFileName, sizeof(OpenFileName));
-    OpenFileName.lStructSize = sizeof(OpenFileName);
-    OpenFileName.hwndOwner = NULL;
-    OpenFileName.lpstrFilter = "Craft Files (*.craft)\0*.craft\0All Files (*.*)\0*.*\0";
-    OpenFileName.lpstrFile = FileName;
-    OpenFileName.nMaxFile = MAX_PATH;
-    OpenFileName.lpstrTitle = "Select a Craft File";
-    OpenFileName.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
-
-    LoadSuccess = false;
-
-    if (GetOpenFileNameA(&OpenFileName))
-    {
-        std::cout << "Opening \"" << FileName << "\"" << std::endl;
+    int LoadCraftCount;
+    bool LoadSuccess = false;
 
     std::ifstream File;
     File.open(filename.c_str(), std::ios::binary | std::ios::in);
@@ -447,40 +430,9 @@ void LoadTopBinary(std::string filename)
             delete h_CraftWeights;
         }
 
-            File.close();
-        }
+        File.close();
     }
-    else
-    {
-        std::cout << "Error opening file-" << std::endl;
-        switch (CommDlgExtendedError())
-        {
-        case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE" << std::endl;   break;
-        case CDERR_FINDRESFAILURE: std::cout << "CDERR_FINDRESFAILURE" << std::endl;  break;
-        case CDERR_INITIALIZATION: std::cout << "CDERR_INITIALIZATION" << std::endl;  break;
-        case CDERR_LOADRESFAILURE: std::cout << "CDERR_LOADRESFAILURE" << std::endl;  break;
-        case CDERR_LOADSTRFAILURE: std::cout << "CDERR_LOADSTRFAILURE" << std::endl;  break;
-        case CDERR_LOCKRESFAILURE: std::cout << "CDERR_LOCKRESFAILURE" << std::endl;  break;
-        case CDERR_MEMALLOCFAILURE: std::cout << "CDERR_MEMALLOCFAILURE" << std::endl; break;
-        case CDERR_MEMLOCKFAILURE: std::cout << "CDERR_MEMLOCKFAILURE" << std::endl;  break;
-        case CDERR_NOHINSTANCE: std::cout << "CDERR_NOHINSTANCE" << std::endl;     break;
-        case CDERR_NOHOOK: std::cout << "CDERR_NOHOOK" << std::endl;          break;
-        case CDERR_NOTEMPLATE: std::cout << "CDERR_NOTEMPLATE" << std::endl;      break;
-        case CDERR_STRUCTSIZE: std::cout << "CDERR_STRUCTSIZE" << std::endl;      break;
-        case FNERR_BUFFERTOOSMALL: std::cout << "FNERR_BUFFERTOOSMALL" << std::endl;  break;
-        case FNERR_INVALIDFILENAME: std::cout << "FNERR_INVALIDFILENAME" << std::endl; break;
-        case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE" << std::endl; break;
-        default: std::cout << "User cancelled" << std::endl;
-        }
-    }
-#else
-    std::cout << "No loading functionality applied for Linux yet" << std::endl;
-#endif
-}
-
-// TODO: Fix loading issue
-void LoadTopBinary2()
-{
+    
     if (LoadSuccess)
     {
         std::cout << "Copying loaded weights" << std::endl;
